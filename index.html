@@ -197,6 +197,8 @@
     const cartBtn = document.querySelector('.cart-btn');
     const cartModal = document.getElementById('cartModal');
     const closeCartBtn = document.getElementById('closeCart');
+    const priceText = card.querySelector('.product-price').textContent.replace('£','');
+    const price = parseFloat(priceText);
     const cartItemsList = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
     let cart = [];
