@@ -610,6 +610,189 @@
       <p class="footer-bottom">© THE O.G. BARBER</p>
     </div>
   </footer>
+  
+  <!-- Cart Modal -->
+<div id="cartModal">
+  <div class="cart-content">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button id="closeCart" class="close-cart">&times;</button>
+    </div>
+    <ul id="cartItems"></ul>
+    <div class="cart-footer">
+      <span id="cartTotal">Total: £0.00</span>
+      <button id="checkoutBtn">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Cart Modal Styling */
+  #cartModal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(7,7,7,0.85);
+    z-index: 500;
+    transition: opacity 0.3s ease;
+  }
+
+  #cartModal .cart-content {
+    background: var(--surface-elevated, #1c1c1c);
+    padding: 24px;
+    border-radius: 12px;
+    width: 320px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6);
+    overflow-y: auto;
+    animation: slideIn 0.3s ease forwards;
+  }
+
+  #cartModal .cart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  #cartModal h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: var(--cream);
+  }
+
+  #cartModal .close-cart {
+    background: none;
+    border: none;
+    color: var(--copper);
+    font-size: 1.4rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  #cartModal .close-cart:hover {
+    color: var(--copper-bright);
+  }
+
+  #cartModal ul {
+    list-style: none;
+    flex: 1;
+    margin-bottom: 16px;
+  }
+
+  #cartModal li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--cream);
+    font-size: 0.95rem;
+  }
+
+  #cartModal li button {
+    background: var(--copper);
+    border: none;
+    color: var(--void);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  #cartModal li button:hover {
+    background: var(--copper-bright);
+  }
+
+  #cartModal .cart-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  #cartModal #checkoutBtn {
+    padding: 8px 16px;
+    background: var(--copper);
+    border: none;
+    color: var(--void);
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.3s;
+  }
+
+  #cartModal #checkoutBtn:hover {
+    background: var(--copper-bright);
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>
+
+<script>
+  // Cart JS
+  const cartBtn = document.querySelector('.cart-btn');
+  const cartModal = document.getElementById('cartModal');
+  const closeCart = document.getElementById('closeCart');
+  const cartItemsList = document.getElementById('cartItems');
+  const cartTotal = document.getElementById('cartTotal');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+
+  let cart = [];
+
+  function updateCart() {
+    cartItemsList.innerHTML = '';
+    let total = 0;
+    cart.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${item.name} £${item.price.toFixed(2)}`;
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '×';
+      removeBtn.onclick = () => {
+        cart.splice(index,1);
+        updateCart();
+      };
+      li.appendChild(removeBtn);
+      cartItemsList.appendChild(li);
+      total += item.price;
+    });
+    cartTotal.textContent = `Total: £${total.toFixed(2)}`;
+  }
+
+  document.querySelectorAll('.add-to-cart').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const card = e.target.closest('.product-card');
+      const name = card.querySelector('.product-name').textContent;
+      const price = parseFloat(card.querySelector('.product-price').textContent);
+      cart.push({name, price});
+      updateCart();
+      cartModal.style.display = 'flex';
+    });
+  });
+
+  cartBtn.addEventListener('click', () => {
+    updateCart();
+    cartModal.style.display = 'flex';
+  });
+
+  closeCart.addEventListener('click', () => cartModal.style.display = 'none');
+  cartModal.addEventListener('click', e => { if(e.target === cartModal) cartModal.style.display = 'none'; });
+
+  checkoutBtn.addEventListener('click', () => {
+    alert(`Checkout not implemented yet. Total: £${cart.reduce((a,b)=>a+b.price,0).toFixed(2)}`);
+  });
+</script>
 
   <script>
     (function() {
