@@ -2,21 +2,52 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>The OG Barber</title>
+<title>Luxury Barber Booking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; margin:0; background:#1a1a1a; }
-header { background:#222; color:rgb(255, 187, 0); padding:20px; text-align:center; }
+body { font-family: Arial; margin:0; background:#f5f5f5; }
+
+header {
+    background:#222;
+    color:white;
+    padding:20px;
+    text-align:center;
+    cursor:pointer;
+    position:relative;
+}
+
+.back-btn {
+    position:absolute;
+    left:20px;
+    top:20px;
+    background:transparent;
+    border:1px solid white;
+    color:white;
+    padding:5px 12px;
+    border-radius:5px;
+    cursor:pointer;
+    display:none;
+}
+
 .container { max-width:1000px; margin:40px auto; padding:20px; }
 
 .card {
-    background:rgb(255, 255, 255);
+    background:white;
     padding:20px;
     border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,0.1);
     margin-bottom:20px;
-    transition:0.4s;
+    opacity:1;
+    transform:translateX(0);
+    transition:0.4s ease;
+}
+
+.hidden {
+    opacity:0;
+    transform:translateX(50px);
+    pointer-events:none;
+    position:absolute;
 }
 
 button {
@@ -50,7 +81,7 @@ button:hover { opacity:0.8; }
     border-radius:5px;
 }
 
-.day:hover { background:#ccc; }
+.day.selected { background:#222; color:white; }
 
 .times {
     display:grid;
@@ -67,9 +98,7 @@ button:hover { opacity:0.8; }
     border-radius:5px;
 }
 
-.time:hover { background:#ccc; }
-
-.hidden { display:none; }
+.time.selected { background:#222; color:white; }
 
 .total-box {
     font-size:20px;
@@ -87,21 +116,17 @@ button:hover { opacity:0.8; }
 
 <body>
 
-<header>
-<h1>The OG Barber</h1>
+<header onclick="goHome()">
+<button class="back-btn" id="backBtn" onclick="goBack(event)">← Back</button>
+<h1>Luxury Barber Booking</h1>
 </header>
 
 <div class="container">
 
 <div id="step1" class="card">
 <h2>Select Services</h2>
-
 <div id="services"></div>
-
-<div class="total-box">
-Total: £<span id="total">0</span>
-</div>
-
+<div class="total-box">Total: £<span id="total">0</span></div>
 <button onclick="goToCalendar()">Next</button>
 </div>
 
@@ -126,18 +151,20 @@ Total: £<span id="total">0</span>
 
 <script>
 const serviceData = [
-    { name: "Haircut", price: 10 },
-    { name: "Skin Fade", price: 10 },
-    { name: "Beard Trim", price: 6.99 },
-    { name: "Hair & Beard", price: 14.99 }
+    { name: "Haircut", price: 20 },
+    { name: "Skin Fade", price: 25 },
+    { name: "Beard Trim", price: 15 },
+    { name: "Hair & Beard", price: 35 }
 ];
 
 let selectedServices = [];
 let total = 0;
 let selectedDate = "";
 let selectedTime = "";
+let currentStep = 1;
 
 const servicesDiv = document.getElementById("services");
+const backBtn = document.getElementById("backBtn");
 
 serviceData.forEach(service => {
     const div = document.createElement("div");
@@ -148,6 +175,27 @@ serviceData.forEach(service => {
     `;
     servicesDiv.appendChild(div);
 });
+
+function showStep(step) {
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById("step"+i).classList.add("hidden");
+    }
+    document.getElementById("step"+step).classList.remove("hidden");
+    currentStep = step;
+
+    backBtn.style.display = step === 1 ? "none" : "block";
+}
+
+function goBack(event) {
+    event.stopPropagation();
+    if (currentStep > 1) {
+        showStep(currentStep - 1);
+    }
+}
+
+function goHome() {
+    showStep(1);
+}
 
 function toggleService(name, price) {
     if (selectedServices.includes(name)) {
@@ -162,8 +210,7 @@ function toggleService(name, price) {
 
 function goToCalendar() {
     if (selectedServices.length === 0) return alert("Select a service.");
-    document.getElementById("step1").classList.add("hidden");
-    document.getElementById("step2").classList.remove("hidden");
+    showStep(2);
 }
 
 function generateCalendar() {
@@ -178,19 +225,18 @@ function generateCalendar() {
         div.className = "day";
         div.innerText = date.toDateString();
         div.onclick = () => {
+            document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+            div.classList.add("selected");
             selectedDate = date.toDateString();
-            alert("Selected: " + selectedDate);
         };
         calendar.appendChild(div);
     }
 }
-
 generateCalendar();
 
 function goToTimes() {
     if (!selectedDate) return alert("Select a date.");
-    document.getElementById("step2").classList.add("hidden");
-    document.getElementById("step3").classList.remove("hidden");
+    showStep(3);
 }
 
 const timesDiv = document.getElementById("times");
@@ -201,8 +247,9 @@ timeSlots.forEach(t => {
     div.className = "time";
     div.innerText = t;
     div.onclick = () => {
+        document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
+        div.classList.add("selected");
         selectedTime = t;
-        alert("Selected time: " + t);
     };
     timesDiv.appendChild(div);
 });
@@ -211,12 +258,12 @@ async function confirmBooking() {
     if (!selectedTime) return alert("Select time.");
 
     const response = await fetch("/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
         body: JSON.stringify({
-            date: selectedDate,
-            time: selectedTime,
-            services: selectedServices,
+            date:selectedDate,
+            time:selectedTime,
+            services:selectedServices,
             total
         })
     });
@@ -228,10 +275,12 @@ async function confirmBooking() {
         return;
     }
 
-    document.getElementById("step3").classList.add("hidden");
-    document.getElementById("step4").classList.remove("hidden");
     document.getElementById("confirmationText").innerText =
-        `${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total}`;
+        `${selectedDate} at ${selectedTime}
+Services: ${selectedServices.join(", ")}
+Total: £${total}`;
+
+    showStep(4);
 }
 </script>
 
