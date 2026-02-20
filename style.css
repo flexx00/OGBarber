@@ -1,95 +1,277 @@
-/* Reset some default styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
+/* --------------------------
+   General Layout & Reset
+--------------------------- */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #111; /* black background */
+  color: #fff;
 }
 
-/* Header */
+/* --------------------------
+   Header
+--------------------------- */
 header {
-    background: #222;
-    color: #fff;
-    padding: 20px;
-    text-align: center;
-}
-header nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-header nav ul li a {
-    color: #fff;
-    text-decoration: none;
+  display: flex;
+  flex-direction: column; /* title on top, nav below */
+  align-items: center;
+  padding: 20px;
+  background-color: #000; /* black header */
+  color: #FFD700; /* gold text for header */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
-/* Hero */
-#hero {
-    background: url('images/barbershop.jpg') center/cover no-repeat;
-    color: #fff;
-    text-align: center;
-    padding: 100px 20px;
-}
-#hero .btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background: #ff0000;
-    color: #fff;
-    text-decoration: none;
-    margin-top: 20px;
+header h1 {
+  margin-bottom: 10px;
+  font-size: 2.5rem;
+  color: #FFD700; /* gold accent */
+  font-family: 'Roboto Slab', serif;
 }
 
-/* Services */
-.service-cards {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 50px 20px;
-}
-.card {
-    border: 1px solid #ccc;
-    padding: 20px;
-    text-align: center;
-    width: 200px;
+header nav {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
 }
 
-/* Gallery */
-#gallery .images {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 50px 20px;
-}
-#gallery img {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
+header nav a {
+  text-decoration: none;
+  color: #FFD700; /* gold links */
+  font-weight: bold;
+  padding: 8px 18px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
 }
 
-/* Contact */
-#contact form {
-    display: flex;
-    flex-direction: column;
-    max-width: 400px;
-    margin: 0 auto;
-    gap: 10px;
-}
-#contact input, #contact textarea {
-    padding: 10px;
-    border: 1px solid #ccc;
-}
-#contact button {
-    padding: 10px;
-    background: #222;
-    color: #fff;
-    border: none;
+header nav a:hover {
+  background-color: #FFD700; /* gold hover background */
+  color: #000; /* black text on hover */
+  transform: scale(1.1);
 }
 
-/* Footer */
+/* Special Cart button */
+#cart-btn {
+  background-color: #FFD700;
+  color: #000;
+}
+
+#cart-btn:hover {
+  background-color: #e6c200;
+  transform: scale(1.1);
+}
+
+/* --------------------------
+   Main Content & Hero
+--------------------------- */
+main {
+  padding: 20px;
+  text-align: center;
+}
+
+.hero {
+  background: linear-gradient(135deg, #000, #333);
+  color: #FFD700; /* gold text in hero */
+  padding: 80px 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.hero a {
+  display: inline-block;
+  padding: 12px 25px;
+  background: #FFD700; /* gold button */
+  color: #000; /* black text */
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.hero a:hover {
+  background: #e6c200;
+  transform: scale(1.05);
+}
+
+/* --------------------------
+   Products Section
+--------------------------- */
+.products {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.product {
+  background: #000; /* black product cards */
+  padding: 20px;
+  border-radius: 10px;
+  width: 220px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); /* subtle gold shadow */
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+}
+
+.product img {
+  width: 150px;
+  height: auto;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 2px solid #FFD700; /* gold border */
+}
+
+.product h3, .product p {
+  color: #FFD700;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background: #FFD700;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+button:hover {
+  background: #e6c200;
+  transform: scale(1.05);
+}
+
+/* --------------------------
+   Cart Sidebar & Overlay
+--------------------------- */
+.cart-sidebar {
+  position: fixed;
+  top: 0;
+  right: -350px;
+  width: 300px;
+  height: 100%;
+  background: #000; /* black cart */
+  box-shadow: -2px 0 10px rgba(255,215,0,0.5);
+  transition: right 0.3s ease;
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 2000;
+  color: #FFD700;
+}
+
+.cart-sidebar.open {
+  right: 0;
+}
+
+.cart-sidebar h3 {
+  margin-top: 0;
+  color: #FFD700;
+}
+
+.cart-item span {
+  color: #FFD700;
+}
+
+.cart-item img {
+  width: 40px;
+  height: auto;
+  border-radius: 5px;
+  border: 1px solid #FFD700;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: red;
+}
+
+#cart-total {
+  font-weight: bold;
+  margin-top: 15px;
+  color: #FFD700;
+}
+
+#cart-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 24px;
+  color: #FFD700;
+  cursor: pointer;
+}
+
+#cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  z-index: 1500;
+}
+
+#cart-overlay.active {
+  display: block;
+}
+
+/* --------------------------
+   Popup for Product Images
+--------------------------- */
+.popup {
+  display: none;
+  position: fixed;
+  z-index: 3000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+}
+
+.popup img {
+  max-width: 80%;
+  max-height: 80%;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(255,215,0,0.5);
+}
+
+#close {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  font-size: 40px;
+  color: #FFD700;
+  cursor: pointer;
+}
+
+/* --------------------------
+   Footer
+--------------------------- */
 footer {
-    text-align: center;
-    padding: 20px;
-    background: #222;
-    color: #fff;
+  background: #000;
+  color: #FFD700;
+  padding: 15px;
+  margin-top: 30px;
+  text-align: center;
+  box-shadow: 0 -2px 5px rgba(255,215,0,0.5);
 }
