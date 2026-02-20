@@ -6,17 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; margin:0; background:#f5f5f5; color:#222; transition:0.3s; }
-
-/* DARK MODE */
-body.dark-mode { background:#121212; color:#f5f5f5; }
-body.dark-mode header { background:#111; color:rgb(255,174,0); }
-body.dark-mode .nav-tabs { background:#111; }
-body.dark-mode .product-card { background:#1e1e1e; color:#f5f5f5; }
-body.dark-mode .cart-dropdown { background:#222; color:white; border-color:#444; }
-body.dark-mode .card { background:#1c1c1c; color:white; }
-body.dark-mode .day, body.dark-mode .time { background:#333; color:white; }
-body.dark-mode .day.selected, body.dark-mode .time.selected { background:#ffae00; color:#111; }
+/* GENERAL STYLES */
+body { font-family: Arial; margin:0; background:#f5f5f5; transition: background 0.3s, color 0.3s; color:#222; }
+.dark-mode { background:#121212; color:#f5f5f5; }
 
 /* HEADER */
 header {
@@ -26,7 +18,6 @@ header {
     text-align:center;
     position:relative;
 }
-
 .back-btn {
     position:absolute;
     left:20px;
@@ -40,26 +31,12 @@ header {
     display:none;
 }
 
-.light-dark-toggle {
-    position:absolute;
-    right:20px;
-    top:20px;
-    padding:5px 12px;
-    border-radius:5px;
-    border:none;
-    cursor:pointer;
-    background:rgb(255,174,0);
-    color:#222;
-    font-weight:bold;
-}
-
 /* NAVIGATION */
 .nav-tabs {
     background:#111;
     text-align:center;
     padding:10px 0;
 }
-
 .nav-tabs button {
     background:transparent;
     border:none;
@@ -68,7 +45,6 @@ header {
     font-size:16px;
     cursor:pointer;
 }
-
 .nav-tabs button:hover { color:rgb(255, 174, 0); }
 
 /* PRODUCTS SECTION */
@@ -79,9 +55,37 @@ header {
     background:white;
     position:relative;
 }
-
 .products-section h2 { margin-bottom:20px; }
+.products-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    gap:30px;
+    max-width:1200px;
+    margin:auto;
+}
+.product-card {
+    background:#f8f8f8;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    transition:0.3s ease;
+}
+.product-card:hover { transform:translateY(-5px); }
+.product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
+.product-card h3 { margin-top:15px; }
+.product-card p { font-weight:bold; margin-top:5px; }
+.product-card button {
+    margin-top:10px;
+    padding:8px 15px;
+    border:none;
+    background:#222;
+    color:rgb(255, 174, 0);
+    border-radius:5px;
+    cursor:pointer;
+}
+.product-card button:hover { opacity:0.8; }
 
+/* CART ICON AND DROPDOWN */
 .cart-icon {
     position:absolute;
     top:20px;
@@ -93,6 +97,7 @@ header {
     cursor:pointer;
     font-weight:bold;
 }
+.cart-count { margin-left:5px; }
 
 .cart-dropdown {
     display:none;
@@ -109,8 +114,11 @@ header {
     z-index:100;
     text-align:left;
 }
-
-.cart-item { display:flex; justify-content:space-between; margin-bottom:10px; }
+.cart-item {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
 .cart-item button {
     background:red;
     color:white;
@@ -120,82 +128,51 @@ header {
     border-radius:4px;
 }
 
-.products-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
-    gap:30px;
-    max-width:1200px;
-    margin:auto;
-}
-
-.product-card {
-    background:#f8f8f8;
+/* CHECKOUT MENU */
+#checkoutMenu {
+    display:none;
+    position:fixed;
+    top:0;
+    right:0;
+    width:400px;
+    height:100%;
+    background:#fff;
+    color:#222;
     padding:20px;
-    border-radius:12px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.08);
-    transition:0.3s ease;
+    box-shadow:-5px 0 15px rgba(0,0,0,0.3);
+    z-index:200;
+    overflow-y:auto;
 }
-
-.product-card:hover { transform:translateY(-5px); }
-
-.product-card img {
-    width:100%;
-    height:250px;
-    object-fit:cover;
-    border-radius:10px;
-}
-
-.product-card h3 { margin-top:15px; }
-.product-card p { font-weight:bold; margin-top:5px; }
-.product-card button {
-    margin-top:10px;
-    padding:8px 15px;
-    border:none;
-    background:#222;
-    color:rgb(255, 174, 0);
-    border-radius:5px;
-    cursor:pointer;
-}
-
-.product-card button:hover { opacity:0.8; }
+#checkoutMenu.dark-mode { background:#222; color:#f5f5f5; }
+#checkoutMenu h2 { margin-bottom:20px; }
+#checkoutItems { margin-bottom:20px; }
+#checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
+#checkoutItems button { background:red; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; }
+#checkoutClose { background:black; color:rgb(255,174,0); padding:10px 15px; border:none; border-radius:5px; cursor:pointer; float:right; }
 
 /* BOOKING SYSTEM */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
-
-.card {
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
-    margin-bottom:20px;
-    transition:0.4s ease;
-}
-
+.card { background:white; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease; }
 .hidden { display:none; }
-
-button.main-btn {
-    padding:10px 20px;
-    border:none;
-    background:black;
-    color:white;
-    cursor:pointer;
-    border-radius:5px;
-}
-
+button.main-btn { padding:10px 20px; border:none; background:black; color:white; cursor:pointer; border-radius:5px; }
 button.main-btn:hover { opacity:0.8; }
-
 .service { display:flex; justify-content:space-between; margin-bottom:10px; }
-
 .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
-
 .day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; }
 .day.selected, .time.selected { background:#222; color:white; }
-
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
-
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
-
 .success { background:#d4edda; padding:20px; border-radius:10px; }
+.toggle-mode {
+    position:absolute;
+    top:20px;
+    left:20px;
+    background:#222;
+    color:rgb(255,174,0);
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+}
 </style>
 </head>
 
@@ -204,7 +181,6 @@ button.main-btn:hover { opacity:0.8; }
 <header>
 <button class="back-btn" id="backBtn" onclick="goBack()">← Back</button>
 <h1 onclick="goHome()" style="cursor:pointer;">The OG Barber</h1>
-<button class="light-dark-toggle" onclick="toggleDarkMode()">🌙</button>
 </header>
 
 <!-- NAVIGATION -->
@@ -213,20 +189,33 @@ button.main-btn:hover { opacity:0.8; }
     <button onclick="showProducts()">Products</button>
 </div>
 
-<!-- PRODUCTS TAB -->
+<!-- LIGHT/DARK MODE TOGGLE -->
+<button class="toggle-mode" onclick="toggleMode()">🌙</button>
+
+<!-- PRODUCTS SECTION -->
 <section class="products-section" id="productsSection">
 <h2>My Products</h2>
-<div class="cart-icon" onclick="toggleCart()">🛒 <span id="cartCount">0</span></div>
+<div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
 
 <div class="cart-dropdown" id="cartDropdown">
     <div id="cartItems"></div>
     <hr>
     <div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
-    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="checkout()">Checkout</button>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
 </div>
 
 <div class="products-grid" id="productsGrid"></div>
 </section>
+
+<!-- CHECKOUT MENU -->
+<div id="checkoutMenu">
+    <button id="checkoutClose" onclick="closeCheckout()">Close</button>
+    <h2>Checkout</h2>
+    <div id="checkoutItems"></div>
+    <hr>
+    <div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
+</div>
 
 <!-- BOOKING SYSTEM -->
 <div class="container" id="bookingSection">
@@ -256,11 +245,6 @@ button.main-btn:hover { opacity:0.8; }
 </div>
 
 <script>
-// LIGHT/DARK MODE
-function toggleDarkMode() {
-    document.body.classList.toggle("dark-mode");
-}
-
 // SERVICES
 const serviceData = [
     { name: "Haircut", price: 10 },
@@ -268,23 +252,19 @@ const serviceData = [
     { name: "Beard Trim", price: 6.99 },
     { name: "Hair & Beard", price: 14.99 }
 ];
-
 let selectedServices = [];
 let total = 0;
 let selectedDate = "";
 let selectedTime = "";
 let currentStep = 1;
-
 const servicesDiv = document.getElementById("services");
 const backBtn = document.getElementById("backBtn");
 
 serviceData.forEach(service => {
     const div = document.createElement("div");
     div.className = "service";
-    div.innerHTML=`
-        <span>${service.name} (£${service.price})</span>
-        <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">
-    `;
+    div.innerHTML=`<span>${service.name} (£${service.price})</span>
+    <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
     servicesDiv.appendChild(div);
 });
 
@@ -301,30 +281,34 @@ const cartDropdown = document.getElementById("cartDropdown");
 const cartItemsDiv = document.getElementById("cartItems");
 const cartTotalSpan = document.getElementById("cartTotal");
 const cartCountSpan = document.getElementById("cartCount");
+const checkoutMenu = document.getElementById("checkoutMenu");
+const checkoutItemsDiv = document.getElementById("checkoutItems");
+const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
 products.forEach((prod,index)=>{
     const div=document.createElement("div");
     div.className="product-card";
-    div.innerHTML=`
-        <img src="${prod.img}" alt="${prod.name}">
+    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}">
         <h3>${prod.name}</h3>
         <p>£${prod.price.toFixed(2)}</p>
-        <button onclick="addToCart(${index})">Add to Cart</button>
-    `;
+        <button onclick="addToCart(${index})">Add to Cart</button>`;
     productsGrid.appendChild(div);
 });
 
 function addToCart(index){
     const item = products[index];
     const exist = cart.find(p=>p.name===item.name);
-    if(exist){ exist.qty +=1; } else { cart.push({...item, qty:1}); }
+    if(exist){ exist.qty+=1; } else { cart.push({...item, qty:1}); }
     updateCart();
 }
 
-function removeFromCart(index){ cart.splice(index,1); updateCart(); }
+function removeFromCart(index){
+    cart.splice(index,1);
+    updateCart();
+}
 
 function updateCart(){
-    cartItemsDiv.innerHTML="";
+    cartItemsDiv.innerHTML=""; checkoutItemsDiv.innerHTML="";
     let total=0;
     cart.forEach((item,i)=>{
         const div=document.createElement("div");
@@ -332,20 +316,27 @@ function updateCart(){
         div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
         <button onclick="removeFromCart(${i})">X</button>`;
         cartItemsDiv.appendChild(div);
+
+        const div2=document.createElement("div");
+        div2.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
+        <button onclick="removeFromCart(${i})">X</button>`;
+        checkoutItemsDiv.appendChild(div2);
+
         total+=item.price*item.qty;
     });
-    cartTotalSpan.innerText=total.toFixed(2);
-    cartCountSpan.innerText=cart.reduce((acc,i)=>acc+i.qty,0);
+    cartTotalSpan.innerText = total.toFixed(2);
+    checkoutTotalSpan.innerText = total.toFixed(2);
+    cartCountSpan.innerText = cart.reduce((acc,i)=>acc+i.qty,0);
 }
 
 function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
-
-function checkout(){
+function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
+function closeCheckout(){ checkoutMenu.style.display="none"; }
+function confirmCheckout(){
     if(cart.length===0) return alert("Cart is empty!");
     let summary = cart.map(p=>`${p.name} x${p.qty}`).join("\n");
-    alert(`Checkout\n${summary}\nTotal: £${cartTotalSpan.innerText}`);
-    cart=[];
-    updateCart();
+    alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
+    cart=[]; updateCart(); closeCheckout();
 }
 
 // NAVIGATION
@@ -354,54 +345,20 @@ function showProducts(){ document.getElementById("bookingSection").style.display
 
 // BOOKING FUNCTIONS
 function goHome(){ showBooking(); showStep(1); }
-function showStep(step){
-    for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); }
-    document.getElementById("step"+step).classList.remove("hidden");
-    currentStep=step;
-    backBtn.style.display= step===1 ? "none":"block";
-}
+function showStep(step){ for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); } document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display= step===1 ? "none":"block"; }
 function goBack(){ if(currentStep>1) showStep(currentStep-1); }
-function toggleService(name,price){
-    if(selectedServices.includes(name)){ selectedServices=selectedServices.filter(s=>s!==name); total-=price; }
-    else { selectedServices.push(name); total+=price; }
-    document.getElementById("total").innerText=total.toFixed(2);
-}
+function toggleService(name,price){ if(selectedServices.includes(name)){ selectedServices=selectedServices.filter(s=>s!==name); total-=price; } else { selectedServices.push(name); total+=price; } document.getElementById("total").innerText=total.toFixed(2); }
 function goToCalendar(){ if(selectedServices.length===0) return alert("Select a service."); showStep(2); }
-
-function generateCalendar(){
-    const calendar=document.getElementById("calendar");
-    const today=new Date();
-    for(let i=0;i<21;i++){
-        const date=new Date();
-        date.setDate(today.getDate()+i);
-        const div=document.createElement("div");
-        div.className="day";
-        div.innerText=date.toDateString();
-        div.onclick=()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=date.toDateString(); };
-        calendar.appendChild(div);
-    }
-}
+function generateCalendar(){ const calendar=document.getElementById("calendar"); const today=new Date(); for(let i=0;i<21;i++){ const date=new Date(); date.setDate(today.getDate()+i); const div=document.createElement("div"); div.className="day"; div.innerText=date.toDateString(); div.onclick=()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=date.toDateString(); }; calendar.appendChild(div); } }
 generateCalendar();
-
 function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
+["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{ const div=document.createElement("div"); div.className="time"; div.innerText=t; div.onclick=()=>{ document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedTime=t; }; });
+async function confirmBooking(){ if(!selectedTime) return alert("Select time."); const response=await fetch("/book",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total })}); const data=await response.json(); if(!response.ok){ alert(data.message); return; } document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`; showStep(4); }
 
-const timesDiv=document.getElementById("times");
-["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{
-    const div=document.createElement("div");
-    div.className="time";
-    div.innerText=t;
-    div.onclick=()=>{ document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedTime=t; };
-    timesDiv.appendChild(div);
-});
-
-async function confirmBooking(){
-    if(!selectedTime) return alert("Select time.");
-    const response=await fetch("/book",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total }) });
-    const data=await response.json();
-    if(!response.ok){ alert(data.message); return; }
-    document.getElementById("confirmationText").innerText=
-    `${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`;
-    showStep(4);
+// LIGHT/DARK MODE
+function toggleMode(){
+    document.body.classList.toggle("dark-mode");
+    checkoutMenu.classList.toggle("dark-mode");
 }
 </script>
 
