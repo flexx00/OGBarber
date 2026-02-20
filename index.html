@@ -1,392 +1,240 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>The OG Barber</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 /* GENERAL STYLES */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #ffffff;
-  transition: background 0.3s, color 0.3s;
-  color: #1d1d1d;
-}
-.dark-mode {
-  background: #202020;
-  color: #ffffff;
-}
+body { font-family: Arial; margin:0; background:#ffffff; transition: background 0.3s, color 0.3s; color:#1d1d1d; }
+.dark-mode { background:#202020; color:#ffffff; }
 
 /* HEADER */
 header {
-  background: #222;
-  color: rgb(255, 174, 0);
-  padding: 20px;
-  text-align: center;
-  position: relative;
+    background:#222;
+    color:rgb(255, 174, 0);
+    padding:20px;
+    text-align:center;
+    position:relative;
 }
 .back-btn {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  background: transparent;
-  border: 1px solid white;
-  color: white;
-  padding: 5px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  display: none;
+    position:absolute;
+    left:20px;
+    top:20px;
+    background:transparent;
+    border:1px solid white;
+    color:white;
+    padding:5px 12px;
+    border-radius:5px;
+    cursor:pointer;
+    display:none;
 }
 
 /* NAVIGATION */
 .nav-tabs {
-  background: #111;
-  text-align: center;
-  padding: 10px 0;
+    background:#111;
+    text-align:center;
+    padding:10px 0;
 }
 .nav-tabs button {
-  background: transparent;
-  border: none;
-  color: white;
-  margin: 0 20px;
-  font-size: 16px;
-  cursor: pointer;
+    background:transparent;
+    border:none;
+    color:white;
+    margin:0 20px;
+    font-size:16px;
+    cursor:pointer;
 }
-.nav-tabs button:hover {
-  color: rgb(255, 174, 0);
-}
+.nav-tabs button:hover { color:rgb(255, 174, 0); }
 
 /* PRODUCTS SECTION */
 .products-section {
-  display: none;
-  padding: 50px 20px;
-  text-align: center;
-  background: white;
-  position: relative;
+    display:none;
+    padding:50px 20px;
+    text-align:center;
+    background:white;
+    position:relative;
 }
-.products-section h2 {
-  margin-bottom: 20px;
-}
+.products-section h2 { margin-bottom:20px; }
 .products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
-  max-width: 1200px;
-  margin: auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    gap:30px;
+    max-width:1200px;
+    margin:auto;
 }
 .product-card {
-  background: #f8f8f8;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-  transition: 0.3s ease;
+    background:#f8f8f8;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    transition:0.3s ease;
 }
-.product-card:hover {
-  transform: translateY(-5px);
-}
-.product-card img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-.product-card h3 {
-  margin-top: 15px;
-}
-.product-card p {
-  font-weight: bold;
-  margin-top: 5px;
-}
+.product-card:hover { transform:translateY(-5px); }
+.product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
+.product-card h3 { margin-top:15px; }
+.product-card p { font-weight:bold; margin-top:5px; }
 .product-card button {
-  margin-top: 10px;
-  padding: 8px 15px;
-  border: none;
-  background: #222;
-  color: rgb(255, 174, 0);
-  border-radius: 5px;
-  cursor: pointer;
+    margin-top:10px;
+    padding:8px 15px;
+    border:none;
+    background:#222;
+    color:rgb(255, 174, 0);
+    border-radius:5px;
+    cursor:pointer;
 }
-.product-card button:hover {
-  opacity: 0.8;
-}
+.product-card button:hover { opacity:0.8; }
 
 /* CART ICON AND DROPDOWN */
 .cart-icon {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #222;
-  color: rgb(255, 174, 0);
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+    position:absolute;
+    top:20px;
+    right:20px;
+    background:#222;
+    color:rgb(255, 174, 0);
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
 }
-.cart-count {
-  margin-left: 5px;
-}
+.cart-count { margin-left:5px; }
 
 .cart-dropdown {
-  display: none;
-  position: absolute;
-  top: 60px;
-  right: 20px;
-  background: white;
-  color: black;
-  border: 1px solid #ccc;
-  width: 300px;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  z-index: 100;
-  text-align: left;
+    display:none;
+    position:absolute;
+    top:60px;
+    right:20px;
+    background:white;
+    color:black;
+    border:1px solid #ccc;
+    width:300px;
+    padding:15px;
+    border-radius:8px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    z-index:100;
+    text-align:left;
 }
 .cart-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
 }
 .cart-item button {
-  background: red;
-  color: white;
-  border: none;
-  padding: 2px 6px;
-  cursor: pointer;
-  border-radius: 4px;
+    background:red;
+    color:white;
+    border:none;
+    padding:2px 6px;
+    cursor:pointer;
+    border-radius:4px;
 }
 
 /* CHECKOUT MENU */
 #checkoutMenu {
-  display: none;
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 400px;
-  height: 100%;
-  background: #fff;
-  color: #222;
-  padding: 20px;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-  z-index: 200;
-  overflow-y: auto;
+    display:none;
+    position:fixed;
+    top:0;
+    right:0;
+    width:400px;
+    height:100%;
+    background:#fff;
+    color:#222;
+    padding:20px;
+    box-shadow:-5px 0 15px rgba(0,0,0,0.3);
+    z-index:200;
+    overflow-y:auto;
 }
-#checkoutMenu.dark-mode {
-  background: #222;
-  color: #f5f5f5;
-}
-#checkoutMenu h2 {
-  margin-bottom: 20px;
-}
-#checkoutItems {
-  margin-bottom: 20px;
-}
-#checkoutItems div {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-#checkoutItems button {
-  background: red;
-  color: white;
-  border: none;
-  padding: 2px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-#checkoutClose {
-  background: black;
-  color: rgb(255, 174, 0);
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  float: right;
-}
+#checkoutMenu.dark-mode { background:#222; color:#f5f5f5; }
+#checkoutMenu h2 { margin-bottom:20px; }
+#checkoutItems { margin-bottom:20px; }
+#checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
+#checkoutItems button { background:red; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; }
+#checkoutClose { background:black; color:rgb(255,174,0); padding:10px 15px; border:none; border-radius:5px; cursor:pointer; float:right; }
 
 /* BOOKING SYSTEM */
-.container {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 20px;
-}
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  transition: 0.4s ease;
-}
-.hidden {
-  display: none;
-}
-button.main-btn {
-  padding: 10px 20px;
-  border: none;
-  background: black;
-  color: white;
-  cursor: pointer;
-  border-radius: 5px;
-}
-button.main-btn:hover {
-  opacity: 0.8;
-}
-.service {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
-}
-.day,
-.time {
-  padding: 15px;
-  background: #eee;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 5px;
-}
-.day.selected,
-.time.selected {
-  background: #222;
-  color: white;
-}
-.times {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 20px;
-}
-.total-box {
-  font-size: 20px;
-  font-weight: bold;
-  margin-top: 20px;
-}
-.success {
-  background: #d4edda;
-  padding: 20px;
-  border-radius: 10px;
-}
+.container { max-width:1000px; margin:40px auto; padding:20px; display:none; }
+.card { background:white; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease; }
+.hidden { display:none; }
+button.main-btn { padding:10px 20px; border:none; background:black; color:white; cursor:pointer; border-radius:5px; }
+button.main-btn:hover { opacity:0.8; }
+.service { display:flex; justify-content:space-between; margin-bottom:10px; }
+.calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+.day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; }
+.day.selected, .time.selected { background:#222; color:white; }
+.times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
+.total-box { font-size:20px; font-weight:bold; margin-top:20px; }
+.success { background:#d4edda; padding:20px; border-radius:10px; }
 .toggle-mode {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: #222;
-  color: rgb(255, 174, 0);
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
+    position:absolute;
+    top:20px;
+    left:20px;
+    background:#222;
+    color:rgb(255,174,0);
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
 }
 
-/* AUTH CONTAINER (Registration form) */
-.auth-container {
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 30px 30px 20px;
-  background: #f8f8f8;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  color: #555;
-  font-size: 14px;
-  line-height: 1.4;
+/* SIGNUP FORM */
+#authContainer {
+    max-width: 400px;
+    margin: 40px auto;
+    background: #f8f8f8;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
 }
-.auth-container h2 {
-  text-align: center;
-  margin-bottom: 10px;
-  color: #444;
-  font-weight: 600;
+#authContainer h2 {
+    text-align: center;
+    margin-bottom: 5px;
 }
-.auth-container p.subtitle {
-  text-align: center;
-  margin-bottom: 25px;
-  font-size: 13px;
-  color: #777;
+#authContainer p {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #555;
 }
-.auth-container label {
-  display: block;
-  margin: 12px 0 5px 0;
-  font-weight: 600;
-  color: #666;
+#authContainer label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #333;
 }
-.auth-container input[type="text"],
-.auth-container input[type="email"],
-.auth-container input[type="tel"],
-.auth-container input[type="password"] {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-}
-.auth-container input[type="radio"] {
-  margin-right: 5px;
-  vertical-align: middle;
-}
-.contact-preferences {
-  margin: 20px 0 20px 0;
-  font-size: 13px;
-  color: #444;
-}
-.contact-preferences div {
-  margin-top: 8px;
-}
-.privacy {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 15px;
-}
-.privacy a {
-  color: #1676d1;
-  text-decoration: none;
-}
-.privacy a:hover {
-  text-decoration: underline;
-}
-.terms-checkbox {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: #444;
-}
-.terms-checkbox input {
-  margin-right: 8px;
-}
-.auth-container button.signup-btn {
-  background: #007bff;
-  border: none;
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
-}
-.auth-container button.signup-btn:hover {
-  background: #0056b3;
-}
-.error-msg {
-  color: red;
-  font-size: 12px;
-  margin-bottom: 10px;
-  display: none;
-  text-align: center;
-}
-
-/* Responsive */
-@media(max-width: 480px){
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-  #checkoutMenu {
+#authContainer input[type="text"],
+#authContainer input[type="email"],
+#authContainer input[type="tel"],
+#authContainer input[type="password"] {
     width: 100%;
-  }
+    padding: 8px 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+#authContainer input[type="radio"] {
+    margin-left: 10px;
+    margin-right: 5px;
+}
+#authContainer button[type="submit"] {
+    width: 100%;
+    padding: 12px 0;
+    background: #007bff;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+#authContainer button[type="submit"]:hover {
+    background: #0056b3;
+}
+#signupError {
+    color: red;
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 10px;
 }
 </style>
 </head>
@@ -394,470 +242,355 @@ button.main-btn:hover {
 <body>
 
 <header>
-  <button class="back-btn" id="backBtn" onclick="goBack()">← Back</button>
-  <h1 onclick="goHome()" style="cursor:pointer;">The OG Barber</h1>
+<button class="back-btn" id="backBtn" onclick="goBack()">← Back</button>
+<h1 onclick="goHome()" style="cursor:pointer;">The OG Barber</h1>
 </header>
 
 <!-- NAVIGATION -->
 <div class="nav-tabs">
-  <button onclick="showBooking()">Home</button>
-  <button onclick="showProducts()">Products</button>
+    <button onclick="showBooking()">Home</button>
+    <button onclick="showProducts()">Products</button>
 </div>
 
 <!-- LIGHT/DARK MODE TOGGLE -->
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
 
 <!-- SIGNUP FORM -->
-<div class="auth-container" id="authContainer">
+<div id="authContainer">
   <h2>Register</h2>
-  <p class="subtitle">Sign up to book appointments</p>
-  <div class="error-msg" id="errorMsg"></div>
+  <p>Sign up to book appointments</p>
+  <form id="signupForm">
+    <label>Full name
+      <input type="text" id="fullName" required>
+    </label>
+    <label>Email
+      <input type="email" id="email" required>
+    </label>
+    <label>Mobile phone number (optional)
+      <input type="tel" id="phone">
+    </label>
+    <label>Password (6 characters minimum)
+      <input type="password" id="password" minlength="6" required>
+    </label>
+    <label>Confirm Password
+      <input type="password" id="confirmPassword" minlength="6" required>
+    </label>
 
-  <label for="fullName">Full name</label>
-  <input type="text" id="fullName" placeholder="Your full name" autocomplete="name" />
+    <p>Contact Preferences</p>
+    <label>Email
+      <input type="radio" name="contactEmail" value="yes" checked> Yes
+      <input type="radio" name="contactEmail" value="no"> No
+    </label>
+    <label>SMS
+      <input type="radio" name="contactSMS" value="yes" checked> Yes
+      <input type="radio" name="contactSMS" value="no"> No
+    </label>
 
-  <label for="email">Email</label>
-  <input type="email" id="email" placeholder="email@example.com" autocomplete="email" />
+    <label>
+      <input type="checkbox" id="termsCheckbox" required>
+      I have read, understand and agree to the terms above
+    </label>
 
-  <label for="phone">Mobile phone number</label>
-  <input type="tel" id="phone" placeholder="Optional" autocomplete="tel" />
-
-  <label for="password">Password <small>(6 characters minimum)</small></label>
-  <input type="password" id="password" placeholder="Enter password" autocomplete="new-password" />
-
-  <label for="passwordConfirm">Password confirmation</label>
-  <input type="password" id="passwordConfirm" placeholder="Confirm password" autocomplete="new-password" />
-
-  <div class="contact-preferences">
-    Would you like to receive news and exclusive offers from G.M Barbers? You can opt out at any time.
-    <div>
-      Email:
-      <label><input type="radio" name="prefEmail" value="yes" checked> Yes</label>
-      <label><input type="radio" name="prefEmail" value="no"> No</label>
-    </div>
-    <div>
-      SMS:
-      <label><input type="radio" name="prefSMS" value="yes" checked> Yes</label>
-      <label><input type="radio" name="prefSMS" value="no"> No</label>
-    </div>
-  </div>
-
-  <div class="privacy">
-    Please read the following privacy policy and terms carefully:
-    <ul>
-      <li><a href="#" target="_blank" rel="noopener">Privacy Policy</a></li>
-      <li><a href="#" target="_blank" rel="noopener">Booking System Terms and Conditions</a></li>
-    </ul>
-  </div>
-
-  <label class="terms-checkbox">
-    <input type="checkbox" id="agreeTerms" /> I have read, understand and agree to the terms above
-  </label>
-
-  <button class="signup-btn" onclick="handleSignup()">Sign up</button>
+    <button type="submit">Sign up</button>
+    <p id="signupError"></p>
+  </form>
 </div>
 
 <!-- PRODUCTS SECTION -->
 <section class="products-section" id="productsSection">
-  <h2>My Products</h2>
-  <div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
+<h2>My Products</h2>
+<div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
 
-  <div class="cart-dropdown" id="cartDropdown">
+<div class="cart-dropdown" id="cartDropdown">
     <div id="cartItems"></div>
-    <hr />
+    <hr>
     <div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
-    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">
-      Checkout
-    </button>
-  </div>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
+</div>
 
-  <div class="products-grid" id="productsGrid"></div>
+<div class="products-grid" id="productsGrid"></div>
 </section>
 
 <!-- CHECKOUT MENU -->
 <div id="checkoutMenu">
-  <button id="checkoutClose" onclick="closeCheckout()">Close</button>
-  <h2>Checkout</h2>
-  <div id="checkoutItems"></div>
-  <hr />
-  <div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
-  <button
-    style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);"
-    onclick="confirmCheckout()"
-  >
-    Confirm Purchase
-  </button>
+    <button id="checkoutClose" onclick="closeCheckout()">Close</button>
+    <h2>Checkout</h2>
+    <div id="checkoutItems"></div>
+    <hr>
+    <div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
 </div>
 
 <!-- BOOKING SYSTEM -->
-<div class="container" id="bookingSection" style="display:none;">
-  <div id="step1" class="card">
-    <h2>Select Services</h2>
-    <div id="services"></div>
-    <div class="total-box">
-      Total: £<span id="total">0</span>
-    </div>
-    <button class="main-btn" onclick="goToCalendar()">Next</button>
-  </div>
+<div class="container" id="bookingSection">
+<div id="step1" class="card">
+<h2>Select Services</h2>
+<div id="services"></div>
+<div class="total-box">Total: £<span id="total">0</span></div>
+<button class="main-btn" onclick="goToCalendar()">Next</button>
+</div>
 
-  <div id="step2" class="card hidden">
-    <h2>Select Date</h2>
-    <div id="calendar" class="calendar"></div>
-    <button class="main-btn" onclick="goToTimes()">Next</button>
-  </div>
+<div id="step2" class="card hidden">
+<h2>Select Date</h2>
+<div id="calendar" class="calendar"></div>
+<button class="main-btn" onclick="goToTimes()">Next</button>
+</div>
 
-  <div id="step3" class="card hidden">
-    <h2>Select Time</h2>
-    <div class="times" id="times"></div>
-    <button class="main-btn" onclick="confirmBooking()">Confirm Booking</button>
-  </div>
+<div id="step3" class="card hidden">
+<h2>Select Time</h2>
+<div class="times" id="times"></div>
+<button class="main-btn" onclick="confirmBooking()">Confirm Booking</button>
+</div>
 
-  <div id="step4" class="card hidden success">
-    <h2>Booking Confirmed 🎉</h2>
-    <p id="confirmationText"></p>
-  </div>
+<div id="step4" class="card hidden success">
+<h2>Booking Confirmed 🎉</h2>
+<p id="confirmationText"></p>
+</div>
 </div>
 
 <script>
-  // ================ USER STORAGE ================
-  // For demo: store users in-memory (reset on page reload)
-  const users = [];
-  let loggedInUser = null;
-
-  // ================ SIGNUP HANDLER ================
-  function handleSignup() {
-    const fullName = document.getElementById("fullName").value.trim();
-    const email = document.getElementById("email").value.trim().toLowerCase();
-    const phone = document.getElementById("phone").value.trim();
-    const password = document.getElementById("password").value;
-    const passwordConfirm = document.getElementById("passwordConfirm").value;
-    const agreeTerms = document.getElementById("agreeTerms").checked;
-    const errorMsg = document.getElementById("errorMsg");
-
-    // Contact preferences
-    const prefEmail = document.querySelector('input[name="prefEmail"]:checked').value;
-    const prefSMS = document.querySelector('input[name="prefSMS"]:checked').value;
-
-    errorMsg.style.display = "none";
-    errorMsg.textContent = "";
-
-    if (!fullName) {
-      showError("Full name is required.");
-      return;
-    }
-    if (!email || !validateEmail(email)) {
-      showError("Valid email is required.");
-      return;
-    }
-    if (phone && !validatePhone(phone)) {
-      showError("Please enter a valid phone number or leave blank.");
-      return;
-    }
-    if (!password || password.length < 6) {
-      showError("Password must be at least 6 characters.");
-      return;
-    }
-    if (password !== passwordConfirm) {
-      showError("Passwords do not match.");
-      return;
-    }
-    if (!agreeTerms) {
-      showError("You must agree to the terms and conditions.");
-      return;
-    }
-    // Check if email already used
-    if (users.some((u) => u.email === email)) {
-      showError("Email is already registered.");
-      return;
-    }
-
-    // Register user
-    const newUser = {
-      fullName,
-      email,
-      phone: phone || null,
-      password, // In production: NEVER store plain passwords
-      contactPreferences: { email: prefEmail, sms: prefSMS },
-    };
-    users.push(newUser);
-    loggedInUser = newUser;
-
-    alert("Registration successful! You are now logged in.");
-
-    // Hide registration, show booking & products
-    document.getElementById("authContainer").style.display = "none";
-    document.getElementById("bookingSection").style.display = "block";
-    document.getElementById("productsSection").style.display = "block";
-
-    // Initialize UI as logged in
-    initializeAfterLogin();
-  }
-
-  function showError(msg) {
-    const errorMsg = document.getElementById("errorMsg");
-    errorMsg.textContent = msg;
-    errorMsg.style.display = "block";
-  }
-
-  function validateEmail(email) {
-    // Simple regex for email validation
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  function validatePhone(phone) {
-    // Basic phone validation (digits, +, -, spaces)
-    return /^[0-9+\-\s]{6,20}$/.test(phone);
-  }
-
-  // ================ LOGIN FUNCTION (simple email + password) ================
-  function handleLogin(email, password) {
-    const user = users.find((u) => u.email === email.toLowerCase() && u.password === password);
-    if (user) {
-      loggedInUser = user;
-      document.getElementById("authContainer").style.display = "none";
-      document.getElementById("bookingSection").style.display = "block";
-      document.getElementById("productsSection").style.display = "block";
-      initializeAfterLogin();
-      return true;
-    }
-    return false;
-  }
-
-  // ================ INITIALIZE UI AFTER LOGIN ================
-  function initializeAfterLogin() {
-    // Prefill phone field in booking section if needed or handle UI states
-    // For now, nothing additional
-  }
-
-  // ================ SERVICES ================
-  const serviceData = [
+// SERVICES
+const serviceData = [
     { name: "Haircut", price: 10 },
     { name: "Skin Fade", price: 11.99 },
     { name: "Beard Trim", price: 6.99 },
-    { name: "Hair & Beard", price: 14.99 },
-  ];
-  let selectedServices = [];
-  let total = 0;
-  let selectedDate = "";
-  let selectedTime = "";
-  let currentStep = 1;
-  const servicesDiv = document.getElementById("services");
-  const backBtn = document.getElementById("backBtn");
+    { name: "Hair & Beard", price: 14.99 }
+];
+let selectedServices = [];
+let total = 0;
+let selectedDate = "";
+let selectedTime = "";
+let currentStep = 1;
+const servicesDiv = document.getElementById("services");
+const backBtn = document.getElementById("backBtn");
 
-  serviceData.forEach((service) => {
+serviceData.forEach(service => {
     const div = document.createElement("div");
     div.className = "service";
-    div.innerHTML = `<span>${service.name} (£${service.price})</span>
+    div.innerHTML=`<span>${service.name} (£${service.price})</span>
     <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
     servicesDiv.appendChild(div);
-  });
+});
 
-  // ================ PRODUCTS ================
-  const products = [
-    { name: "Texture Paste", price: 8.99, img: "images/paste.png" },
-    { name: "Texture Powder", price: 6.99, img: "images/texture.png" },
-    { name: "Sea Salt Spray", price: 7.99, img: "images/spray.png" },
-  ];
+// PRODUCTS
+const products = [
+    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
+    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
+    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
+];
 
-  let cart = [];
-  const productsGrid = document.getElementById("productsGrid");
-  const cartDropdown = document.getElementById("cartDropdown");
-  const cartItemsDiv = document.getElementById("cartItems");
-  const cartTotalSpan = document.getElementById("cartTotal");
-  const cartCountSpan = document.getElementById("cartCount");
-  const checkoutMenu = document.getElementById("checkoutMenu");
-  const checkoutItemsDiv = document.getElementById("checkoutItems");
-  const checkoutTotalSpan = document.getElementById("checkoutTotal");
+let cart = [];
+const productsGrid = document.getElementById("productsGrid");
+const cartDropdown = document.getElementById("cartDropdown");
+const cartItemsDiv = document.getElementById("cartItems");
+const cartTotalSpan = document.getElementById("cartTotal");
+const cartCountSpan = document.getElementById("cartCount");
+const checkoutMenu = document.getElementById("checkoutMenu");
+const checkoutItemsDiv = document.getElementById("checkoutItems");
+const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
-  products.forEach((prod, index) => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `<img src="${prod.img}" alt="${prod.name}">
+products.forEach((prod,index)=>{
+    const div=document.createElement("div");
+    div.className="product-card";
+    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}">
         <h3>${prod.name}</h3>
         <p>£${prod.price.toFixed(2)}</p>
         <button onclick="addToCart(${index})">Add to Cart</button>`;
     productsGrid.appendChild(div);
-  });
+});
 
-  function addToCart(index) {
+function addToCart(index){
     const item = products[index];
-    const exist = cart.find((p) => p.name === item.name);
-    if (exist) {
-      exist.qty += 1;
-    } else {
-      cart.push({ ...item, qty: 1 });
-    }
+    const exist = cart.find(p=>p.name===item.name);
+    if(exist){ exist.qty+=1; } else { cart.push({...item, qty:1}); }
     updateCart();
-  }
+}
 
-  function removeFromCart(index) {
-    cart.splice(index, 1);
+function removeFromCart(index){
+    cart.splice(index,1);
     updateCart();
-  }
+}
 
-  function updateCart() {
-    cartItemsDiv.innerHTML = "";
-    checkoutItemsDiv.innerHTML = "";
-    let total = 0;
-    cart.forEach((item, i) => {
-      const div = document.createElement("div");
-      div.className = "cart-item";
-      div.innerHTML = `${item.name} x${item.qty} - £${(item.price * item.qty).toFixed(2)}
+function updateCart(){
+    cartItemsDiv.innerHTML=""; checkoutItemsDiv.innerHTML="";
+    let total=0;
+    cart.forEach((item,i)=>{
+        const div=document.createElement("div");
+        div.className="cart-item";
+        div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
         <button onclick="removeFromCart(${i})">X</button>`;
-      cartItemsDiv.appendChild(div);
+        cartItemsDiv.appendChild(div);
 
-      const div2 = document.createElement("div");
-      div2.innerHTML = `${item.name} x${item.qty} - £${(item.price * item.qty).toFixed(2)}
+        const div2=document.createElement("div");
+        div2.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
         <button onclick="removeFromCart(${i})">X</button>`;
-      checkoutItemsDiv.appendChild(div2);
+        checkoutItemsDiv.appendChild(div2);
 
-      total += item.price * item.qty;
+        total+=item.price*item.qty;
     });
     cartTotalSpan.innerText = total.toFixed(2);
     checkoutTotalSpan.innerText = total.toFixed(2);
-    cartCountSpan.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
-  }
+    cartCountSpan.innerText = cart.reduce((acc,i)=>acc+i.qty,0);
+}
 
-  function toggleCart() {
-    cartDropdown.style.display = cartDropdown.style.display === "block" ? "none" : "block";
-  }
-  function openCheckout() {
-    checkoutMenu.style.display = "block";
-    cartDropdown.style.display = "none";
-  }
-  function closeCheckout() {
-    checkoutMenu.style.display = "none";
-  }
-  function confirmCheckout() {
-    if (cart.length === 0) return alert("Cart is empty!");
-    let summary = cart.map((p) => `${p.name} x${p.qty}`).join("\n");
+function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
+function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
+function closeCheckout(){ checkoutMenu.style.display="none"; }
+function confirmCheckout(){
+    if(cart.length===0) return alert("Cart is empty!");
+    let summary = cart.map(p=>`${p.name} x${p.qty}`).join("\n");
     alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
-    cart = [];
-    updateCart();
-    closeCheckout();
-  }
+    cart=[]; updateCart(); closeCheckout();
+}
 
-  // ================ NAVIGATION ================
-  function showBooking() {
-    if (!loggedInUser) {
-      alert("Please register or log in first.");
-      return;
-    }
-    document.getElementById("productsSection").style.display = "none";
-    document.getElementById("bookingSection").style.display = "block";
-  }
-  function showProducts() {
-    if (!loggedInUser) {
-      alert("Please register or log in first.");
-      return;
-    }
-    document.getElementById("bookingSection").style.display = "none";
-    document.getElementById("productsSection").style.display = "block";
-  }
+// NAVIGATION
+function showBooking(){ 
+    document.getElementById("productsSection").style.display="none"; 
+    document.getElementById("bookingSection").style.display="block"; 
+}
+function showProducts(){ 
+    document.getElementById("bookingSection").style.display="none"; 
+    document.getElementById("productsSection").style.display="block"; 
+}
 
-  // ================ BOOKING FUNCTIONS ================
-  function goHome() {
-    showBooking();
-    showStep(1);
-  }
-  function showStep(step) {
-    for (let i = 1; i <= 4; i++) {
-      document.getElementById("step" + i).classList.add("hidden");
-    }
-    document.getElementById("step" + step).classList.remove("hidden");
-    currentStep = step;
-    backBtn.style.display = step === 1 ? "none" : "block";
-  }
-  function goBack() {
-    if (currentStep > 1) showStep(currentStep - 1);
-  }
-  function toggleService(name, price) {
-    if (selectedServices.includes(name)) {
-      selectedServices = selectedServices.filter((s) => s !== name);
-      total -= price;
-    } else {
-      selectedServices.push(name);
-      total += price;
-    }
-    document.getElementById("total").innerText = total.toFixed(2);
-  }
-  function goToCalendar() {
-    if (selectedServices.length === 0) return alert("Select a service.");
-    showStep(2);
-  }
-  function generateCalendar() {
-    const calendar = document.getElementById("calendar");
-    const today = new Date();
-    calendar.innerHTML = "";
-    for (let i = 0; i < 21; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() + i);
-      const div = document.createElement("div");
-      div.className = "day";
-      div.innerText = date.toDateString();
-      div.onclick = () => {
-        document.querySelectorAll(".day").forEach((d) => d.classList.remove("selected"));
+// BOOKING FUNCTIONS
+function goHome(){ showBooking(); showStep(1); }
+function showStep(step){ 
+    for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); } 
+    document.getElementById("step"+step).classList.remove("hidden"); 
+    currentStep=step; 
+    backBtn.style.display= step===1 ? "none":"block"; 
+}
+function goBack(){ if(currentStep>1) showStep(currentStep-1); }
+function toggleService(name,price){ 
+    if(selectedServices.includes(name)){ 
+        selectedServices=selectedServices.filter(s=>s!==name); 
+        total-=price; 
+    } else { 
+        selectedServices.push(name); 
+        total+=price; 
+    } 
+    document.getElementById("total").innerText=total.toFixed(2); 
+}
+function goToCalendar(){ if(selectedServices.length===0) return alert("Select a service."); showStep(2); }
+function generateCalendar(){ 
+    const calendar=document.getElementById("calendar"); 
+    const today=new Date(); 
+    for(let i=0;i<21;i++){ 
+        const date=new Date(); 
+        date.setDate(today.getDate()+i); 
+        const div=document.createElement("div"); 
+        div.className="day"; 
+        div.innerText=date.toDateString(); 
+        div.onclick=()=>{ 
+            document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); 
+            div.classList.add("selected"); 
+            selectedDate=date.toDateString(); 
+        }; 
+        calendar.appendChild(div); 
+    } 
+}
+generateCalendar();
+function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
+["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{
+    const div=document.createElement("div");
+    div.className="time";
+    div.innerText=t;
+    div.onclick=()=>{
+        document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected"));
         div.classList.add("selected");
-        selectedDate = date.toDateString();
-      };
-      calendar.appendChild(div);
-    }
-  }
-  generateCalendar();
-  function goToTimes() {
-    if (!selectedDate) return alert("Select a date.");
-    showStep(3);
-  }
-  const timesContainer = document.getElementById("times");
-  ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"].forEach((t) => {
-    const div = document.createElement("div");
-    div.className = "time";
-    div.innerText = t;
-    div.onclick = () => {
-      document.querySelectorAll(".time").forEach((d) => d.classList.remove("selected"));
-      div.classList.add("selected");
-      selectedTime = t;
+        selectedTime=t;
     };
-    timesContainer.appendChild(div);
-  });
-  async function confirmBooking() {
-    if (!selectedTime) return alert("Select time.");
+    document.getElementById("times").appendChild(div);
+});
+async function confirmBooking(){ 
+    if(!selectedTime) return alert("Select time."); 
+    const response=await fetch("/book",{ 
+        method:"POST", 
+        headers:{"Content-Type":"application/json"}, 
+        body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total })}); 
+    const data=await response.json(); 
+    if(!response.ok){ 
+        alert(data.message); 
+        return; 
+    } 
+    document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`; 
+    showStep(4); 
+}
 
-    // Here you would send booking info to backend (mocked below)
-    // Include phone number if provided for reminders
-    /*
-    const response = await fetch("/book", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        date: selectedDate,
-        time: selectedTime,
-        services: selectedServices,
-        total,
-        phone: loggedInUser?.phone || null,
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      alert(data.message);
-      return;
-    }
-    */
-
-    // Mock confirmation
-    document.getElementById(
-      "confirmationText"
-    ).innerText = `${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(
-      ", "
-    )}\nTotal: £${total.toFixed(2)}\nPhone: ${loggedInUser?.phone || "Not Provided"}`;
-    showStep(4);
-  }
-
-  // ================ LIGHT/DARK MODE ================
-  function toggleMode() {
+// LIGHT/DARK MODE
+function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
+}
+
+// SIGNUP FORM LOGIC
+document.getElementById('signupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const fullName = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const termsChecked = document.getElementById('termsCheckbox').checked;
+
+  const contactEmail = document.querySelector('input[name="contactEmail"]:checked').value === 'yes';
+  const contactSMS = document.querySelector('input[name="contactSMS"]:checked').value === 'yes';
+
+  const errorElem = document.getElementById('signupError');
+  errorElem.textContent = '';
+
+  if (!termsChecked) {
+    errorElem.textContent = 'You must agree to the terms.';
+    return;
   }
+  if (password !== confirmPassword) {
+    errorElem.textContent = 'Passwords do not match.';
+    return;
+  }
+  if (password.length < 6) {
+    errorElem.textContent = 'Password must be at least 6 characters.';
+    return;
+  }
+
+  const userData = {
+    fullName,
+    email,
+    phone: phone || null,
+    password,
+    contactPreferences: { email: contactEmail, sms: contactSMS }
+  };
+
+  try {
+    const response = await fetch('http://localhost:3000/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      errorElem.textContent = result.message || 'Registration failed.';
+      return;
+    }
+
+    alert('Registration successful! You can now book appointments.');
+
+    // Hide signup form and show main content
+    document.getElementById('authContainer').style.display = 'none';
+    document.getElementById('bookingSection').style.display = 'block';
+    document.getElementById('productsSection').style.display = 'block';
+
+    // Clear form
+    this.reset();
+  } catch (err) {
+    errorElem.textContent = 'Network error, please try again later.';
+    console.error(err);
+  }
+});
 </script>
+
 </body>
 </html>
