@@ -10,7 +10,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Georgia', serif;
+    font-family: Georgia, serif;
 }
 
 body {
@@ -35,18 +35,12 @@ header {
     justify-content: center;
     margin: 0 auto 15px;
     font-size: 24px;
-    letter-spacing: 2px;
 }
 
 nav a {
     color: white;
     text-decoration: none;
     margin: 0 15px;
-    font-size: 14px;
-}
-
-nav a:hover {
-    text-decoration: underline;
 }
 
 .book-btn {
@@ -55,19 +49,13 @@ nav a:hover {
     border: 1px solid white;
     background: transparent;
     color: white;
-    cursor: pointer;
 }
 
-/* Main */
+/* Main Container */
 .container {
-    max-width: 500px;
+    max-width: 900px;
     margin: 40px auto;
     text-align: center;
-}
-
-.container h2 {
-    margin-bottom: 20px;
-    color: #333;
 }
 
 /* Booking Card */
@@ -75,12 +63,13 @@ nav a:hover {
     background: #5a5a5a;
     color: white;
     padding: 15px;
+    max-width: 500px;
+    margin: auto;
 }
 
 .booking-top {
     display: flex;
     justify-content: space-between;
-    font-size: 13px;
     margin-bottom: 10px;
 }
 
@@ -88,12 +77,11 @@ nav a:hover {
     background: #777;
     border: none;
     color: white;
-    padding: 5px 10px;
+    padding: 5px 15px;
     cursor: pointer;
 }
 
 .services-title {
-    font-size: 18px;
     padding: 10px 0;
     border-top: 1px solid #777;
     border-bottom: 1px solid #777;
@@ -105,19 +93,8 @@ nav a:hover {
     color: #333;
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 12px;
     border-bottom: 1px solid #ddd;
-}
-
-.service-info {
-    text-align: left;
-}
-
-.service-info small {
-    display: block;
-    font-size: 12px;
-    color: #666;
 }
 
 .select-btn {
@@ -125,15 +102,43 @@ nav a:hover {
     background: white;
     padding: 5px 10px;
     cursor: pointer;
-    font-size: 12px;
-}
-
-.select-btn:hover {
-    background: #ddd;
 }
 
 .selected {
     background: #d4d4d4 !important;
+}
+
+/* Date Screen */
+#dateScreen {
+    display: none;
+}
+
+.selected-services-box {
+    background: white;
+    padding: 15px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 15px;
+}
+
+.date-box {
+    padding: 20px 10px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #001f3f;
+}
+
+.orange { background: #b45309; color: white; }
+.green { background: #84cc16; }
+.grey { background: #d4d4d4; }
+
+.date-box:hover {
+    transform: scale(1.05);
 }
 </style>
 </head>
@@ -153,81 +158,105 @@ nav a:hover {
 </header>
 
 <div class="container">
-    <h2>Select up to 8 services</h2>
 
-    <div class="booking-card">
-        <div class="booking-top">
-            <span id="count">0 services selected</span>
-            <button class="next-btn">Next »</button>
-        </div>
+    <!-- SERVICE SCREEN -->
+    <div id="serviceScreen">
+        <h2>Select up to 8 services</h2>
 
-        <div class="services-title">Services</div>
-
-        <div class="service">
-            <div class="service-info">
-                Gents Hair Cut
-                <small>30 minutes · £19.00</small>
+        <div class="booking-card">
+            <div class="booking-top">
+                <span id="count">0 services selected</span>
+                <button class="next-btn" onclick="goToDates()">Next »</button>
             </div>
-            <button class="select-btn">Select</button>
-        </div>
 
-        <div class="service">
-            <div class="service-info">
-                Gents Cut & Beard
-                <small>40 minutes · £28.00</small>
-            </div>
-            <button class="select-btn">Select</button>
-        </div>
+            <div class="services-title">Services</div>
 
-        <div class="service">
-            <div class="service-info">
-                Skin Fade
-                <small>40 minutes · £23.00</small>
-            </div>
-            <button class="select-btn">Select</button>
+            <div class="service"><span>Gents Hair Cut</span><button class="select-btn">Select</button></div>
+            <div class="service"><span>Skin Fade</span><button class="select-btn">Select</button></div>
+            <div class="service"><span>Beard Trim</span><button class="select-btn">Select</button></div>
+            <div class="service"><span>Kids Cut</span><button class="select-btn">Select</button></div>
+            <div class="service"><span>Cut & Beard</span><button class="select-btn">Select</button></div>
         </div>
-
-        <div class="service">
-            <div class="service-info">
-                Kids Cut (Under 12)
-                <small>30 minutes · £15.00</small>
-            </div>
-            <button class="select-btn">Select</button>
-        </div>
-
-        <div class="service">
-            <div class="service-info">
-                Beard Trim
-                <small>20 minutes · £12.00</small>
-            </div>
-            <button class="select-btn">Select</button>
-        </div>
-
     </div>
+
+    <!-- DATE SCREEN -->
+    <div id="dateScreen">
+        <h2>Select a Date</h2>
+
+        <div class="selected-services-box">
+            <strong>Selected Services:</strong>
+            <ul id="selectedList"></ul>
+        </div>
+
+        <div class="date-grid">
+            <div class="date-box orange">FRI<br>20 FEB</div>
+            <div class="date-box orange">SAT<br>21 FEB</div>
+            <div class="date-box grey">SUN<br>22 FEB</div>
+            <div class="date-box grey">MON<br>23 FEB</div>
+            <div class="date-box green">TUE<br>24 FEB</div>
+            <div class="date-box green">WED<br>25 FEB</div>
+            <div class="date-box green">THU<br>26 FEB</div>
+
+            <div class="date-box green">FRI<br>27 FEB</div>
+            <div class="date-box orange">SAT<br>28 FEB</div>
+            <div class="date-box grey">SUN<br>1 MAR</div>
+            <div class="date-box grey">MON<br>2 MAR</div>
+            <div class="date-box green">TUE<br>3 MAR</div>
+            <div class="date-box green">WED<br>4 MAR</div>
+            <div class="date-box green">THU<br>5 MAR</div>
+        </div>
+    </div>
+
 </div>
 
 <script>
+let selectedServices = [];
+let selectedCount = 0;
+
 const buttons = document.querySelectorAll('.select-btn');
 const countText = document.getElementById('count');
-let selectedCount = 0;
 
 buttons.forEach(button => {
     button.addEventListener('click', () => {
+        const serviceName = button.parentElement.querySelector('span').textContent;
+
         if (button.classList.contains('active')) {
             button.classList.remove('active');
             button.textContent = "Select";
             button.parentElement.classList.remove('selected');
             selectedCount--;
+            selectedServices = selectedServices.filter(s => s !== serviceName);
         } else {
-            if (selectedCount >= 8) return alert("You can only select up to 8 services.");
+            if (selectedCount >= 8) return alert("Maximum 8 services.");
             button.classList.add('active');
             button.textContent = "Selected";
             button.parentElement.classList.add('selected');
             selectedCount++;
+            selectedServices.push(serviceName);
         }
+
         countText.textContent = selectedCount + " services selected";
     });
 });
+
+function goToDates() {
+    if (selectedServices.length === 0) {
+        alert("Please select at least one service.");
+        return;
+    }
+
+    document.getElementById('serviceScreen').style.display = "none";
+    document.getElementById('dateScreen').style.display = "block";
+
+    const list = document.getElementById('selectedList');
+    list.innerHTML = "";
+
+    selectedServices.forEach(service => {
+        const li = document.createElement('li');
+        li.textContent = service;
+        list.appendChild(li);
+    });
+}
 </script>
 
 </body>
