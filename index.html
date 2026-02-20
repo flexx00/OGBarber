@@ -8,7 +8,7 @@
 <style>
 /* GENERAL STYLES */
 body { font-family: Arial; margin:0; background:#f5f5f5; transition: background 0.3s, color 0.3s; color:#222; }
-.dark-mode { background:#555; color:#fff; } /* Dark mode: grey background and white text */
+.dark-mode { background:#555; color:#fff; }
 
 /* HEADER */
 header {
@@ -52,11 +52,9 @@ header {
     display:none;
     padding:50px 20px;
     text-align:center;
-    background:white;
-    position:relative;
+    background:#ccc; /* Grey background for visibility in dark mode */
     transition: background 0.3s, color 0.3s;
 }
-.products-section.dark-mode { background:#666; color:#fff; }
 .products-section h2 { margin-bottom:20px; }
 .products-grid {
     display:grid;
@@ -66,17 +64,15 @@ header {
     margin:auto;
 }
 .product-card {
-    background:#f8f8f8;
+    background:#bbb; /* grey for better visibility */
     padding:20px;
     border-radius:12px;
     box-shadow:0 10px 25px rgba(0,0,0,0.08);
     transition:0.3s ease, background 0.3s, color 0.3s;
 }
-.dark-mode .product-card { background:#777; color:#fff; }
 .product-card:hover { transform:translateY(-5px); }
 .product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
-.product-card h3 { margin-top:15px; }
-.product-card p { font-weight:bold; margin-top:5px; }
+.product-card h3, .product-card p { margin-top:5px; color:#222; }
 .product-card button {
     margin-top:10px;
     padding:8px 15px;
@@ -101,24 +97,21 @@ header {
     font-weight:bold;
 }
 .cart-count { margin-left:5px; }
-
 .cart-dropdown {
     display:none;
     position:absolute;
     top:60px;
     right:20px;
-    background:white;
-    color:black;
-    border:1px solid #ccc;
+    background:#ccc;
+    color:#000;
+    border:1px solid #999;
     width:300px;
     padding:15px;
     border-radius:8px;
     box-shadow:0 5px 15px rgba(0,0,0,0.2);
     z-index:100;
     text-align:left;
-    transition: background 0.3s, color 0.3s;
 }
-.dark-mode .cart-dropdown { background:#666; color:#fff; border-color:#888; }
 .cart-item {
     display:flex;
     justify-content:space-between;
@@ -141,15 +134,14 @@ header {
     right:0;
     width:400px;
     height:100%;
-    background:#fff;
+    background:#ccc;
     color:#222;
     padding:20px;
     box-shadow:-5px 0 15px rgba(0,0,0,0.3);
     z-index:200;
     overflow-y:auto;
-    transition: background 0.3s, color 0.3s;
 }
-#checkoutMenu.dark-mode { background:#666; color:#fff; }
+#checkoutMenu.dark-mode { background:#555; color:#fff; }
 #checkoutMenu h2 { margin-bottom:20px; }
 #checkoutItems { margin-bottom:20px; }
 #checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
@@ -158,22 +150,19 @@ header {
 
 /* BOOKING SYSTEM */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
-.card { background:white; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease, background 0.3s, color 0.3s; }
-.dark-mode .card { background:#777; color:#fff; }
+.card { background:#ccc; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease, background 0.3s, color 0.3s; color:#222; }
+.card.success { background:#d4edda; color:#000; }
 .hidden { display:none; }
 button.main-btn { padding:10px 20px; border:none; background:black; color:white; cursor:pointer; border-radius:5px; }
 button.main-btn:hover { opacity:0.8; }
 .service { display:flex; justify-content:space-between; margin-bottom:10px; }
 .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
-.day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; transition: background 0.3s, color 0.3s; }
-.dark-mode .day, .dark-mode .time { background:#999; color:#fff; }
+.day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; }
 .day.selected, .time.selected { background:#222; color:white; }
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
-.success { background:#d4edda; padding:20px; border-radius:10px; transition: background 0.3s, color 0.3s; }
-.dark-mode .success { background:#888; color:#fff; }
 
-/* TOGGLE DARK MODE BUTTON */
+/* DARK MODE BUTTON */
 .toggle-mode {
     position:fixed;
     top:50%;
@@ -202,7 +191,7 @@ button.main-btn:hover { opacity:0.8; }
     <button onclick="showProducts()">Products</button>
 </div>
 
-<!-- LIGHT/DARK MODE TOGGLE -->
+<!-- DARK MODE TOGGLE -->
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
 
 <!-- PRODUCTS SECTION -->
@@ -301,47 +290,35 @@ const checkoutTotalSpan = document.getElementById("checkoutTotal");
 products.forEach((prod,index)=>{
     const div=document.createElement("div");
     div.className="product-card";
-    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}">
-        <h3>${prod.name}</h3>
-        <p>£${prod.price.toFixed(2)}</p>
-        <button onclick="addToCart(${index})">Add to Cart</button>`;
+    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}"><h3>${prod.name}</h3><p>£${prod.price.toFixed(2)}</p><button onclick="addToCart(${index})">Add to Cart</button>`;
     productsGrid.appendChild(div);
 });
 
+// CART FUNCTIONS
 function addToCart(index){
     const item = products[index];
     const exist = cart.find(p=>p.name===item.name);
     if(exist){ exist.qty+=1; } else { cart.push({...item, qty:1}); }
     updateCart();
 }
-
-function removeFromCart(index){
-    cart.splice(index,1);
-    updateCart();
-}
-
+function removeFromCart(index){ cart.splice(index,1); updateCart(); }
 function updateCart(){
     cartItemsDiv.innerHTML=""; checkoutItemsDiv.innerHTML="";
     let total=0;
     cart.forEach((item,i)=>{
         const div=document.createElement("div");
         div.className="cart-item";
-        div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
-        <button onclick="removeFromCart(${i})">X</button>`;
+        div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
         cartItemsDiv.appendChild(div);
-
         const div2=document.createElement("div");
-        div2.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)}
-        <button onclick="removeFromCart(${i})">X</button>`;
+        div2.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
         checkoutItemsDiv.appendChild(div2);
-
         total+=item.price*item.qty;
     });
     cartTotalSpan.innerText = total.toFixed(2);
     checkoutTotalSpan.innerText = total.toFixed(2);
     cartCountSpan.innerText = cart.reduce((acc,i)=>acc+i.qty,0);
 }
-
 function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
 function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
 function closeCheckout(){ checkoutMenu.style.display="none"; }
@@ -365,14 +342,33 @@ function goToCalendar(){ if(selectedServices.length===0) return alert("Select a 
 function generateCalendar(){ const calendar=document.getElementById("calendar"); const today=new Date(); for(let i=0;i<21;i++){ const date=new Date(); date.setDate(today.getDate()+i); const div=document.createElement("div"); div.className="day"; div.innerText=date.toDateString(); div.onclick=()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=date.toDateString(); }; calendar.appendChild(div); } }
 generateCalendar();
 function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
-["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{ const div=document.createElement("div"); div.className="time"; div.innerText=t; div.onclick=()=>{ document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedTime=t; }; });
-async function confirmBooking(){ if(!selectedTime) return alert("Select time."); const response=await fetch("/book",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total })}); const data=await response.json(); if(!response.ok){ alert(data.message); return; } document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`; showStep(4); }
 
-// LIGHT/DARK MODE
+// TIMES SELECTION
+const timesContainer = document.getElementById("times");
+["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "time";
+    div.innerText = t;
+    div.onclick = () => {
+        document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedTime = t;
+    };
+    timesContainer.appendChild(div);
+});
+
+// BOOKING CONFIRM
+async function confirmBooking(){ 
+    if(!selectedTime) return alert("Select time."); 
+    document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`; 
+    showStep(4); 
+}
+
+// DARK MODE
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
-    document.getElementById("productsSection").classList.toggle("dark-mode");
+    document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
 }
 </script>
 
