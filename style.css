@@ -1,0 +1,95 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Header */
+header {
+    background: #222;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+header nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Hero */
+#hero {
+    background: url('images/barbershop.jpg') center/cover no-repeat;
+    color: #fff;
+    text-align: center;
+    padding: 100px 20px;
+}
+#hero .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #ff0000;
+    color: #fff;
+    text-decoration: none;
+    margin-top: 20px;
+}
+
+/* Services */
+.service-cards {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 50px 20px;
+}
+.card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    text-align: center;
+    width: 200px;
+}
+
+/* Gallery */
+#gallery .images {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 50px 20px;
+}
+#gallery img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Contact */
+#contact form {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin: 0 auto;
+    gap: 10px;
+}
+#contact input, #contact textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+#contact button {
+    padding: 10px;
+    background: #222;
+    color: #fff;
+    border: none;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    background: #222;
+    color: #fff;
+}
