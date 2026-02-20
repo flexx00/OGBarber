@@ -1,144 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
+<title>Luxury Barber Booking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GM Booking</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Georgia, serif;
+body { font-family: Arial; margin:0; background:#f5f5f5; }
+header { background:#222; color:white; padding:20px; text-align:center; }
+.container { max-width:1000px; margin:40px auto; padding:20px; }
+
+.card {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+    transition:0.4s;
 }
 
-body {
-    background: #e5e5e5;
+button {
+    padding:10px 20px;
+    border:none;
+    background:black;
+    color:white;
+    cursor:pointer;
+    border-radius:5px;
 }
 
-/* Header */
-header {
-    background: #4d4d4d;
-    color: white;
-    padding: 40px 0;
-    text-align: center;
-}
-
-.logo {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    border: 2px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    font-size: 24px;
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-}
-
-.book-btn {
-    margin-top: 15px;
-    padding: 6px 25px;
-    border: 1px solid white;
-    background: transparent;
-    color: white;
-}
-
-/* Main Container */
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-    text-align: center;
-}
-
-/* Booking Card */
-.booking-card {
-    background: #5a5a5a;
-    color: white;
-    padding: 15px;
-    max-width: 500px;
-    margin: auto;
-}
-
-.booking-top {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.next-btn {
-    background: #777;
-    border: none;
-    color: white;
-    padding: 5px 15px;
-    cursor: pointer;
-}
-
-.services-title {
-    padding: 10px 0;
-    border-top: 1px solid #777;
-    border-bottom: 1px solid #777;
-    margin-bottom: 10px;
-}
+button:hover { opacity:0.8; }
 
 .service {
-    background: #f2f2f2;
-    color: #333;
-    display: flex;
-    justify-content: space-between;
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
 }
 
-.select-btn {
-    border: 1px solid #999;
-    background: white;
-    padding: 5px 10px;
-    cursor: pointer;
+.calendar {
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:10px;
 }
 
-.selected {
-    background: #d4d4d4 !important;
+.day {
+    padding:15px;
+    background:#eee;
+    text-align:center;
+    cursor:pointer;
+    border-radius:5px;
 }
 
-/* Date Screen */
-#dateScreen {
-    display: none;
+.day:hover { background:#ccc; }
+
+.times {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:20px;
 }
 
-.selected-services-box {
-    background: white;
-    padding: 15px;
-    margin-bottom: 30px;
-    text-align: left;
+.time {
+    padding:10px;
+    background:#eee;
+    text-align:center;
+    cursor:pointer;
+    border-radius:5px;
 }
 
-.date-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 15px;
+.time:hover { background:#ccc; }
+
+.hidden { display:none; }
+
+.total-box {
+    font-size:20px;
+    font-weight:bold;
+    margin-top:20px;
 }
 
-.date-box {
-    padding: 20px 10px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #001f3f;
-}
-
-.orange { background: #b45309; color: white; }
-.green { background: #84cc16; }
-.grey { background: #d4d4d4; }
-
-.date-box:hover {
-    transform: scale(1.05);
+.success {
+    background:#d4edda;
+    padding:20px;
+    border-radius:10px;
 }
 </style>
 </head>
@@ -146,116 +88,150 @@ nav a {
 <body>
 
 <header>
-    <div class="logo">G.M</div>
-    <nav>
-        <a href="#">Home</a>
-        <a href="#">Gallery</a>
-        <a href="#">Register</a>
-        <a href="#">Login</a>
-        <a href="#">Book</a>
-    </nav>
-    <button class="book-btn">Book</button>
+<h1>Luxury Barber Booking</h1>
 </header>
 
 <div class="container">
 
-    <!-- SERVICE SCREEN -->
-    <div id="serviceScreen">
-        <h2>Select up to 8 services</h2>
+<div id="step1" class="card">
+<h2>Select Services</h2>
 
-        <div class="booking-card">
-            <div class="booking-top">
-                <span id="count">0 services selected</span>
-                <button class="next-btn" onclick="goToDates()">Next »</button>
-            </div>
+<div id="services"></div>
 
-            <div class="services-title">Services</div>
+<div class="total-box">
+Total: £<span id="total">0</span>
+</div>
 
-            <div class="service"><span>Gents Hair Cut</span><button class="select-btn">Select</button></div>
-            <div class="service"><span>Skin Fade</span><button class="select-btn">Select</button></div>
-            <div class="service"><span>Beard Trim</span><button class="select-btn">Select</button></div>
-            <div class="service"><span>Kids Cut</span><button class="select-btn">Select</button></div>
-            <div class="service"><span>Cut & Beard</span><button class="select-btn">Select</button></div>
-        </div>
-    </div>
+<button onclick="goToCalendar()">Next</button>
+</div>
 
-    <!-- DATE SCREEN -->
-    <div id="dateScreen">
-        <h2>Select a Date</h2>
+<div id="step2" class="card hidden">
+<h2>Select Date</h2>
+<div id="calendar" class="calendar"></div>
+<button onclick="goToTimes()">Next</button>
+</div>
 
-        <div class="selected-services-box">
-            <strong>Selected Services:</strong>
-            <ul id="selectedList"></ul>
-        </div>
+<div id="step3" class="card hidden">
+<h2>Select Time</h2>
+<div class="times" id="times"></div>
+<button onclick="confirmBooking()">Confirm Booking</button>
+</div>
 
-        <div class="date-grid">
-            <div class="date-box orange">FRI<br>20 FEB</div>
-            <div class="date-box orange">SAT<br>21 FEB</div>
-            <div class="date-box grey">SUN<br>22 FEB</div>
-            <div class="date-box grey">MON<br>23 FEB</div>
-            <div class="date-box green">TUE<br>24 FEB</div>
-            <div class="date-box green">WED<br>25 FEB</div>
-            <div class="date-box green">THU<br>26 FEB</div>
-
-            <div class="date-box green">FRI<br>27 FEB</div>
-            <div class="date-box orange">SAT<br>28 FEB</div>
-            <div class="date-box grey">SUN<br>1 MAR</div>
-            <div class="date-box grey">MON<br>2 MAR</div>
-            <div class="date-box green">TUE<br>3 MAR</div>
-            <div class="date-box green">WED<br>4 MAR</div>
-            <div class="date-box green">THU<br>5 MAR</div>
-        </div>
-    </div>
+<div id="step4" class="card hidden success">
+<h2>Booking Confirmed 🎉</h2>
+<p id="confirmationText"></p>
+</div>
 
 </div>
 
 <script>
+const serviceData = [
+    { name: "Haircut", price: 20 },
+    { name: "Skin Fade", price: 25 },
+    { name: "Beard Trim", price: 15 },
+    { name: "Hair & Beard", price: 35 }
+];
+
 let selectedServices = [];
-let selectedCount = 0;
+let total = 0;
+let selectedDate = "";
+let selectedTime = "";
 
-const buttons = document.querySelectorAll('.select-btn');
-const countText = document.getElementById('count');
+const servicesDiv = document.getElementById("services");
 
-buttons.forEach(button => {
-    button.addEventListener('click', () => {
-        const serviceName = button.parentElement.querySelector('span').textContent;
-
-        if (button.classList.contains('active')) {
-            button.classList.remove('active');
-            button.textContent = "Select";
-            button.parentElement.classList.remove('selected');
-            selectedCount--;
-            selectedServices = selectedServices.filter(s => s !== serviceName);
-        } else {
-            if (selectedCount >= 8) return alert("Maximum 8 services.");
-            button.classList.add('active');
-            button.textContent = "Selected";
-            button.parentElement.classList.add('selected');
-            selectedCount++;
-            selectedServices.push(serviceName);
-        }
-
-        countText.textContent = selectedCount + " services selected";
-    });
+serviceData.forEach(service => {
+    const div = document.createElement("div");
+    div.className = "service";
+    div.innerHTML = `
+        <span>${service.name} (£${service.price})</span>
+        <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">
+    `;
+    servicesDiv.appendChild(div);
 });
 
-function goToDates() {
-    if (selectedServices.length === 0) {
-        alert("Please select at least one service.");
+function toggleService(name, price) {
+    if (selectedServices.includes(name)) {
+        selectedServices = selectedServices.filter(s => s !== name);
+        total -= price;
+    } else {
+        selectedServices.push(name);
+        total += price;
+    }
+    document.getElementById("total").innerText = total;
+}
+
+function goToCalendar() {
+    if (selectedServices.length === 0) return alert("Select a service.");
+    document.getElementById("step1").classList.add("hidden");
+    document.getElementById("step2").classList.remove("hidden");
+}
+
+function generateCalendar() {
+    const calendar = document.getElementById("calendar");
+    calendar.innerHTML = "";
+    const today = new Date();
+
+    for (let i = 0; i < 21; i++) {
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = date.toDateString();
+        div.onclick = () => {
+            selectedDate = date.toDateString();
+            alert("Selected: " + selectedDate);
+        };
+        calendar.appendChild(div);
+    }
+}
+
+generateCalendar();
+
+function goToTimes() {
+    if (!selectedDate) return alert("Select a date.");
+    document.getElementById("step2").classList.add("hidden");
+    document.getElementById("step3").classList.remove("hidden");
+}
+
+const timesDiv = document.getElementById("times");
+const timeSlots = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
+
+timeSlots.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "time";
+    div.innerText = t;
+    div.onclick = () => {
+        selectedTime = t;
+        alert("Selected time: " + t);
+    };
+    timesDiv.appendChild(div);
+});
+
+async function confirmBooking() {
+    if (!selectedTime) return alert("Select time.");
+
+    const response = await fetch("/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            date: selectedDate,
+            time: selectedTime,
+            services: selectedServices,
+            total
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.message);
         return;
     }
 
-    document.getElementById('serviceScreen').style.display = "none";
-    document.getElementById('dateScreen').style.display = "block";
-
-    const list = document.getElementById('selectedList');
-    list.innerHTML = "";
-
-    selectedServices.forEach(service => {
-        const li = document.createElement('li');
-        li.textContent = service;
-        list.appendChild(li);
-    });
+    document.getElementById("step3").classList.add("hidden");
+    document.getElementById("step4").classList.remove("hidden");
+    document.getElementById("confirmationText").innerText =
+        `${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total}`;
 }
 </script>
 
