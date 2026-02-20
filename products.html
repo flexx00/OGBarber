@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OGClipz Products</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>💈OGClipz Products</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="products.html">Products</a>
+      <a href="javascript:void(0)" id="cart-btn">Cart 🛒</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>My Products</h2>
+    <section class="products">
+      <div class="product" data-name="Texture Hair Powder" data-price="7.99" data-image="images/texture.png">
+        <img src="images/texture.png" alt="Texture Hair Powder" class="clickable">
+        <h3>Texture Hair Powder</h3>
+        <p>£7.99</p>
+        <button class="add-to-cart">Add to Cart</button>
+      </div>
+
+      <div class="product" data-name="Sea Salt Spray" data-price="7.99" data-image="images/spray.png">
+        <img src="images/spray.png" alt="Sea Salt Spray" class="clickable">
+        <h3>Sea Salt Spray</h3>
+        <p>£7.99</p>
+        <button class="add-to-cart">Add to Cart</button>
+      </div>
+
+      <div class="product" data-name="Texture Paste" data-price="7.99" data-image="images/paste.png">
+        <img src="images/paste.png" alt="Texture Paste" class="clickable">
+        <h3>Texture Paste</h3>
+        <p>£7.99</p>
+        <button class="add-to-cart">Add to Cart</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Cart Overlay + Sidebar (ONLY ONE COPY!) -->
+  <div id="cart-overlay">
+    <div id="cart-sidebar" class="cart-sidebar">
+      <span id="cart-close">&times;</span>
+      <h3>Your Cart</h3>
+      <div id="cart-items"><p>No items in cart.</p></div>
+      <p id="cart-total">Total: £0</p>
+      <button id="checkout-btn">Checkout</button>
+    </div>
+  </div>
+
+  <!-- Popup modal -->
+  <div id="popup" class="popup">
+    <span id="close">&times;</span>
+    <img id="popup-img" src="" alt="Preview">
+  </div>
+
+  <footer>
+    <p>&copy; OGClipz Products</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
