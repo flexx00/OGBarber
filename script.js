@@ -34,6 +34,15 @@ if (form) {
     });
   });
 }
+// Header scroll effect
+(function() {
+  const header = document.querySelector('header');
+  function onScroll() {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
 
 // Simple Cart System
 const cartBtn = document.querySelector('.cart-btn');
@@ -47,9 +56,9 @@ let cart = [];
 function updateCart() {
   cartItemsList.innerHTML = '';
   let total = 0;
-  cart.forEach((item, index) => {
+  cart.forEach(item => {
     const li = document.createElement('li');
-    li.innerHTML = `${item.name} <span>£${item.price.toFixed(2)}</span>`;
+    li.textContent = `${item.name} £${item.price.toFixed(2)}`;
     cartItemsList.appendChild(li);
     total += item.price;
   });
