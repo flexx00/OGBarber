@@ -216,21 +216,17 @@
     }
 
     // ADD TO CART
-  document.querySelectorAll('.add-to-cart').forEach(btn => {
-  btn.addEventListener('click', e => {
-    const card = e.target.closest('.product-card');
-    const name = card.querySelector('.product-name').textContent.trim();
-    const priceText = card.querySelector('.product-price').textContent.replace(/[^0-9.]/g, '');
-    const price = parseFloat(priceText);
-    if (!isNaN(price)) {
-      cart.push({name, price});
-      updateCart();
-      cartModal.style.display = 'flex';
-    } else {
-      console.error('Invalid price for', name, card.querySelector('.product-price').textContent);
-    }
-  });
-});
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+      btn.addEventListener('click', e => {
+        const card = e.target.closest('.product-card');
+        const name = card.querySelector('.product-name').textContent;
+        const priceText = card.querySelector('.product-price').textContent.replace('£','');
+        const price = parseFloat(priceText);
+        cart.push({name, price});
+        updateCart();
+        cartModal.style.display = 'flex';
+      });
+    });
 
     // SHOW CART
     cartBtn.addEventListener('click', () => { cartModal.style.display = 'flex'; updateCart(); });
