@@ -7,8 +7,8 @@
 
 <style>
 /* GENERAL STYLES */
-body { font-family: Arial; margin:0; background:#f5f5f5; transition: background 0.3s, color 0.3s; color:#222; }
-.dark-mode { background:#121212; color:#f5f5f5; }
+body { font-family: Arial; margin:0; background:#ffffff; transition: background 0.3s, color 0.3s; color:#1d1d1d; }
+.dark-mode { background:#202020; color:#ffffff; }
 
 /* HEADER */
 header {
@@ -173,6 +173,14 @@ button.main-btn:hover { opacity:0.8; }
     border-radius:8px;
     cursor:pointer;
 }
+
+/* SIGNUP / LOGIN */
+.auth-container { max-width:400px; margin:50px auto; padding:20px; background:#f8f8f8; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
+.auth-container h2 { text-align:center; margin-bottom:20px; }
+.auth-container input { width:100%; padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; }
+.auth-container button { width:100%; padding:10px; margin-top:10px; border:none; border-radius:5px; background:#222; color:rgb(255,174,0); cursor:pointer; }
+.auth-container button:hover { opacity:0.8; }
+.auth-switch { text-align:center; margin-top:10px; cursor:pointer; color:blue; text-decoration:underline; }
 </style>
 </head>
 
@@ -191,6 +199,16 @@ button.main-btn:hover { opacity:0.8; }
 
 <!-- LIGHT/DARK MODE TOGGLE -->
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
+
+<!-- SIGNUP / LOGIN -->
+<div class="auth-container" id="authContainer">
+<h2 id="authTitle">Sign Up</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<input type="tel" id="phone" placeholder="Phone Number (Optional)">
+<button onclick="handleAuth()">Sign Up</button>
+<div class="auth-switch" onclick="switchAuth()">Already have an account? Login</div>
+</div>
 
 <!-- PRODUCTS SECTION -->
 <section class="products-section" id="productsSection">
@@ -245,7 +263,37 @@ button.main-btn:hover { opacity:0.8; }
 </div>
 
 <script>
-// SERVICES
+// ================== AUTH SYSTEM ==================
+let isLogin = false;
+let users = []; // In-memory users, ideally stored in DB
+
+function switchAuth(){
+    isLogin = !isLogin;
+    document.getElementById("authTitle").innerText = isLogin ? "Login" : "Sign Up";
+    document.querySelector("#authContainer button").innerText = isLogin ? "Login" : "Sign Up";
+    document.querySelector(".auth-switch").innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
+}
+
+function handleAuth(){
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    if(!username || !password) return alert("Username and password required");
+    
+    if(isLogin){
+        const user = users.find(u => u.username===username && u.password===password);
+        if(!user) return alert("Invalid credentials");
+        alert("Login successful!");
+    } else {
+        if(users.find(u=>u.username===username)) return alert("Username already exists");
+        users.push({username, password, phone});
+        alert("Sign up successful!");
+    }
+    document.getElementById("authContainer").style.display="none";
+    showBooking();
+}
+
+// ================== SERVICES ==================
 const serviceData = [
     { name: "Haircut", price: 10 },
     { name: "Skin Fade", price: 11.99 },
@@ -262,13 +310,13 @@ const backBtn = document.getElementById("backBtn");
 
 serviceData.forEach(service => {
     const div = document.createElement("div");
-    div.className = "service";
+    div.className=`service`;
     div.innerHTML=`<span>${service.name} (£${service.price})</span>
-    <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
+        <input type="checkbox" onchange="toggleService('${service.name}',${service.price})">`;
     servicesDiv.appendChild(div);
 });
 
-// PRODUCTS
+// ================== PRODUCTS ==================
 const products = [
     { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
     { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
@@ -339,11 +387,11 @@ function confirmCheckout(){
     cart=[]; updateCart(); closeCheckout();
 }
 
-// NAVIGATION
+// ================== NAVIGATION ==================
 function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
 function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
 
-// BOOKING FUNCTIONS
+// ================== BOOKING ==================
 function goHome(){ showBooking(); showStep(1); }
 function showStep(step){ for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); } document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display= step===1 ? "none":"block"; }
 function goBack(){ if(currentStep>1) showStep(currentStep-1); }
@@ -353,9 +401,9 @@ function generateCalendar(){ const calendar=document.getElementById("calendar");
 generateCalendar();
 function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
 ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{ const div=document.createElement("div"); div.className="time"; div.innerText=t; div.onclick=()=>{ document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedTime=t; }; });
-async function confirmBooking(){ if(!selectedTime) return alert("Select time."); const response=await fetch("/book",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total })}); const data=await response.json(); if(!response.ok){ alert(data.message); return; } document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`; showStep(4); }
+async function confirmBooking(){ if(!selectedTime) return alert("Select time."); const response=await fetch("/book",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ date:selectedDate, time:selectedTime, services:selectedServices, total, phone:document.getElementById("phone").value })}); const data=await response.json(); if(!response.ok){ alert(data.message); return; } document.getElementById("confirmationText").innerText=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}\nPhone: ${document.getElementById("phone").value || "Not Provided"}`; showStep(4); }
 
-// LIGHT/DARK MODE
+// ================== LIGHT/DARK MODE ==================
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
