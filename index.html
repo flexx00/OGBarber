@@ -3,151 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>THE O.G. BARBER</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>GM Booking</title>
+
 <style>
-:root {
-  --void: #070707;
-  --ink: #0d0d0d;
-  --surface: #141414;
-  --surface-elevated: #1c1c1c;
-  --cream: #f0ebe3;
-  --cream-muted: #c4bdb2;
-  --copper: #c17f3a;
-  --copper-bright: #e09b5c;
-  --copper-dim: #8b5a2b;
-  --accent: #c17f3a;
-  --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'Syne', system-ui, sans-serif;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Georgia', serif;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body { font-family: var(--sans); background: var(--void); color: var(--cream); line-height:1.5; }
-
-.wrap { max-width:1320px; margin:0 auto; padding:0 clamp(20px,5vw,48px); }
+body {
+    background: #e5e5e5;
+}
 
 /* Header */
 header {
-  position: fixed; top:0; left:0; right:0; z-index:200;
-  padding:20px 0; transition: background 0.4s var(--ease-out), padding 0.3s ease;
-  background: transparent;
+    background: #4d4d4d;
+    color: white;
+    padding: 40px 0;
+    text-align: center;
 }
-header.scrolled { background: rgba(7,7,7,0.92); padding:12px 0; backdrop-filter: blur(20px); }
-header .wrap { display:flex; justify-content:space-between; align-items:center; }
-.logo { font-family:var(--serif); font-size:1.8rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--cream); text-decoration:none; }
-.logo .accent { color:var(--copper); font-style:italic; font-weight:500; }
-nav { display:flex; align-items:center; gap:24px; }
-nav a { color:var(--cream-muted); text-decoration:none; font-size:0.8rem; font-weight:500; text-transform:uppercase; letter-spacing:0.15em; }
-nav a:hover { color:var(--copper-bright); }
-.cart-btn { padding:12px 20px; background:transparent; border:1px solid rgba(193,127,58,0.5); color:var(--copper); cursor:pointer; font-weight:600; text-transform:uppercase; }
-.cart-btn:hover { background:var(--copper); color:var(--void); }
 
-/* Hero */
-.hero-home { text-align:center; padding:120px 0; background: var(--surface); }
-.hero-home h1 { font-family:var(--serif); font-size:3rem; margin-bottom:16px; }
-.hero-home .sub-heading { font-size:1.2rem; color:var(--cream-muted); margin-bottom:24px; }
-.hero-home .btn-primary { background:var(--copper); padding:14px 26px; color:var(--void); text-transform:uppercase; text-decoration:none; display:inline-block; border-radius:4px; transition:0.3s; }
-.hero-home .btn-primary:hover { background:var(--copper-bright); }
+.logo {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
 
-/* Services */
-.services-section { padding:80px 0; }
-.services-section h2 { font-family:var(--serif); font-size:2rem; margin-bottom:40px; text-align:center; }
-.services-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:32px; }
-.service { text-align:center; }
-.service img { width:100%; border-radius:8px; margin-bottom:16px; }
-.service h3 { font-family:var(--serif); font-size:1.5rem; margin-bottom:8px; }
-.service p { color:var(--cream-muted); }
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 14px;
+}
 
-/* Contact */
-.contact-info { padding:60px 0; background: var(--surface-elevated); }
-.contact-info h2 { font-family:var(--serif); font-size:2rem; margin-bottom:24px; text-align:center; }
-.contact-info p { margin-bottom:8px; text-align:center; }
+nav a:hover {
+    text-decoration: underline;
+}
 
-/* Footer */
-footer { padding:40px 0; background: var(--surface); text-align:center; border-top:1px solid rgba(255,255,255,0.06); }
-footer p { color:var(--cream-muted); font-size:0.8rem; }
+.book-btn {
+    margin-top: 15px;
+    padding: 6px 25px;
+    border: 1px solid white;
+    background: transparent;
+    color: white;
+    cursor: pointer;
+}
 
-/* Responsive */
-@media (max-width:768px){ .services-grid{ grid-template-columns:1fr; } }
+/* Main */
+.container {
+    max-width: 500px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+.container h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Booking Card */
+.booking-card {
+    background: #5a5a5a;
+    color: white;
+    padding: 15px;
+}
+
+.booking-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.next-btn {
+    background: #777;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.services-title {
+    font-size: 18px;
+    padding: 10px 0;
+    border-top: 1px solid #777;
+    border-bottom: 1px solid #777;
+    margin-bottom: 10px;
+}
+
+.service {
+    background: #f2f2f2;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.service-info {
+    text-align: left;
+}
+
+.service-info small {
+    display: block;
+    font-size: 12px;
+    color: #666;
+}
+
+.select-btn {
+    border: 1px solid #999;
+    background: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.select-btn:hover {
+    background: #ddd;
+}
+
+.selected {
+    background: #d4d4d4 !important;
+}
 </style>
 </head>
+
 <body>
 
 <header>
-  <div class="wrap">
-    <a href="#" class="logo">theog<span class="accent">barber</span></a>
+    <div class="logo">G.M</div>
     <nav>
-      <a href="#services">Services</a>
-      <a href="#contact">Contact</a>
-      <button class="cart-btn">Cart</button>
+        <a href="#">Home</a>
+        <a href="#">Gallery</a>
+        <a href="#">Register</a>
+        <a href="#">Login</a>
+        <a href="#">Book</a>
     </nav>
-  </div>
+    <button class="book-btn">Book</button>
 </header>
 
-<main>
-  <section class="hero-home">
-    <div class="wrap">
-      <h1>Premium Barbering Services</h1>
-      <p class="sub-heading">Crafting fresh cuts & classic styles for every gentleman</p>
-      <a href="#contact" class="btn-primary">Book Online</a>
-    </div>
-  </section>
+<div class="container">
+    <h2>Select up to 8 services</h2>
 
-  <section id="services" class="services-section">
-    <div class="wrap">
-      <h2>Our Services</h2>
-      <div class="services-grid">
-        <div class="service">
-          <img src="haircut.jpg" alt="Haircut">
-          <h3>Haircut</h3>
-          <p>Precision cuts tailored to your look.</p>
+    <div class="booking-card">
+        <div class="booking-top">
+            <span id="count">0 services selected</span>
+            <button class="next-btn">Next »</button>
         </div>
-        <div class="service">
-          <img src="beard.jpg" alt="Beard Trim">
-          <h3>Beard Trim</h3>
-          <p>Clean and sharp beard detailing.</p>
-        </div>
-        <div class="service">
-          <img src="styling.jpg" alt="Styling">
-          <h3>Styling</h3>
-          <p>Finish your look with classic or modern style.</p>
-        </div>
-        <div class="service">
-          <img src="wash.jpg" alt="Hair Wash">
-          <h3>Hair Wash</h3>
-          <p>Relaxing shampoo before cut or style.</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <section class="contact-info" id="contact">
-    <div class="wrap">
-      <h2>Contact & Opening Hours</h2>
-      <p><strong>Address:</strong> 250 Cranmore Blvd, Shirley, Solihull, B90 4PX</p>
-      <p><strong>Email:</strong> gmbarbers@outlook.com</p>
-      <p><strong>Phone:</strong> 0121 824 3355</p>
-      <p><strong>Hours:</strong> Tue–Thu 9am–6pm | Fri 9am–7pm | Sat 9am–5pm | Sun–Mon Closed</p>
-    </div>
-  </section>
-</main>
+        <div class="services-title">Services</div>
 
-<footer>
-  <p>© THE O.G. BARBER</p>
-</footer>
+        <div class="service">
+            <div class="service-info">
+                Gents Hair Cut
+                <small>30 minutes · £19.00</small>
+            </div>
+            <button class="select-btn">Select</button>
+        </div>
+
+        <div class="service">
+            <div class="service-info">
+                Gents Cut & Beard
+                <small>40 minutes · £28.00</small>
+            </div>
+            <button class="select-btn">Select</button>
+        </div>
+
+        <div class="service">
+            <div class="service-info">
+                Skin Fade
+                <small>40 minutes · £23.00</small>
+            </div>
+            <button class="select-btn">Select</button>
+        </div>
+
+        <div class="service">
+            <div class="service-info">
+                Kids Cut (Under 12)
+                <small>30 minutes · £15.00</small>
+            </div>
+            <button class="select-btn">Select</button>
+        </div>
+
+        <div class="service">
+            <div class="service-info">
+                Beard Trim
+                <small>20 minutes · £12.00</small>
+            </div>
+            <button class="select-btn">Select</button>
+        </div>
+
+    </div>
+</div>
 
 <script>
-(function() {
-  const header = document.querySelector('header');
-  window.addEventListener('scroll', () => {
-    header.classList.toggle('scrolled', window.scrollY > 60);
-  });
-})();
+const buttons = document.querySelectorAll('.select-btn');
+const countText = document.getElementById('count');
+let selectedCount = 0;
+
+buttons.forEach(button => {
+    button.addEventListener('click', () => {
+        if (button.classList.contains('active')) {
+            button.classList.remove('active');
+            button.textContent = "Select";
+            button.parentElement.classList.remove('selected');
+            selectedCount--;
+        } else {
+            if (selectedCount >= 8) return alert("You can only select up to 8 services.");
+            button.classList.add('active');
+            button.textContent = "Selected";
+            button.parentElement.classList.add('selected');
+            selectedCount++;
+        }
+        countText.textContent = selectedCount + " services selected";
+    });
+});
 </script>
 
 </body>
