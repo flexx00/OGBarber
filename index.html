@@ -8,6 +8,7 @@
 <style>
 body { font-family: Arial; margin:0; background:#f5f5f5; }
 
+/* HEADER */
 header {
     background:#222;
     color:rgb(255, 174, 0);
@@ -30,6 +31,55 @@ header {
     display:none;
 }
 
+/* PRODUCTS SECTION */
+.products-section {
+    background:white;
+    padding:50px 20px;
+    text-align:center;
+}
+
+.products-section h2 {
+    margin-bottom:30px;
+    font-size:28px;
+}
+
+.products-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    gap:30px;
+    max-width:1200px;
+    margin:auto;
+}
+
+.product-card {
+    background:#f8f8f8;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    transition:0.3s ease;
+}
+
+.product-card:hover {
+    transform:translateY(-5px);
+}
+
+.product-card img {
+    width:100%;
+    height:250px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.product-card h3 {
+    margin-top:15px;
+}
+
+.product-card p {
+    font-weight:bold;
+    margin-top:5px;
+}
+
+/* BOOKING SYSTEM */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
 
 .card {
@@ -121,6 +171,33 @@ button:hover { opacity:0.8; }
 <h1>The OG Barber</h1>
 </header>
 
+<!-- PRODUCTS SECTION -->
+<section class="products-section">
+<h2>My Products</h2>
+
+<div class="products-grid">
+
+<div class="product-card">
+<img src="images/paste.png" alt="Texture Paste">
+<h3>Texture Paste</h3>
+<p>£8.99</p>
+</div>
+
+<div class="product-card">
+<img src="images/texture.png" alt="Texture Powder">
+<h3>Texture Powder</h3>
+<p>£6.99</p>
+</div>
+
+<div class="product-card">
+<img src="images/spray.png" alt="Sea Salt Spray">
+<h3>Sea Salt Spray</h3>
+<p>£7.99</p>
+</div>
+
+</div>
+</section>
+
 <div class="container">
 
 <div id="step1" class="card">
@@ -182,7 +259,6 @@ function showStep(step) {
     }
     document.getElementById("step"+step).classList.remove("hidden");
     currentStep = step;
-
     backBtn.style.display = step === 1 ? "none" : "block";
 }
 
@@ -195,6 +271,7 @@ function goBack(event) {
 
 function goHome() {
     showStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function toggleService(name, price) {
@@ -205,7 +282,7 @@ function toggleService(name, price) {
         selectedServices.push(name);
         total += price;
     }
-    document.getElementById("total").innerText = total;
+    document.getElementById("total").innerText = total.toFixed(2);
 }
 
 function goToCalendar() {
@@ -278,7 +355,7 @@ async function confirmBooking() {
     document.getElementById("confirmationText").innerText =
         `${selectedDate} at ${selectedTime}
 Services: ${selectedServices.join(", ")}
-Total: £${total}`;
+Total: £${total.toFixed(2)}`;
 
     showStep(4);
 }
