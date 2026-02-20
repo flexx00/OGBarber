@@ -54,7 +54,9 @@ header {
     text-align:center;
     background:white;
     position:relative;
+    transition: background 0.3s, color 0.3s;
 }
+.products-section.dark-mode { background:#666; color:#fff; }
 .products-section h2 { margin-bottom:20px; }
 .products-grid {
     display:grid;
@@ -68,8 +70,9 @@ header {
     padding:20px;
     border-radius:12px;
     box-shadow:0 10px 25px rgba(0,0,0,0.08);
-    transition:0.3s ease;
+    transition:0.3s ease, background 0.3s, color 0.3s;
 }
+.dark-mode .product-card { background:#777; color:#fff; }
 .product-card:hover { transform:translateY(-5px); }
 .product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
 .product-card h3 { margin-top:15px; }
@@ -113,7 +116,9 @@ header {
     box-shadow:0 5px 15px rgba(0,0,0,0.2);
     z-index:100;
     text-align:left;
+    transition: background 0.3s, color 0.3s;
 }
+.dark-mode .cart-dropdown { background:#666; color:#fff; border-color:#888; }
 .cart-item {
     display:flex;
     justify-content:space-between;
@@ -142,8 +147,9 @@ header {
     box-shadow:-5px 0 15px rgba(0,0,0,0.3);
     z-index:200;
     overflow-y:auto;
+    transition: background 0.3s, color 0.3s;
 }
-#checkoutMenu.dark-mode { background:#222; color:#f5f5f5; }
+#checkoutMenu.dark-mode { background:#666; color:#fff; }
 #checkoutMenu h2 { margin-bottom:20px; }
 #checkoutItems { margin-bottom:20px; }
 #checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
@@ -152,17 +158,20 @@ header {
 
 /* BOOKING SYSTEM */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
-.card { background:white; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease; }
+.card { background:white; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease, background 0.3s, color 0.3s; }
+.dark-mode .card { background:#777; color:#fff; }
 .hidden { display:none; }
 button.main-btn { padding:10px 20px; border:none; background:black; color:white; cursor:pointer; border-radius:5px; }
 button.main-btn:hover { opacity:0.8; }
 .service { display:flex; justify-content:space-between; margin-bottom:10px; }
 .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
-.day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; }
+.day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; transition: background 0.3s, color 0.3s; }
+.dark-mode .day, .dark-mode .time { background:#999; color:#fff; }
 .day.selected, .time.selected { background:#222; color:white; }
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
-.success { background:#d4edda; padding:20px; border-radius:10px; }
+.success { background:#d4edda; padding:20px; border-radius:10px; transition: background 0.3s, color 0.3s; }
+.dark-mode .success { background:#888; color:#fff; }
 
 /* TOGGLE DARK MODE BUTTON */
 .toggle-mode {
@@ -363,6 +372,7 @@ async function confirmBooking(){ if(!selectedTime) return alert("Select time.");
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
+    document.getElementById("productsSection").classList.toggle("dark-mode");
 }
 </script>
 
