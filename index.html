@@ -223,8 +223,9 @@ button.main-btn:hover { opacity:0.8; }
 <div class="container" id="bookingSection">
 <div id="step1" class="card">
 <h2>Select Services</h2>
-<input id="customerName" placeholder="Customer Name"
-style="padding:10px;width:100%;margin-bottom:15px">
+<label style="font-weight:bold;">Name for booking</label>
+<input id="customerName" placeholder="What is the name for the booking?"
+style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;">
 <div id="services"></div>
 <div class="total-box">Total: £<span id="total">0</span></div>
 <button class="main-btn" onclick="goToCalendar()">Next</button>
@@ -350,41 +351,54 @@ const timesContainer = document.getElementById("times");
     timesContainer.appendChild(div);
 });
 
-// --- BOOKING CONFIRM WITH NOTIFICATION + DISCORD ---
-async function confirmBooking(){ 
+// --- BOOKING CONFIRM WITH EMBED ---
+async function confirmBooking(){
 
-    if(!selectedTime) return alert("Select time."); 
+    if(!selectedTime) return alert("Select time.");
 
-    const customerName = document.getElementById("customerName")?.value || "Unknown";
+    const name = document.getElementById("customerName")?.value || "Unknown";
 
-    const message =
-`🪒 NEW BOOKING – The OG Barber
-👤 Name: ${customerName}
-📅 Date: ${selectedDate}
-⏰ Time: ${selectedTime}
-💈 Services: ${selectedServices.join(", ")}
-💰 Total: £${total.toFixed(2)}`;
+    const bookingData = {
+        name,
+        date: selectedDate,
+        time: selectedTime,
+        services: selectedServices,
+        total: total.toFixed(2)
+    };
 
-    document.getElementById("confirmationText").innerText = message; 
+    const res = await fetch("http://localhost:5000/book", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(bookingData)
+    });
+
+    if(!res.ok){
+        alert("That time slot is already booked!");
+        return;
+    }
+
+    document.getElementById("confirmationText").innerText =
+        `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
+
     showStep(4);
+}
 
     // 🔔 Browser notification
     if(Notification.permission==="granted"){
         navigator.serviceWorker.getRegistration().then(reg => {
             if(reg) reg.showNotification("New Booking Confirmed!", { 
-                body: message, 
-                icon: 'images/paste.png' 
+                body: `${customerName} - ${selectedDate} at ${selectedTime}`
             });
         });
     }
 
-    // 🔥 SEND TO DISCORD
+    // 🔥 SEND EMBED TO DISCORD
     fetch(DISCORD_WEBHOOK, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ content: message })
+        body: JSON.stringify({ embeds: [embed] })
     }).catch(err => console.log("Discord webhook error:", err));
-}
+
 
 // --- DARK MODE ---
 function toggleMode(){
