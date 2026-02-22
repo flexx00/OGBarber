@@ -311,14 +311,88 @@ function toggleService(name, price){
 
 // ----------------------------
 // PRODUCTS & CART
-// (same as before)
 // ----------------------------
-// ... (cart code unchanged)
+const products = [
+    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
+    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
+    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
+];
+
+products.forEach((prod, index) => {
+    const div = document.createElement("div");
+    div.className = "product-card";
+    div.innerHTML = `
+        <img src="${prod.img}" alt="${prod.name}">
+        <h3>${prod.name}</h3>
+        <p>£${prod.price.toFixed(2)}</p>
+        <button onclick="addToCart(${index})">Add to Cart</button>
+    `;
+    productsGrid.appendChild(div);
+});
+
+function addToCart(index){
+    const item = products[index];
+    const exist = cart.find(p => p.name === item.name);
+    if(exist) exist.qty += 1;
+    else cart.push({...item, qty:1});
+    updateCart();
+}
+
+function removeFromCart(index){
+    cart.splice(index,1);
+    updateCart();
+}
+
+function updateCart(){
+    cartItemsDiv.innerHTML = "";
+    checkoutItemsDiv.innerHTML = "";
+    let totalCart = 0;
+
+    cart.forEach((item, i) => {
+        const div1 = document.createElement("div");
+        div1.className = "cart-item";
+        div1.innerHTML = `${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
+        cartItemsDiv.appendChild(div1);
+
+        const div2 = div1.cloneNode(true);
+        checkoutItemsDiv.appendChild(div2);
+
+        totalCart += item.price * item.qty;
+    });
+
+    cartTotalSpan.innerText = totalCart.toFixed(2);
+    checkoutTotalSpan.innerText = totalCart.toFixed(2);
+    cartCountSpan.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
+}
+
+function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
+function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
+function closeCheckout(){ checkoutMenu.style.display="none"; }
+
+function confirmCheckout(){
+    if(cart.length === 0) return alert("Cart is empty!");
+    let summary = cart.map(p => `${p.name} x${p.qty}`).join("\n");
+    alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
+    cart = [];
+    updateCart();
+    closeCheckout();
+}
 
 // ----------------------------
 // NAVIGATION
 // ----------------------------
-// ... (navigation code unchanged)
+function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
+function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
+
+function showStep(step){
+    for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden");
+    document.getElementById("step"+step).classList.remove("hidden");
+    currentStep = step;
+    backBtn.style.display = step===1 ? "none":"block";
+}
+
+function goBack(){ if(currentStep>1) showStep(currentStep-1); }
+function goHome(){ showStep(1); }
 
 // ----------------------------
 // CALENDAR
@@ -336,6 +410,7 @@ function generateCalendar(){
             document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
             div.classList.add("selected");
             selectedDate = date.toISOString().split('T')[0];
+            // Load booked times for selected date
             await loadTimeSlots(selectedDate);
         };
         calendarDiv.appendChild(div);
@@ -354,7 +429,7 @@ function goToTimes(){
 }
 
 // ----------------------------
-// TIMES (with past & booked slots greyed out)
+// TIMES
 // ----------------------------
 const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
 
@@ -369,19 +444,21 @@ async function loadTimeSlots(date){
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const now = new Date();
+    const nowHour = new Date().getHours();
+    const nowMinute = new Date().getMinutes();
 
     defaultTimes.forEach(t => {
         const div = document.createElement("div");
         div.className = "time";
         div.innerText = t;
 
+        // Grey out if already booked
         let isBooked = booked.includes(t);
 
-        // Grey out past times today
+        // Grey out if past time today
         if(date === today){
-            const [h,m] = t.split(':').map(Number);
-            if(h < now.getHours() || (h === now.getHours() && m <= now.getMinutes())) isBooked = true;
+            const [h, m] = t.split(':').map(Number);
+            if(h < nowHour || (h === nowHour && m <= nowMinute)) isBooked = true;
         }
 
         if(isBooked){
@@ -398,14 +475,55 @@ async function loadTimeSlots(date){
 }
 
 // ----------------------------
-// BOOKING CONFIRM (same as before)
+// BOOKING CONFIRM (with backend webhook)
 // ----------------------------
-// ... (confirmBooking code unchanged, reloads times after booking)
+async function confirmBooking() {
+    const name = document.getElementById("customerName")?.value.trim() || "Unknown";
+    if(selectedServices.length===0) return alert("Select at least one service.");
+    if(!selectedDate) return alert("Select a date.");
+    if(!selectedTime) return alert("Select a time.");
+
+    const bookingData = { name, date:selectedDate, time:selectedTime, services:selectedServices, total:total.toFixed(2) };
+
+    let res;
+    try {
+        res = await fetch(BACKEND_BOOK_URL, {
+            method:"POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify(bookingData)
+        });
+    } catch(err) {
+        console.error("Booking failed:", err);
+        return alert("Booking server not reachable.");
+    }
+
+    if(!res.ok) return alert("Time slot already booked or server error.");
+
+    // Show confirmation
+    confirmationText.innerText = `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
+    showStep(4);
+
+    // Reload times to grey out the newly booked slot
+    await loadTimeSlots(selectedDate);
+
+    // Reset selections
+    selectedServices = [];
+    selectedDate = "";
+    selectedTime = "";
+    total = 0;
+    document.getElementById("total").innerText = "0";
+    document.querySelectorAll("#services input[type=checkbox]").forEach(cb=>cb.checked=false);
+    document.querySelectorAll(".day").forEach(el=>el.classList.remove("selected"));
+}
 
 // ----------------------------
 // DARK MODE
 // ----------------------------
-// ... (toggleMode code unchanged)
+function toggleMode(){
+    document.body.classList.toggle("dark-mode");
+    checkoutMenu.classList.toggle("dark-mode");
+    document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
+}
 </script>
 
 </body>
