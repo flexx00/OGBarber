@@ -38,36 +38,62 @@ function saveBookedSlots() {
     fs.writeFileSync(BOOKED_FILE, JSON.stringify(bookedSlots, null, 2));
 }
 
+// Remove past bookings (date before today)
+function removePastBookings() {
+    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+    bookedSlots = bookedSlots.filter(slot => slot.date >= today);
+    saveBookedSlots();
+}
+
+// Call this on server start to clean old bookings
+removePastBookings();
+
 // GET route for browser check
 app.get('/', (req, res) => res.send("Booking server is running"));
 
 // GET booked slots for a specific date
 app.get('/booked/:date', (req, res) => {
-    const date = req.params.date;
-    const slots = bookedSlots
-        .filter(slot => slot.date === date)
+    // Normalize date to ISO (YYYY-MM-DD)
+    const dateParam = new Date(req.params.date).toISOString().split('T')[0];
+
+    let slots = bookedSlots
+        .filter(slot => slot.date === dateParam)
         .map(slot => slot.time);
+
+    // Sort times ascending
+    slots.sort((a, b) => {
+        const [ah, am] = a.split(':').map(Number);
+        const [bh, bm] = b.split(':').map(Number);
+        return ah - bh || am - bm;
+    });
+
     res.json(slots);
 });
 
 // POST /book route
 app.post('/book', async (req, res) => {
     const booking = req.body;
-    console.log("Received booking:", booking);
 
     // Validate required fields
     if (!booking.name || !booking.date || !booking.time || !booking.services || !booking.total) {
         return res.status(400).json({ ok: false, error: "Missing booking fields" });
     }
 
+    // Normalize date
+    const bookingDate = new Date(booking.date).toISOString().split('T')[0];
+    const bookingTime = booking.time;
+
+    // Remove old bookings before checking
+    removePastBookings();
+
     // Check if slot is already booked
-    const alreadyBooked = bookedSlots.some(slot => slot.date === booking.date && slot.time === booking.time);
+    const alreadyBooked = bookedSlots.some(slot => slot.date === bookingDate && slot.time === bookingTime);
     if (alreadyBooked) {
         return res.status(400).json({ ok: false, error: "Slot already booked" });
     }
 
     // Add slot to booked slots and save
-    bookedSlots.push({ date: booking.date, time: booking.time });
+    bookedSlots.push({ date: bookingDate, time: bookingTime });
     saveBookedSlots();
 
     try {
@@ -78,7 +104,7 @@ app.post('/book', async (req, res) => {
             body: JSON.stringify({
                 embeds: [{
                     title: "New Booking",
-                    description: `**Name:** ${booking.name}\n**Date:** ${booking.date}\n**Time:** ${booking.time}\n**Services:** ${booking.services.join(", ")}\n**Total:** £${booking.total}`,
+                    description: `**Name:** ${booking.name}\n**Date:** ${bookingDate}\n**Time:** ${bookingTime}\n**Services:** ${booking.services.join(", ")}\n**Total:** £${booking.total}`,
                     color: 16753920
                 }]
             })
