@@ -7,11 +7,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Dynamic import for node-fetch (works in CommonJS with Node 20+)
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
 // Discord webhook URL
 const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+
+// Helper to use node-fetch dynamically
+async function fetchWrapper(...args) {
+    const { default: fetch } = await import('node-fetch');
+    return fetch(...args);
+}
 
 // GET route for browser check
 app.get('/', (req, res) => res.send("Booking server is running"));
@@ -21,8 +24,13 @@ app.post('/book', async (req, res) => {
     const booking = req.body;
     console.log("Received booking:", booking);
 
+    // Validate required fields
+    if (!booking.name || !booking.date || !booking.time || !booking.services || !booking.total) {
+        return res.status(400).json({ ok: false, error: "Missing booking fields" });
+    }
+
     try {
-        await fetch(DISCORD_WEBHOOK, {
+        await fetchWrapper(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
