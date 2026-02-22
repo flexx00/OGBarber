@@ -6,33 +6,151 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; margin:0; background:#f5f5f5; color:#222; transition:0.3s;}
+/* GENERAL STYLES */
+body { font-family: Arial; margin:0; background:#f5f5f5; transition: background 0.3s, color 0.3s; color:#222; }
 .dark-mode { background:#555; color:#fff; }
-header { background:#222; color:rgb(255,174,0); padding:20px; text-align:center; position:relative; }
-.back-btn { position:absolute; left:20px; top:20px; background:transparent; border:1px solid white; color:white; padding:5px 12px; border-radius:5px; cursor:pointer; display:none; }
-.nav-tabs { background:#111; text-align:center; padding:10px 0; }
-.nav-tabs button { background:transparent; border:none; color:white; margin:0 20px; font-size:16px; cursor:pointer; }
-.nav-tabs button:hover { color:rgb(255,174,0); }
 
-.products-section { display:none; padding:50px 20px; text-align:center; background:#ccc; transition:0.3s; }
-.products-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:30px; max-width:1200px; margin:auto; }
-.product-card { background:#bbb; padding:20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); transition:0.3s; }
+/* HEADER */
+header {
+    background:#222;
+    color:rgb(255, 174, 0);
+    padding:20px;
+    text-align:center;
+    position:relative;
+}
+.back-btn {
+    position:absolute;
+    left:20px;
+    top:20px;
+    background:transparent;
+    border:1px solid white;
+    color:white;
+    padding:5px 12px;
+    border-radius:5px;
+    cursor:pointer;
+    display:none;
+}
+
+/* NAVIGATION */
+.nav-tabs {
+    background:#111;
+    text-align:center;
+    padding:10px 0;
+}
+.nav-tabs button {
+    background:transparent;
+    border:none;
+    color:white;
+    margin:0 20px;
+    font-size:16px;
+    cursor:pointer;
+}
+.nav-tabs button:hover { color:rgb(255, 174, 0); }
+
+/* PRODUCTS SECTION */
+.products-section {
+    display:none;
+    padding:50px 20px;
+    text-align:center;
+    background:#ccc;
+    transition: background 0.3s, color 0.3s;
+}
+.products-section h2 { margin-bottom:20px; }
+.products-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+    gap:30px;
+    max-width:1200px;
+    margin:auto;
+}
+.product-card {
+    background:#bbb;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.08);
+    transition:0.3s ease, background 0.3s, color 0.3s;
+}
+.product-card:hover { transform:translateY(-5px); }
 .product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
-.product-card h3,p { margin-top:5px; color:#222; }
-.product-card button { margin-top:10px; padding:8px 15px; border:none; background:#222; color:rgb(255,174,0); border-radius:5px; cursor:pointer; }
+.product-card h3, .product-card p { margin-top:5px; color:#222; }
+.product-card button {
+    margin-top:10px;
+    padding:8px 15px;
+    border:none;
+    background:#222;
+    color:rgb(255, 174, 0);
+    border-radius:5px;
+    cursor:pointer;
+}
 .product-card button:hover { opacity:0.8; }
 
-.cart-icon { position:absolute; top:20px; right:20px; background:#222; color:rgb(255,174,0); padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; }
-.cart-dropdown { display:none; position:absolute; top:60px; right:20px; background:#ccc; color:#000; border:1px solid #999; width:300px; padding:15px; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.2); z-index:100; text-align:left; }
-.cart-item { display:flex; justify-content:space-between; margin-bottom:10px; }
-.cart-item button { background:red; color:white; border:none; padding:2px 6px; cursor:pointer; border-radius:4px; }
+/* CART ICON AND DROPDOWN */
+.cart-icon {
+    position:absolute;
+    top:20px;
+    right:20px;
+    background:#222;
+    color:rgb(255, 174, 0);
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+.cart-count { margin-left:5px; }
+.cart-dropdown {
+    display:none;
+    position:absolute;
+    top:60px;
+    right:20px;
+    background:#ccc;
+    color:#000;
+    border:1px solid #999;
+    width:300px;
+    padding:15px;
+    border-radius:8px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    z-index:100;
+    text-align:left;
+}
+.cart-item {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+.cart-item button {
+    background:red;
+    color:white;
+    border:none;
+    padding:2px 6px;
+    cursor:pointer;
+    border-radius:4px;
+}
 
-#checkoutMenu { display:none; position:fixed; top:0; right:0; width:400px; height:100%; background:#ccc; color:#222; padding:20px; box-shadow:-5px 0 15px rgba(0,0,0,0.3); z-index:200; overflow-y:auto; }
+/* CHECKOUT MENU */
+#checkoutMenu {
+    display:none;
+    position:fixed;
+    top:0;
+    right:0;
+    width:400px;
+    height:100%;
+    background:#ccc;
+    color:#222;
+    padding:20px;
+    box-shadow:-5px 0 15px rgba(0,0,0,0.3);
+    z-index:200;
+    overflow-y:auto;
+}
 #checkoutMenu.dark-mode { background:#555; color:#fff; }
+#checkoutMenu h2 { margin-bottom:20px; }
+#checkoutItems { margin-bottom:20px; }
+#checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
+#checkoutItems button { background:red; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; }
 #checkoutClose { background:black; color:rgb(255,174,0); padding:10px 15px; border:none; border-radius:5px; cursor:pointer; float:right; }
 
+/* BOOKING SYSTEM */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
-.card { background:#ccc; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; color:#222; transition:0.4s; }
+.card { background:#ccc; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease, background 0.3s, color 0.3s; color:#222; }
 .card.success { background:#d4edda; color:#000; }
 .hidden { display:none; }
 button.main-btn { padding:10px 20px; border:none; background:black; color:white; cursor:pointer; border-radius:5px; }
@@ -44,7 +162,19 @@ button.main-btn:hover { opacity:0.8; }
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
 
-.toggle-mode { position:fixed; top:50%; right:20px; transform:translateY(-50%); background:#222; color:rgb(255,174,0); padding:10px 15px; border-radius:8px; cursor:pointer; z-index:500; }
+/* DARK MODE BUTTON */
+.toggle-mode {
+    position:fixed;
+    top:50%;
+    right:20px;
+    transform:translateY(-50%);
+    background:#222;
+    color:rgb(255,174,0);
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    z-index:500;
+}
 </style>
 </head>
 
@@ -55,39 +185,47 @@ button.main-btn:hover { opacity:0.8; }
 <h1 onclick="goHome()" style="cursor:pointer;">The OG Barber</h1>
 </header>
 
+<!-- NAVIGATION -->
 <div class="nav-tabs">
-<button onclick="showBooking()">Home</button>
-<button onclick="showProducts()">Products</button>
+    <button onclick="showBooking()">Home</button>
+    <button onclick="showProducts()">Products</button>
 </div>
 
+<!-- DARK MODE TOGGLE -->
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
 
+<!-- PRODUCTS SECTION -->
 <section class="products-section" id="productsSection">
 <h2>My Products</h2>
 <div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
+
 <div class="cart-dropdown" id="cartDropdown">
-<div id="cartItems"></div>
-<hr>
-<div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
-<button style="margin-top:10px;width:100%;padding:10px;background:#222;color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
+    <div id="cartItems"></div>
+    <hr>
+    <div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
 </div>
+
 <div class="products-grid" id="productsGrid"></div>
 </section>
 
+<!-- CHECKOUT MENU -->
 <div id="checkoutMenu">
-<button id="checkoutClose" onclick="closeCheckout()">Close</button>
-<h2>Checkout</h2>
-<div id="checkoutItems"></div>
-<hr>
-<div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
-<button style="margin-top:10px;width:100%;padding:10px;background:#222;color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
+    <button id="checkoutClose" onclick="closeCheckout()">Close</button>
+    <h2>Checkout</h2>
+    <div id="checkoutItems"></div>
+    <hr>
+    <div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
+    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
 </div>
 
+<!-- BOOKING SYSTEM -->
 <div class="container" id="bookingSection">
 <div id="step1" class="card">
 <h2>Select Services</h2>
 <label style="font-weight:bold;">Name for booking</label>
-<input id="customerName" placeholder="What is the name for the booking?" style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;">
+<input id="customerName" placeholder="What is the name for the booking?"
+style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;">
 <div id="services"></div>
 <div class="total-box">Total: £<span id="total">0</span></div>
 <button class="main-btn" onclick="goToCalendar()">Next</button>
@@ -112,18 +250,54 @@ button.main-btn:hover { opacity:0.8; }
 </div>
 
 <script>
-// ====== STATE ======
-let currentStep = 1;
+
+    
+// --- SERVICE WORKER & PUSH NOTIFICATIONS ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+    .then(reg => console.log('Service Worker Registered'))
+    .catch(err => console.log('SW registration failed', err));
+}
+
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    const permission = await Notification.requestPermission();
+    if(permission !== 'granted') alert('Enable notifications to get booking alerts!');
+}
+requestNotificationPermission();
+
+// --- SERVICES ---
+const serviceData = [
+    { name: "Haircut", price: 10 },
+    { name: "Skin Fade", price: 11.99 },
+    { name: "Beard Trim", price: 6.99 },
+    { name: "Hair & Beard", price: 14.99 }
+];
 let selectedServices = [];
 let total = 0;
 let selectedDate = "";
 let selectedTime = "";
 
 const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
-const backBtn = document.getElementById("backBtn");
 const servicesDiv = document.getElementById("services");
-const calendarDiv = document.getElementById("calendar");
-const timesDiv = document.getElementById("times");
+const backBtn = document.getElementById("backBtn");
+
+serviceData.forEach(service => {
+    const div = document.createElement("div");
+    div.className = "service";
+    div.innerHTML=`<span>${service.name} (£${service.price})</span>
+    <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
+    servicesDiv.appendChild(div);
+});
+
+// --- PRODUCTS ---
+const products = [
+    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
+    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
+    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
+];
+
+let cart = [];
 const productsGrid = document.getElementById("productsGrid");
 const cartDropdown = document.getElementById("cartDropdown");
 const cartItemsDiv = document.getElementById("cartItems");
@@ -133,128 +307,112 @@ const checkoutMenu = document.getElementById("checkoutMenu");
 const checkoutItemsDiv = document.getElementById("checkoutItems");
 const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
-// ====== SERVICES ======
-const serviceData = [
-{name:"Haircut",price:10},
-{name:"Skin Fade",price:11.99},
-{name:"Beard Trim",price:6.99},
-{name:"Hair & Beard",price:14.99}
-];
-serviceData.forEach(s=>{
-    const div=document.createElement("div");
-    div.className="service";
-    div.innerHTML=`<span>${s.name} (£${s.price})</span><input type="checkbox" onchange="toggleService('${s.name}',${s.price})">`;
-    servicesDiv.appendChild(div);
-});
-function toggleService(name,price){
-    if(selectedServices.includes(name)){
-        selectedServices = selectedServices.filter(x=>x!==name);
-        total-=price;
-    }else{
-        selectedServices.push(name);
-        total+=price;
-    }
-    document.getElementById("total").innerText = total.toFixed(2);
-}
-
-// ====== CART / PRODUCTS ======
-const products=[
-{name:"Texture Paste",price:8.99,img:"images/paste.png"},
-{name:"Texture Powder",price:6.99,img:"images/texture.png"},
-{name:"Sea Salt Spray",price:7.99,img:"images/spray.png"}
-];
-let cart=[];
-products.forEach((p,i)=>{
+// --- PRODUCTS FUNCTIONS ---
+products.forEach((prod,index)=>{
     const div=document.createElement("div");
     div.className="product-card";
-    div.innerHTML=`<img src="${p.img}" alt="${p.name}"><h3>${p.name}</h3><p>£${p.price.toFixed(2)}</p><button onclick="addToCart(${i})">Add to Cart</button>`;
+    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}"><h3>${prod.name}</h3><p>£${prod.price.toFixed(2)}</p><button onclick="addToCart(${index})">Add to Cart</button>`;
     productsGrid.appendChild(div);
 });
-function addToCart(i){
-    const item=products[i];
-    const exist=cart.find(x=>x.name===item.name);
-    if(exist) exist.qty+=1; else cart.push({...item,qty:1});
-    updateCart();
-}
-function removeFromCart(i){ cart.splice(i,1); updateCart(); }
-function updateCart(){
-    cartItemsDiv.innerHTML="";
-    checkoutItemsDiv.innerHTML="";
-    let t=0;
-    cart.forEach((item,i)=>{
-        const div=document.createElement("div"); div.className="cart-item";
-        div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
-        cartItemsDiv.appendChild(div);
-        const div2=div.cloneNode(true); checkoutItemsDiv.appendChild(div2);
-        t+=item.price*item.qty;
-    });
-    cartTotalSpan.innerText=t.toFixed(2);
-    checkoutTotalSpan.innerText=t.toFixed(2);
-    cartCountSpan.innerText=cart.reduce((acc,i)=>acc+i.qty,0);
-}
-function toggleCart(){ cartDropdown.style.display=cartDropdown.style.display==="block"?"none":"block"; }
+
+function addToCart(index){ const item = products[index]; const exist = cart.find(p=>p.name===item.name); if(exist){ exist.qty+=1; } else { cart.push({...item, qty:1}); } updateCart(); }
+function removeFromCart(index){ cart.splice(index,1); updateCart(); }
+function updateCart(){ cartItemsDiv.innerHTML=""; checkoutItemsDiv.innerHTML=""; let total=0; cart.forEach((item,i)=>{ const div=document.createElement("div"); div.className="cart-item"; div.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`; cartItemsDiv.appendChild(div); const div2=document.createElement("div"); div2.innerHTML=`${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`; checkoutItemsDiv.appendChild(div2); total+=item.price*item.qty; }); cartTotalSpan.innerText = total.toFixed(2); checkoutTotalSpan.innerText = total.toFixed(2); cartCountSpan.innerText = cart.reduce((acc,i)=>acc+i.qty,0); }
+function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
 function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
 function closeCheckout(){ checkoutMenu.style.display="none"; }
-function confirmCheckout(){ if(cart.length===0)return alert("Cart is empty!"); alert("Purchase confirmed!"); cart=[]; updateCart(); closeCheckout(); }
+function confirmCheckout(){ if(cart.length===0) return alert("Cart is empty!"); let summary = cart.map(p=>`${p.name} x${p.qty}`).join("\n"); alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`); cart=[]; updateCart(); closeCheckout(); }
 
-// ====== BOOKING NAV ======
+// --- NAVIGATION ---
 function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
 function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
-function showStep(step){ for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); } document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display=step===1?"none":"block"; }
-function goBack(){ if(currentStep>1) showStep(currentStep-1); }
-function goHome(){ showBooking(); showStep(1); }
 
-// ====== CALENDAR / TIMES ======
-function generateCalendar(){
-    calendarDiv.innerHTML="";
-    const today=new Date();
-    for(let i=0;i<21;i++){
-        const date=new Date();
-        date.setDate(today.getDate()+i);
-        const div=document.createElement("div");
-        div.className="day"; div.innerText=date.toDateString();
-        div.onclick=()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=date.toDateString(); };
-        calendarDiv.appendChild(div);
-    }
-}
-generateCalendar();
-const times=["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
-times.forEach(t=>{
-    const div=document.createElement("div");
-    div.className="time"; div.innerText=t;
-    div.onclick=()=>{ document.querySelectorAll(".time").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedTime=t; };
-    timesDiv.appendChild(div);
-});
+// --- BOOKING ---
+function goHome(){ showBooking(); showStep(1); }
+function showStep(step){ for(let i=1;i<=4;i++){ document.getElementById("step"+i).classList.add("hidden"); } document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display= step===1 ? "none":"block"; }
+function goBack(){ if(currentStep>1) showStep(currentStep-1); }
+function toggleService(name,price){ if(selectedServices.includes(name)){ selectedServices=selectedServices.filter(s=>s!==name); total-=price; } else { selectedServices.push(name); total+=price; } document.getElementById("total").innerText=total.toFixed(2); }
 function goToCalendar(){ if(selectedServices.length===0) return alert("Select a service."); showStep(2); }
+function generateCalendar(){ const calendar=document.getElementById("calendar"); const today=new Date(); for(let i=0;i<21;i++){ const date=new Date(); date.setDate(today.getDate()+i); const div=document.createElement("div"); div.className="day"; div.innerText=date.toDateString(); div.onclick=()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=date.toDateString(); }; calendar.appendChild(div); } }
+generateCalendar();
 function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
 
-// ====== CONFIRM BOOKING ======
-async function confirmBooking(){
-    if(!selectedTime) return alert("Select time.");
-    const name=document.getElementById("customerName")?.value||"Unknown";
-    const bookingData={name,date:selectedDate,time:selectedTime,services:selectedServices,total:total.toFixed(2)};
-    try{
-        const res=await fetch("http://localhost:5000/book",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(bookingData)});
-        if(!res.ok) return alert("Time slot already booked!");
-    }catch(e){ return alert("Error connecting to server."); }
-    document.getElementById("confirmationText").innerText=`Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
+// --- TIMES ---
+const timesContainer = document.getElementById("times");
+["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "time";
+    div.innerText = t;
+    div.onclick = () => {
+        document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedTime = t;
+    };
+    timesContainer.appendChild(div);
+});
+
+// --- BOOKING CONFIRM WITH EMBED ---
+async function confirmBooking() {
+    if (!selectedTime) return alert("Select time.");
+
+    const name = document.getElementById("customerName")?.value || "Unknown";
+
+    const bookingData = {
+        name,
+        date: selectedDate,
+        time: selectedTime,
+        services: selectedServices,
+        total: total.toFixed(2)
+    };
+
+    // POST booking to your backend
+    const res = await fetch("http://localhost:5000/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingData)
+    });
+
+    if (!res.ok) {
+        alert("That time slot is already booked!");
+        return;
+    }
+
+    // Show confirmation step
+    document.getElementById("confirmationText").innerText =
+        `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
     showStep(4);
-    if(Notification.permission==="granted"){ navigator.serviceWorker.getRegistration().then(reg=>{ if(reg) reg.showNotification("Booking Confirmed!",{body:`${name} - ${selectedDate} at ${selectedTime}`}); }); }
-    const embed={title:"New Booking",description:`**Name:** ${name}\n**Date:** ${selectedDate}\n**Time:** ${selectedTime}\n**Services:** ${selectedServices.join(", ")}\n**Total:** £${total.toFixed(2)}`,color:16753920};
-    fetch(DISCORD_WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({embeds:[embed]})}).catch(err=>console.log("Discord error:",err));
+
+    // 🔔 Browser notification
+    if (Notification.permission === "granted") {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) reg.showNotification("New Booking Confirmed!", {
+                body: `${name} - ${selectedDate} at ${selectedTime}`
+            });
+        });
+    }
+
+    // 🔥 SEND EMBED TO DISCORD (basic example)
+    const embed = {
+        title: "New Booking",
+        description: `**Name:** ${name}\n**Date:** ${selectedDate}\n**Time:** ${selectedTime}\n**Services:** ${selectedServices.join(", ")}\n**Total:** £${total.toFixed(2)}`,
+        color: 16753920
+    };
+
+    fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+    }).catch(err => console.log("Discord webhook error:", err));
 }
 
-// ====== DARK MODE ======
+
+// --- DARK MODE ---
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
 }
-
-// ====== SERVICE WORKER & NOTIFICATIONS ======
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').then(r=>console.log("SW registered")).catch(e=>console.log("SW failed",e)); }
-Notification.requestPermission().then(p=>{ if(p!=="granted") alert("Enable notifications to get booking alerts!"); });
-
 </script>
+
 </body>
 </html>
