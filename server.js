@@ -1,54 +1,28 @@
-const express = require("express");
-const fs = require("fs");
-const bodyParser = require("body-parser");
+// server.js
+const express = require('express');
+const fetch = require('node-fetch');
 const app = express();
+app.use(express.json());
 
-app.use(bodyParser.json());
-app.use(express.static("public"));
+const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
 
-const BOOKINGS_FILE = "bookings.json";
-
-function readBookings() {
-    if (!fs.existsSync(BOOKINGS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(BOOKINGS_FILE));
-}
-
-function saveBookings(bookings) {
-    fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2));
-}
-
-app.post("/book", (req, res) => {
-    const { date, time, services, total } = req.body;
-
-    let bookings = readBookings();
-
-    // 🚫 Prevent double booking
-    const alreadyBooked = bookings.find(
-        b => b.date === date && b.time === time
-    );
-
-    if (alreadyBooked) {
-        return res.status(400).json({ message: "Time slot already booked." });
-    }
-
-    const newBooking = {
-        id: Date.now(),
-        date,
-        time,
-        services,
-        total
-    };
-
-    bookings.push(newBooking);
-    saveBookings(bookings);
-
-    res.json({ message: "Booking confirmed!", booking: newBooking });
+app.post('/book', async (req,res)=>{
+  const booking = req.body;
+  try {
+    await fetch(DISCORD_WEBHOOK,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ embeds:[{
+        title:"New Booking",
+        description:`**Name:** ${booking.name}\n**Date:** ${booking.date}\n**Time:** ${booking.time}\n**Services:** ${booking.services.join(", ")}\n**Total:** £${booking.total}`,
+        color:16753920
+      }]})
+    });
+    res.json({ ok:true });
+  } catch(err){
+    console.error(err);
+    res.status(500).json({ ok:false });
+  }
 });
 
-app.get("/bookings", (req, res) => {
-    res.json(readBookings());
-});
-
-app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
-});
+app.listen(5000, ()=>console.log("Server running on port 5000"));
