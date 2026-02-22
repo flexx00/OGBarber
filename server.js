@@ -1,6 +1,8 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 // Middleware
@@ -16,8 +18,37 @@ async function fetchWrapper(...args) {
     return fetch(...args);
 }
 
+// Path to store booked slots
+const BOOKED_FILE = path.join(__dirname, 'bookedSlots.json');
+
+// Load booked slots from file or initialize empty array
+let bookedSlots = [];
+if (fs.existsSync(BOOKED_FILE)) {
+    try {
+        const data = fs.readFileSync(BOOKED_FILE, 'utf-8');
+        bookedSlots = JSON.parse(data);
+    } catch (err) {
+        console.error("Failed to read booked slots file:", err);
+        bookedSlots = [];
+    }
+}
+
+// Save booked slots to file
+function saveBookedSlots() {
+    fs.writeFileSync(BOOKED_FILE, JSON.stringify(bookedSlots, null, 2));
+}
+
 // GET route for browser check
 app.get('/', (req, res) => res.send("Booking server is running"));
+
+// GET booked slots for a specific date
+app.get('/booked/:date', (req, res) => {
+    const date = req.params.date;
+    const slots = bookedSlots
+        .filter(slot => slot.date === date)
+        .map(slot => slot.time);
+    res.json(slots);
+});
 
 // POST /book route
 app.post('/book', async (req, res) => {
@@ -29,7 +60,18 @@ app.post('/book', async (req, res) => {
         return res.status(400).json({ ok: false, error: "Missing booking fields" });
     }
 
+    // Check if slot is already booked
+    const alreadyBooked = bookedSlots.some(slot => slot.date === booking.date && slot.time === booking.time);
+    if (alreadyBooked) {
+        return res.status(400).json({ ok: false, error: "Slot already booked" });
+    }
+
+    // Add slot to booked slots and save
+    bookedSlots.push({ date: booking.date, time: booking.time });
+    saveBookedSlots();
+
     try {
+        // Send booking to Discord webhook
         await fetchWrapper(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
