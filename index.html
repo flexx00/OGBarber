@@ -186,16 +186,13 @@ button.main-btn:hover { opacity:0.8; }
 <h1 onclick="goHome()" style="cursor:pointer;">The OG Barber</h1>
 </header>
 
-<!-- NAVIGATION -->
 <div class="nav-tabs">
     <button onclick="showBooking()">Home</button>
     <button onclick="showProducts()">Products</button>
 </div>
 
-<!-- DARK MODE TOGGLE -->
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
 
-<!-- PRODUCTS SECTION -->
 <section class="products-section" id="productsSection">
 <h2>My Products</h2>
 <div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
@@ -210,7 +207,6 @@ button.main-btn:hover { opacity:0.8; }
 <div class="products-grid" id="productsGrid"></div>
 </section>
 
-<!-- CHECKOUT MENU -->
 <div id="checkoutMenu">
     <button id="checkoutClose" onclick="closeCheckout()">Close</button>
     <h2>Checkout</h2>
@@ -220,7 +216,6 @@ button.main-btn:hover { opacity:0.8; }
     <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
 </div>
 
-<!-- BOOKING SYSTEM -->
 <div class="container" id="bookingSection">
 <div id="step1" class="card">
 <h2>Select Services</h2>
@@ -247,13 +242,11 @@ style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px s
 <div id="step4" class="card hidden success">
 <h2>Booking Confirmed 🎉</h2>
 <p id="confirmationText"></p>
+<button class="main-btn" onclick="startNewBooking()">New Booking</button>
 </div>
 </div>
 
 <script>
-// ----------------------------
-// GLOBAL STATE
-// ----------------------------
 let currentStep = 1;
 let selectedServices = [];
 let total = 0;
@@ -276,13 +269,9 @@ const checkoutMenu = document.getElementById("checkoutMenu");
 const checkoutItemsDiv = document.getElementById("checkoutItems");
 const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
-// Backend URL
 const BACKEND_BOOK_URL = "http://localhost:5000/book";
 const BACKEND_BOOKED_URL = "http://localhost:5000/booked";
 
-// ----------------------------
-// SERVICES
-// ----------------------------
 const serviceData = [
   { name: "Haircut", price: 10 },
   { name: "Skin Fade", price: 11.99 },
@@ -309,128 +298,6 @@ function toggleService(name, price){
     document.getElementById("total").innerText = total.toFixed(2);
 }
 
-// ----------------------------
-// PRODUCTS & CART
-// ----------------------------
-const products = [
-    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
-    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
-    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
-];
-
-products.forEach((prod, index) => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `
-        <img src="${prod.img}" alt="${prod.name}">
-        <h3>${prod.name}</h3>
-        <p>£${prod.price.toFixed(2)}</p>
-        <button onclick="addToCart(${index})">Add to Cart</button>
-    `;
-    productsGrid.appendChild(div);
-});
-
-function addToCart(index){
-    const item = products[index];
-    const exist = cart.find(p => p.name === item.name);
-    if(exist) exist.qty += 1;
-    else cart.push({...item, qty:1});
-    updateCart();
-}
-
-function removeFromCart(index){
-    cart.splice(index,1);
-    updateCart();
-}
-
-function updateCart(){
-    cartItemsDiv.innerHTML = "";
-    checkoutItemsDiv.innerHTML = "";
-    let totalCart = 0;
-
-    cart.forEach((item, i) => {
-        const div1 = document.createElement("div");
-        div1.className = "cart-item";
-        div1.innerHTML = `${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
-        cartItemsDiv.appendChild(div1);
-
-        const div2 = div1.cloneNode(true);
-        checkoutItemsDiv.appendChild(div2);
-
-        totalCart += item.price * item.qty;
-    });
-
-    cartTotalSpan.innerText = totalCart.toFixed(2);
-    checkoutTotalSpan.innerText = totalCart.toFixed(2);
-    cartCountSpan.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
-}
-
-function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
-function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
-function closeCheckout(){ checkoutMenu.style.display="none"; }
-
-function confirmCheckout(){
-    if(cart.length === 0) return alert("Cart is empty!");
-    let summary = cart.map(p => `${p.name} x${p.qty}`).join("\n");
-    alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
-    cart = [];
-    updateCart();
-    closeCheckout();
-}
-
-// ----------------------------
-// NAVIGATION
-// ----------------------------
-function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
-function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
-
-function showStep(step){
-    for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden");
-    document.getElementById("step"+step).classList.remove("hidden");
-    currentStep = step;
-    backBtn.style.display = step===1 ? "none":"block";
-}
-
-function goBack(){ if(currentStep>1) showStep(currentStep-1); }
-function goHome(){ showStep(1); }
-
-// ----------------------------
-// CALENDAR
-// ----------------------------
-function generateCalendar(){
-    calendarDiv.innerHTML = "";
-    const today = new Date();
-    for(let i=0;i<21;i++){
-        const date = new Date();
-        date.setDate(today.getDate() + i);
-        const div = document.createElement("div");
-        div.className = "day";
-        div.innerText = date.toDateString();
-        div.onclick = async () => {
-            document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
-            div.classList.add("selected");
-            selectedDate = date.toISOString().split('T')[0];
-            // Load booked times for selected date
-            await loadTimeSlots(selectedDate);
-        };
-        calendarDiv.appendChild(div);
-    }
-}
-generateCalendar();
-
-function goToCalendar(){
-    if(selectedServices.length === 0) return alert("Select at least one service.");
-    showStep(2);
-}
-
-function goToTimes(){
-    if(!selectedDate) return alert("Select a date.");
-    showStep(3);
-}
-
-// ----------------------------
-// TIMES
-// ----------------------------
 const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
 
 async function loadTimeSlots(date){
@@ -439,26 +306,22 @@ async function loadTimeSlots(date){
     try {
         const res = await fetch(`${BACKEND_BOOKED_URL}/${date}`);
         if(res.ok) booked = await res.json();
-    } catch(err){
-        console.error("Failed to fetch booked slots", err);
-    }
+    } catch(err){ console.error(err); }
 
     const today = new Date().toISOString().split('T')[0];
-    const nowHour = new Date().getHours();
-    const nowMinute = new Date().getMinutes();
+    const now = new Date();
+    const nowHour = now.getHours();
+    const nowMinute = now.getMinutes();
 
     defaultTimes.forEach(t => {
         const div = document.createElement("div");
         div.className = "time";
         div.innerText = t;
-
-        // Grey out if already booked
         let isBooked = booked.includes(t);
 
-        // Grey out if past time today
         if(date === today){
-            const [h, m] = t.split(':').map(Number);
-            if(h < nowHour || (h === nowHour && m <= nowMinute)) isBooked = true;
+            const [h,m] = t.split(':').map(Number);
+            if(h < nowHour || (h===nowHour && m<=nowMinute)) isBooked=true;
         }
 
         if(isBooked){
@@ -474,9 +337,7 @@ async function loadTimeSlots(date){
     });
 }
 
-// ----------------------------
-// BOOKING CONFIRM (with backend webhook)
-// ----------------------------
+// Booking confirmation
 async function confirmBooking() {
     const name = document.getElementById("customerName")?.value.trim() || "Unknown";
     if(selectedServices.length===0) return alert("Select at least one service.");
@@ -484,31 +345,24 @@ async function confirmBooking() {
     if(!selectedTime) return alert("Select a time.");
 
     const bookingData = { name, date:selectedDate, time:selectedTime, services:selectedServices, total:total.toFixed(2) };
-
     let res;
     try {
-        res = await fetch(BACKEND_BOOK_URL, {
+        res = await fetch(BACKEND_BOOK_URL,{
             method:"POST",
-            headers: { "Content-Type":"application/json" },
-            body: JSON.stringify(bookingData)
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(bookingData)
         });
-    } catch(err) {
-        console.error("Booking failed:", err);
-        return alert("Booking server not reachable.");
-    }
+    } catch(err){ console.error(err); return alert("Booking server not reachable."); }
 
     if(!res.ok) return alert("Time slot already booked or server error.");
 
-    // Show confirmation
     confirmationText.innerText = `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
     showStep(4);
 
-    // Reload times to grey out the newly booked slot
     await loadTimeSlots(selectedDate);
 
-    // Reset selections
+    // Reset services and total, but keep selectedDate for the next booking
     selectedServices = [];
-    selectedDate = "";
     selectedTime = "";
     total = 0;
     document.getElementById("total").innerText = "0";
@@ -516,14 +370,47 @@ async function confirmBooking() {
     document.querySelectorAll(".day").forEach(el=>el.classList.remove("selected"));
 }
 
-// ----------------------------
-// DARK MODE
-// ----------------------------
+// Start a new booking after confirmation
+function startNewBooking(){
+    selectedDate = ""; // reset date only when user explicitly starts new booking
+    showStep(1);
+}
+
+// Dark mode toggle
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
     checkoutMenu.classList.toggle("dark-mode");
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
 }
+
+// Calendar generation
+function generateCalendar(){
+    calendarDiv.innerHTML = "";
+    const today = new Date();
+    for(let i=0;i<21;i++){
+        const date = new Date();
+        date.setDate(today.getDate() + i);
+        const div = document.createElement("div");
+        div.className = "day";
+        div.innerText = date.toDateString();
+        div.onclick = async () => {
+            document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
+            div.classList.add("selected");
+            selectedDate = date.toISOString().split('T')[0];
+            await loadTimeSlots(selectedDate);
+        };
+        calendarDiv.appendChild(div);
+    }
+}
+generateCalendar();
+
+function goToCalendar(){ if(selectedServices.length===0) return alert("Select at least one service."); showStep(2); }
+function goToTimes(){ if(!selectedDate) return alert("Select a date."); showStep(3); }
+function showStep(step){ for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden"); document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display=step===1?"none":"block"; }
+function goBack(){ if(currentStep>1) showStep(currentStep-1); }
+function goHome(){ showStep(1); }
+function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
+function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
 </script>
 
 </body>
