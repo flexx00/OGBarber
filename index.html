@@ -160,6 +160,7 @@ button.main-btn:hover { opacity:0.8; }
 .day, .time { padding:15px; background:#eee; text-align:center; cursor:pointer; border-radius:5px; }
 .day.selected, .time.selected { background:#222; color:white; }
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
+.time.booked { background:#ccc; color:#666; cursor:not-allowed; }
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
 
 /* DARK MODE BUTTON */
@@ -251,22 +252,6 @@ style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px s
 
 <script>
 // ----------------------------
-// SERVICE WORKER & NOTIFICATIONS
-// ----------------------------
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-    .then(reg => console.log('Service Worker Registered'))
-    .catch(err => console.log('SW registration failed', err));
-}
-
-async function requestNotificationPermission() {
-    if (!('Notification' in window)) return;
-    const permission = await Notification.requestPermission();
-    if(permission !== 'granted') alert('Enable notifications to get booking alerts!');
-}
-requestNotificationPermission();
-
-// ----------------------------
 // GLOBAL STATE
 // ----------------------------
 let currentStep = 1;
@@ -276,7 +261,6 @@ let selectedDate = "";
 let selectedTime = "";
 let cart = [];
 
-// Backend proxy URL (replace with your Node.js server)
 const BACKEND_BOOK_URL = "http://localhost:5000/book";
 
 // DOM Elements
@@ -285,15 +269,6 @@ const calendarDiv = document.getElementById("calendar");
 const timesDiv = document.getElementById("times");
 const backBtn = document.getElementById("backBtn");
 const confirmationText = document.getElementById("confirmationText");
-
-const productsGrid = document.getElementById("productsGrid");
-const cartDropdown = document.getElementById("cartDropdown");
-const cartItemsDiv = document.getElementById("cartItems");
-const cartTotalSpan = document.getElementById("cartTotal");
-const cartCountSpan = document.getElementById("cartCount");
-const checkoutMenu = document.getElementById("checkoutMenu");
-const checkoutItemsDiv = document.getElementById("checkoutItems");
-const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
 // ----------------------------
 // SERVICES
@@ -327,91 +302,6 @@ function toggleService(name, price){
 }
 
 // ----------------------------
-// PRODUCTS & CART
-// ----------------------------
-const products = [
-    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
-    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
-    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
-];
-
-products.forEach((prod, index) => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `
-        <img src="${prod.img}" alt="${prod.name}">
-        <h3>${prod.name}</h3>
-        <p>£${prod.price.toFixed(2)}</p>
-        <button onclick="addToCart(${index})">Add to Cart</button>
-    `;
-    productsGrid.appendChild(div);
-});
-
-function addToCart(index){
-    const item = products[index];
-    const exist = cart.find(p => p.name === item.name);
-    if(exist) exist.qty += 1;
-    else cart.push({...item, qty:1});
-    updateCart();
-}
-
-function removeFromCart(index){
-    cart.splice(index,1);
-    updateCart();
-}
-
-function updateCart(){
-    cartItemsDiv.innerHTML = "";
-    checkoutItemsDiv.innerHTML = "";
-    let totalCart = 0;
-
-    cart.forEach((item, i) => {
-        const div1 = document.createElement("div");
-        div1.className = "cart-item";
-        div1.innerHTML = `${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
-        cartItemsDiv.appendChild(div1);
-
-        const div2 = div1.cloneNode(true);
-        checkoutItemsDiv.appendChild(div2);
-
-        totalCart += item.price * item.qty;
-    });
-
-    cartTotalSpan.innerText = totalCart.toFixed(2);
-    checkoutTotalSpan.innerText = totalCart.toFixed(2);
-    cartCountSpan.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
-}
-
-function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
-function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
-function closeCheckout(){ checkoutMenu.style.display="none"; }
-
-function confirmCheckout(){
-    if(cart.length === 0) return alert("Cart is empty!");
-    let summary = cart.map(p => `${p.name} x${p.qty}`).join("\n");
-    alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
-    cart = [];
-    updateCart();
-    closeCheckout();
-}
-
-// ----------------------------
-// NAVIGATION
-// ----------------------------
-function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
-function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
-
-function showStep(step){
-    for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden");
-    document.getElementById("step"+step).classList.remove("hidden");
-    currentStep = step;
-    backBtn.style.display = step===1 ? "none":"block";
-}
-
-function goBack(){ if(currentStep>1) showStep(currentStep-1); }
-function goHome(){ showStep(1); }
-
-// ----------------------------
 // CALENDAR
 // ----------------------------
 function generateCalendar(){
@@ -426,7 +316,7 @@ function generateCalendar(){
         div.onclick = () => {
             document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
             div.classList.add("selected");
-            selectedDate = date.toDateString();
+            selectedDate = date.toISOString().split('T')[0]; // yyyy-mm-dd
         };
         calendarDiv.appendChild(div);
     }
@@ -438,28 +328,65 @@ function goToCalendar(){
     showStep(2);
 }
 
+// ----------------------------
+// TIME SLOTS
+// ----------------------------
+const allTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
+
+async function loadTimeSlots(dateStr){
+    timesDiv.innerHTML = "";
+
+    // Fetch booked slots
+    let booked = [];
+    try {
+        const res = await fetch(`http://localhost:5000/booked/${dateStr}`);
+        booked = await res.json();
+    } catch(err){
+        console.error("Failed to fetch booked slots", err);
+    }
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    allTimes.forEach(t=>{
+        const div = document.createElement("div");
+        div.className = "time";
+        div.innerText = t;
+
+        // Disable past times if today
+        if(dateStr === todayStr){
+            const [h,m] = t.split(":").map(Number);
+            if(h < now.getHours() || (h === now.getHours() && m <= now.getMinutes())){
+                div.classList.add("booked");
+            }
+        }
+
+        // Disable already booked times
+        if(booked.includes(t)){
+            div.classList.add("booked");
+        }
+
+        // Add click event if not booked
+        if(!div.classList.contains("booked")){
+            div.onclick = () => {
+                document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
+                div.classList.add("selected");
+                selectedTime = t;
+            };
+        }
+
+        timesDiv.appendChild(div);
+    });
+}
+
 function goToTimes(){
     if(!selectedDate) return alert("Select a date.");
     showStep(3);
+    loadTimeSlots(selectedDate);
 }
 
 // ----------------------------
-// TIMES
-// ----------------------------
-["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"].forEach(t => {
-    const div = document.createElement("div");
-    div.className = "time";
-    div.innerText = t;
-    div.onclick = () => {
-        document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
-        div.classList.add("selected");
-        selectedTime = t;
-    };
-    timesDiv.appendChild(div);
-});
-
-// ----------------------------
-// BOOKING CONFIRM (with backend webhook)
+// BOOKING CONFIRMATION
 // ----------------------------
 async function confirmBooking() {
     const name = document.getElementById("customerName")?.value.trim() || "Unknown";
@@ -469,7 +396,6 @@ async function confirmBooking() {
 
     const bookingData = { name, date:selectedDate, time:selectedTime, services:selectedServices, total:total.toFixed(2) };
 
-    // Send to backend (backend handles Discord webhook)
     let res;
     try {
         res = await fetch(BACKEND_BOOK_URL, {
@@ -484,15 +410,8 @@ async function confirmBooking() {
 
     if(!res.ok) return alert("Time slot already booked or server error.");
 
-    // Show confirmation
     confirmationText.innerText = `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
     showStep(4);
-
-    // Notification
-    if(Notification.permission === "granted") {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if(reg) reg.showNotification("Booking Confirmed!", { body:`${name} - ${selectedDate} at ${selectedTime}` });
-    }
 
     // Reset selections
     selectedServices = [];
@@ -505,11 +424,24 @@ async function confirmBooking() {
 }
 
 // ----------------------------
+// NAVIGATION
+// ----------------------------
+function showStep(step){
+    for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden");
+    document.getElementById("step"+step).classList.remove("hidden");
+    currentStep = step;
+    backBtn.style.display = step===1 ? "none":"block";
+}
+function goBack(){ if(currentStep>1) showStep(currentStep-1); }
+function goHome(){ showStep(1); }
+function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
+function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
+
+// ----------------------------
 // DARK MODE
 // ----------------------------
 function toggleMode(){
     document.body.classList.toggle("dark-mode");
-    checkoutMenu.classList.toggle("dark-mode");
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
 }
 </script>
