@@ -22,7 +22,6 @@ async function fetchWrapper(...args) {
 const BOOKED_FILE = path.join(__dirname, 'bookedSlots.json');
 
 // Load booked slots from file or initialize empty array
-let bookedSlots = [];
 if (fs.existsSync(BOOKED_FILE)) {
     try {
         const data = fs.readFileSync(BOOKED_FILE, 'utf-8').trim();
@@ -31,9 +30,6 @@ if (fs.existsSync(BOOKED_FILE)) {
         console.error("Failed to read booked slots file:", err);
         bookedSlots = [];
     }
-} else {
-    // Ensure file exists
-    fs.writeFileSync(BOOKED_FILE, '[]');
 }
 
 // Save booked slots to file
@@ -48,27 +44,27 @@ function removePastBookings() {
     saveBookedSlots();
 }
 
-// Clean old bookings on server start
+// Call this on server start to clean old bookings
 removePastBookings();
 
 // GET route for browser check
 app.get('/', (req, res) => res.send("Booking server is running"));
 
-// GET booked slots for today or a specific date
-app.get(['/booked', '/booked/:date'], (req, res) => {
-    // Use provided date or default to today
-    const dateParam = req.params.date
-        ? new Date(req.params.date).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0];
+// GET booked slots for a specific date
+app.get('/booked/:date', (req, res) => {
+    // Normalize date to ISO (YYYY-MM-DD)
+    const dateParam = new Date(req.params.date).toISOString().split('T')[0];
 
-    const slots = bookedSlots
+    let slots = bookedSlots
         .filter(slot => slot.date === dateParam)
-        .map(slot => slot.time)
-        .sort((a, b) => {
-            const [ah, am] = a.split(':').map(Number);
-            const [bh, bm] = b.split(':').map(Number);
-            return ah - bh || am - bm;
-        });
+        .map(slot => slot.time);
+
+    // Sort times ascending
+    slots.sort((a, b) => {
+        const [ah, am] = a.split(':').map(Number);
+        const [bh, bm] = b.split(':').map(Number);
+        return ah - bh || am - bm;
+    });
 
     res.json(slots);
 });
@@ -86,11 +82,12 @@ app.post('/book', async (req, res) => {
     const bookingDate = new Date(booking.date).toISOString().split('T')[0];
     const bookingTime = booking.time;
 
-    // Remove old bookings
+    // Remove old bookings before checking
     removePastBookings();
 
     // Check if slot is already booked
-    if (bookedSlots.some(slot => slot.date === bookingDate && slot.time === bookingTime)) {
+    const alreadyBooked = bookedSlots.some(slot => slot.date === bookingDate && slot.time === bookingTime);
+    if (alreadyBooked) {
         return res.status(400).json({ ok: false, error: "Slot already booked" });
     }
 
@@ -119,6 +116,6 @@ app.post('/book', async (req, res) => {
     }
 });
 
-// Start server
+// Start server, 0.0.0.0 allows external access
 const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Booking server running on port ${PORT}`));
