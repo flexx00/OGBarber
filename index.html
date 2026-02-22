@@ -443,11 +443,25 @@ async function loadTimeSlots(date){
         console.error("Failed to fetch booked slots", err);
     }
 
+    const today = new Date().toISOString().split('T')[0];
+    const nowHour = new Date().getHours();
+    const nowMinute = new Date().getMinutes();
+
     defaultTimes.forEach(t => {
         const div = document.createElement("div");
         div.className = "time";
         div.innerText = t;
-        if(booked.includes(t)){
+
+        // Grey out if already booked
+        let isBooked = booked.includes(t);
+
+        // Grey out if past time today
+        if(date === today){
+            const [h, m] = t.split(':').map(Number);
+            if(h < nowHour || (h === nowHour && m <= nowMinute)) isBooked = true;
+        }
+
+        if(isBooked){
             div.classList.add("booked");
         } else {
             div.onclick = () => {
