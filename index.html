@@ -223,6 +223,8 @@ button.main-btn:hover { opacity:0.8; }
 <div class="container" id="bookingSection">
 <div id="step1" class="card">
 <h2>Select Services</h2>
+<input id="customerName" placeholder="Customer Name"
+style="padding:10px;width:100%;margin-bottom:15px">
 <div id="services"></div>
 <div class="total-box">Total: £<span id="total">0</span></div>
 <button class="main-btn" onclick="goToCalendar()">Next</button>
@@ -247,6 +249,8 @@ button.main-btn:hover { opacity:0.8; }
 </div>
 
 <script>
+
+    
 // --- SERVICE WORKER & PUSH NOTIFICATIONS ---
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
@@ -272,7 +276,8 @@ let selectedServices = [];
 let total = 0;
 let selectedDate = "";
 let selectedTime = "";
-let currentStep = 1;
+
+const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
 const servicesDiv = document.getElementById("services");
 const backBtn = document.getElementById("backBtn");
 
@@ -345,19 +350,40 @@ const timesContainer = document.getElementById("times");
     timesContainer.appendChild(div);
 });
 
-// --- BOOKING CONFIRM WITH NOTIFICATION ---
+// --- BOOKING CONFIRM WITH NOTIFICATION + DISCORD ---
 async function confirmBooking(){ 
+
     if(!selectedTime) return alert("Select time."); 
-    const message=`${selectedDate} at ${selectedTime}\nServices: ${selectedServices.join(", ")}\nTotal: £${total.toFixed(2)}`;
-    document.getElementById("confirmationText").innerText=message; 
+
+    const customerName = document.getElementById("customerName")?.value || "Unknown";
+
+    const message =
+`🪒 NEW BOOKING – The OG Barber
+👤 Name: ${customerName}
+📅 Date: ${selectedDate}
+⏰ Time: ${selectedTime}
+💈 Services: ${selectedServices.join(", ")}
+💰 Total: £${total.toFixed(2)}`;
+
+    document.getElementById("confirmationText").innerText = message; 
     showStep(4);
 
-    // Trigger browser notification
+    // 🔔 Browser notification
     if(Notification.permission==="granted"){
         navigator.serviceWorker.getRegistration().then(reg => {
-            if(reg) reg.showNotification("New Booking Confirmed!", { body: message, icon: 'images/paste.png' });
+            if(reg) reg.showNotification("New Booking Confirmed!", { 
+                body: message, 
+                icon: 'images/paste.png' 
+            });
         });
     }
+
+    // 🔥 SEND TO DISCORD
+    fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ content: message })
+    }).catch(err => console.log("Discord webhook error:", err));
 }
 
 // --- DARK MODE ---
