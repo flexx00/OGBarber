@@ -22,11 +22,10 @@ async function fetchWrapper(...args) {
 const BOOKED_FILE = path.join(__dirname, 'bookedSlots.json');
 
 // Load booked slots from file or initialize empty array
-let bookedSlots = [];
 if (fs.existsSync(BOOKED_FILE)) {
     try {
-        const data = fs.readFileSync(BOOKED_FILE, 'utf-8');
-        bookedSlots = JSON.parse(data);
+        const data = fs.readFileSync(BOOKED_FILE, 'utf-8').trim();
+        bookedSlots = data ? JSON.parse(data) : [];
     } catch (err) {
         console.error("Failed to read booked slots file:", err);
         bookedSlots = [];
