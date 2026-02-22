@@ -4,7 +4,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-WEBHOOK = "PASTE_YOUR_WEBHOOK_URL_HERE"
+WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa"
 ROLE_ID = "PASTE_ROLE_ID"   # optional
 
 BOOKINGS_FILE = "bookings.json"
