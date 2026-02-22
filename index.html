@@ -423,6 +423,9 @@ function goToTimes(){
 // ----------------------------
 // TIMES
 // ----------------------------
+// ----------------------------
+// TIMES
+// ----------------------------
 const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
 
 async function loadTimeSlots(date){
@@ -430,7 +433,7 @@ async function loadTimeSlots(date){
     let booked = [];
     try {
         const res = await fetch(`${BACKEND_BOOKED_URL}/${date}`);
-        if(res.ok) booked = await res.json();
+        if(res.ok) booked = await res.json(); // array of booked times from backend
     } catch(err){
         console.error("Failed to fetch booked slots", err);
     }
@@ -446,7 +449,7 @@ async function loadTimeSlots(date){
 
         let isBooked = booked.includes(t);
 
-        // Grey out past times
+        // Grey out past times for today
         if(date === today){
             const [h, m] = t.split(':').map(Number);
             if(h < nowHour || (h === nowHour && m <= nowMinute)) isBooked = true;
@@ -454,13 +457,16 @@ async function loadTimeSlots(date){
 
         if(isBooked){
             div.classList.add("booked");
+            div.onclick = null; // cannot click
         } else {
             div.onclick = () => {
+                // Select only one time
                 document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
                 div.classList.add("selected");
                 selectedTime = t;
             };
         }
+
         timesDiv.appendChild(div);
     });
 }
