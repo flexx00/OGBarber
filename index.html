@@ -410,17 +410,20 @@ async function confirmBooking() {
 
     if(!res.ok) return alert("Time slot already booked or server error.");
 
+    // Show confirmation
     confirmationText.innerText = `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
     showStep(4);
 
-    // Reset selections
+    // Reload times to grey out the newly booked slot
+    if(selectedDate) await loadTimeSlots(selectedDate);
+
+    // Reset selections for services and total
     selectedServices = [];
-    selectedDate = "";
-    selectedTime = "";
     total = 0;
     document.getElementById("total").innerText = "0";
     document.querySelectorAll("#services input[type=checkbox]").forEach(cb=>cb.checked=false);
-    document.querySelectorAll(".day, .time").forEach(el=>el.classList.remove("selected"));
+    document.querySelectorAll(".day").forEach(el=>el.classList.remove("selected"));
+    selectedTime = ""; // reset selected time
 }
 
 // ----------------------------
