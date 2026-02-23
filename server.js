@@ -41,8 +41,11 @@ function saveUsers() {
 
 // ------------------ CLEAN PAST BOOKINGS ------------------
 function removePastBookings() {
-    const today = new Date().toISOString().split("T")[0];
-    bookedSlots = bookedSlots.filter(b => b.date >= today);
+    const now = new Date();
+    bookedSlots = bookedSlots.filter(b => {
+        const dt = new Date(`${b.date}T${b.time}:00`);
+        return dt >= now;
+    });
     saveBookedSlots();
 }
 
@@ -52,8 +55,8 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        user: "bearwallbear1@gmail.com",       // Gmail
-        pass: "qvut-ljig-nxbs-unqh"           // 16-char app password
+        user: "bearwallbear1@gmail.com",
+        pass: "qvut-ljig-nxbs-unqh" // Gmail App password
     }
 });
 
@@ -116,7 +119,10 @@ app.post("/user/login", (req, res) => {
 app.get("/booked/:date", (req, res) => {
     loadBookedSlots();
     const date = req.params.date;
-    const slots = bookedSlots.filter(b => b.date === date).map(b => b.time);
+    const now = new Date();
+    const slots = bookedSlots
+        .filter(b => b.date === date && new Date(`${b.date}T${b.time}:00`) >= now)
+        .map(b => b.time);
     res.json(slots);
 });
 
@@ -125,9 +131,16 @@ app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
 
-    if (!name || !date || !time || !email) return res.status(400).json({ ok: false, error: "Missing info" });
+    if (!name || !date || !time || !email || !services?.length) {
+        return res.status(400).json({ ok: false, error: "Missing info or no services selected" });
+    }
 
     removePastBookings();
+
+    const bookingDateTime = new Date(`${date}T${time}:00`);
+    if (bookingDateTime < new Date()) {
+        return res.status(400).json({ ok: false, error: "Cannot book past time" });
+    }
 
     const exists = bookedSlots.some(b => b.date === date && b.time === time);
     if (exists) return res.status(400).json({ ok: false, error: "Slot already booked" });
@@ -143,7 +156,7 @@ app.post("/book", async (req, res) => {
             body: JSON.stringify({
                 embeds: [{
                     title: "📅 New Booking",
-                    description: `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services?.join(", ") || "None"}\n**Total:** £${total || 0}`,
+                    description: `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services.join(", ")}\n**Total:** £${total || 0}`,
                     color: 16753920
                 }]
             })
@@ -165,17 +178,21 @@ function scheduleReminders(booking) {
 
     // 1 day before
     const dayBefore = new Date(bookingDate.getTime() - 24 * 60 * 60 * 1000);
-    cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
-        sendEmail(booking.email, "Reminder: Your Booking Tomorrow",
-            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
-    });
+    if (dayBefore > new Date()) {
+        cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
+            sendEmail(booking.email, "Reminder: Your Booking Tomorrow",
+                `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
+        });
+    }
 
     // 1 hour before
     const hourBefore = new Date(bookingDate.getTime() - 60 * 60 * 1000);
-    cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
-        sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
-            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
-    });
+    if (hourBefore > new Date()) {
+        cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
+            sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
+                `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
+        });
+    }
 }
 
 // ------------------ START SERVER ------------------
