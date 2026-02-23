@@ -41,11 +41,8 @@ function saveUsers() {
 
 // ------------------ CLEAN PAST BOOKINGS ------------------
 function removePastBookings() {
-    const now = new Date();
-    bookedSlots = bookedSlots.filter(b => {
-        const dt = new Date(`${b.date}T${b.time}:00`);
-        return dt >= now;
-    });
+    const today = new Date().toISOString().split("T")[0];
+    bookedSlots = bookedSlots.filter(b => b.date >= today);
     saveBookedSlots();
 }
 
@@ -55,8 +52,8 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        user: "bearwallbear1@gmail.com",
-        pass: "qvut-ljig-nxbs-unqh" // Gmail App password
+        user: "bearwallbear1@gmail.com",       
+        pass: "qvut-ljig-nxbs-unqh"           
     }
 });
 
@@ -73,6 +70,28 @@ function sendEmail(to, subject, text) {
     });
 }
 
+// ------------------ HELPER: DISCORD WEBHOOK ------------------
+async function sendDiscordWebhook(title, description, color = 3447003) {
+    if (!DISCORD_WEBHOOK) return;
+    try {
+        const res = await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                embeds: [{ title, description, color }]
+            })
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            console.error("Discord webhook failed:", text);
+        } else {
+            console.log("Discord webhook sent:", title);
+        }
+    } catch (err) {
+        console.error("Discord webhook error:", err.message);
+    }
+}
+
 // ------------------ SIGNUP ------------------
 app.post("/user/signup", async (req, res) => {
     loadUsers();
@@ -86,22 +105,11 @@ app.post("/user/signup", async (req, res) => {
     saveUsers();
 
     // Discord webhook
-    try {
-        const response = await fetch(DISCORD_WEBHOOK, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                embeds: [{
-                    title: "📝 New User Signup",
-                    description: `**Username:** ${username}\n**Email:** ${email}`,
-                    color: 3447003
-                }]
-            })
-        });
-        if (!response.ok) console.log("Discord webhook error:", await response.text());
-    } catch (err) {
-        console.log("Discord webhook failed:", err.message);
-    }
+    await sendDiscordWebhook(
+        "📝 New User Signup",
+        `**Username:** ${username}\n**Email:** ${email}`,
+        3447003
+    );
 
     res.json({ ok: true, user });
 });
@@ -119,10 +127,7 @@ app.post("/user/login", (req, res) => {
 app.get("/booked/:date", (req, res) => {
     loadBookedSlots();
     const date = req.params.date;
-    const now = new Date();
-    const slots = bookedSlots
-        .filter(b => b.date === date && new Date(`${b.date}T${b.time}:00`) >= now)
-        .map(b => b.time);
+    const slots = bookedSlots.filter(b => b.date === date).map(b => b.time);
     res.json(slots);
 });
 
@@ -130,17 +135,10 @@ app.get("/booked/:date", (req, res) => {
 app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
-
-    if (!name || !date || !time || !email || !services?.length) {
+    if (!name || !date || !time || !email || !services || services.length === 0)
         return res.status(400).json({ ok: false, error: "Missing info or no services selected" });
-    }
 
     removePastBookings();
-
-    const bookingDateTime = new Date(`${date}T${time}:00`);
-    if (bookingDateTime < new Date()) {
-        return res.status(400).json({ ok: false, error: "Cannot book past time" });
-    }
 
     const exists = bookedSlots.some(b => b.date === date && b.time === time);
     if (exists) return res.status(400).json({ ok: false, error: "Slot already booked" });
@@ -149,24 +147,17 @@ app.post("/book", async (req, res) => {
     saveBookedSlots();
 
     // Discord webhook
-    try {
-        const response = await fetch(DISCORD_WEBHOOK, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                embeds: [{
-                    title: "📅 New Booking",
-                    description: `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services.join(", ")}\n**Total:** £${total || 0}`,
-                    color: 16753920
-                }]
-            })
-        });
-        if (!response.ok) console.log("Discord webhook error:", await response.text());
-    } catch (err) {
-        console.log("Discord webhook failed:", err.message);
-    }
+    await sendDiscordWebhook(
+        "📅 New Booking",
+        `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services.join(", ")}\n**Total:** £${total}`,
+        16753920
+    );
 
-    // Schedule email reminders
+    // SEND IMMEDIATE EMAIL CONFIRMATION
+    sendEmail(email, "Booking Confirmed - The OG Barber",
+        `Hi ${name},\n\nYour booking has been confirmed!\n\nDate: ${date}\nTime: ${time}\nServices: ${services.join(", ")}\nTotal: £${total}\n\nSee you soon!`);
+
+    // Schedule future reminders
     scheduleReminders({ name, date, time, email, services, total });
 
     res.json({ ok: true });
@@ -178,21 +169,17 @@ function scheduleReminders(booking) {
 
     // 1 day before
     const dayBefore = new Date(bookingDate.getTime() - 24 * 60 * 60 * 1000);
-    if (dayBefore > new Date()) {
-        cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
-            sendEmail(booking.email, "Reminder: Your Booking Tomorrow",
-                `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
-        });
-    }
+    cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
+        sendEmail(booking.email, "Reminder: Your Booking Tomorrow",
+            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
+    });
 
     // 1 hour before
     const hourBefore = new Date(bookingDate.getTime() - 60 * 60 * 1000);
-    if (hourBefore > new Date()) {
-        cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
-            sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
-                `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
-        });
-    }
+    cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
+        sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
+            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
+    });
 }
 
 // ------------------ START SERVER ------------------
