@@ -229,16 +229,34 @@ const serviceData = [
   { name: "Beard Trim", price: 6.99 },
   { name: "Hair & Beard", price: 14.99 }
 ];
+
 serviceData.forEach(service => {
     const div = document.createElement("div");
     div.className = "service";
-    div.innerHTML = `<span>${service.name} (£${service.price})</span>
-        <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
+    const checkboxId = `service-${service.name.replace(/\s+/g, '-')}`;
+    div.innerHTML = `
+        <span>${service.name} (£${service.price})</span>
+        <input type="checkbox" id="${checkboxId}">
+    `;
+    const checkbox = div.querySelector("input");
+    checkbox.addEventListener("change", () => {
+        toggleService(service.name, service.price, checkbox.checked);
+    });
     servicesDiv.appendChild(div);
-}),
-function toggleService(name, price){
-    if(selectedServices.includes(name)){ selectedServices = selectedServices.filter(s=>s!==name); total-=price;}
-    else{ selectedServices.push(name); total+=price;}
+});
+
+function toggleService(name, price, checked) {
+    if (checked) {
+        // Add service only if not already in array
+        if (!selectedServices.find(s => s.name === name)) {
+            selectedServices.push({ name, price });
+            total += price;
+        }
+    } else {
+        // Remove service
+        selectedServices = selectedServices.filter(s => s.name !== name);
+        total -= price;
+    }
     document.getElementById("total").innerText = total.toFixed(2);
 }
 
@@ -308,7 +326,7 @@ generateCalendar();
 async function confirmBooking(){
     if(!currentUser) return alert("You must be logged in to book");
     const name=document.getElementById("customerName").value.trim()||currentUser.username;
-    if(selectedServices.length===0) return alert("Select at least one service");
+    if(selectedServices.length === 0) return alert("Select at least one service");
     if(!selectedDate) return alert("Select a date");
     if(!selectedTime) return alert("Select a time");
     try{
