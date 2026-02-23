@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OG Barber Admin Panel</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FullCalendar CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <!-- js-yaml CDN – to parse language.yaml directly in browser -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: '#c9a347',
+            'gold-dark': '#a67c00',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="max-w-md mx-auto bg-gray-900 rounded-2xl border border-gray-700 shadow-2xl p-10">
+      <h1 id="loginTitle" class="text-4xl font-bold text-gold text-center mb-10">OG Barber Admin</h1>
+      <input id="adminEmail" type="email" class="w-full p-4 mb-5 bg-gray-800 border border-gray-700 rounded-lg focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition">
+      <input id="adminPassword" type="password" class="w-full p-4 mb-6 bg-gray-800 border border-gray-700 rounded-lg focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition">
+      <button id="loginButton" onclick="adminLogin()" class="w-full py-4 bg-gold hover:bg-gold-dark text-black font-bold rounded-lg transition shadow-md">
+        Login
+      </button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+        <h1 id="dashboardTitle" class="text-4xl font-bold text-gold">Bookings Management</h1>
+        <div class="flex gap-4 flex-wrap">
+          <button id="exportCsvButton" onclick="exportToCSV()" class="px-6 py-3 bg-green-700 hover:bg-green-600 rounded-lg font-medium transition">
+            Export CSV
+          </button>
+          <button id="logoutButton" onclick="logoutAdmin()" class="px-6 py-3 bg-red-700 hover:bg-red-600 rounded-lg font-medium transition">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="mb-12 bg-gray-900 rounded-xl border border-gray-700 p-6 shadow-xl">
+        <h2 id="calendarTitle" class="text-2xl font-bold text-gold mb-6">Calendar Overview</h2>
+        <div id="calendar" class="w-full"></div>
+      </div>
+
+      <!-- Search -->
+      <div class="mb-8">
+        <input id="searchFilter" type="text" 
+               class="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:border-gold focus:ring-2 focus:ring-gold/30 outline-none transition"
+               oninput="filterBookings()">
+      </div>
+
+      <!-- Bookings -->
+      <div id="bookingsContainer" class="space-y-10"></div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm"></div>
+
+  <script>
+    // ────────────────────────────────────────────────
+    // i18n – Load & parse language.yaml from root directory
+    // ────────────────────────────────────────────────
+    let lang = { admin: {} }; // fallback / default English
+
+    async function loadTranslations() {
+      try {
+        const res = await fetch('./language.yaml');
+        if (!res.ok) throw new Error('Failed to fetch language.yaml');
+        const yamlText = await res.text();
+        const data = jsyaml.load(yamlText);
+        lang.admin = data?.admin || {};
+      } catch (err) {
+        console.error('Could not load language.yaml:', err);
+      }
+      applyStaticTranslations();
+    }
+
+    function t(keyPath, replacements = {}) {
+      const parts = keyPath.split('.');
+      let value = lang;
+      for (const part of parts) {
+        value = value?.[part];
+        if (value === undefined) return keyPath; // fallback to key itself
+      }
+      if (typeof value !== 'string') return keyPath;
+
+      let str = value;
+      Object.entries(replacements).forEach(([k, v]) => {
+        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      });
+      return str;
+    }
+
+    function applyStaticTranslations() {
+      // Login
+      document.getElementById('loginTitle').textContent = t('admin.login_title');
+      document.getElementById('adminEmail').placeholder = t('admin.login_email_placeholder');
+      document.getElementById('adminPassword').placeholder = t('admin.login_password_placeholder');
+      document.getElementById('loginButton').textContent = t('admin.login_button');
+
+      // Dashboard header
+      document.getElementById('dashboardTitle').textContent = t('admin.dashboard_title');
+      document.getElementById('exportCsvButton').textContent = t('admin.export_csv_button');
+      document.getElementById('logoutButton').textContent = t('admin.logout_button');
+
+      // Calendar section
+      document.getElementById('calendarTitle').textContent = t('admin.calendar_title');
+
+      // Search
+      document.getElementById('searchFilter').placeholder = t('admin.search_placeholder');
+
+      // Page title
+      document.title = t('admin.page_title');
+    }
+
+    // Load translations immediately
+    loadTranslations();
+
+    // ────────────────────────────────────────────────
+    // CONFIG
+    // ────────────────────────────────────────────────
+    const ADMIN_EMAIL    = "admin@ogbarber.co.uk";
+    const ADMIN_PASSWORD = "SuperSecret2026!";
+    const BACKEND        = "http://localhost:5000";
+
+    let calendar;
+
+    // ────────────────────────────────────────────────
+    // AUTH + AUTO-LOGIN
+    // ────────────────────────────────────────────────
+    function adminLogin() {
+      const email = document.getElementById("adminEmail").value.trim();
+      const pw    = document.getElementById("adminPassword").value;
+
+      if (email === ADMIN_EMAIL && pw === ADMIN_PASSWORD) {
+        localStorage.setItem("adminLoggedIn", "true");
+        showToast(t('admin.toast.logged_in_success'), "success");
+        showDashboard();
+      } else {
+        showToast(t('admin.toast.invalid_credentials'), "error");
+      }
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminLoggedIn");
+      document.getElementById("adminPassword").value = "";
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("loginScreen").classList.remove("hidden");
+      showToast(t('admin.toast.logged_out'), "info");
+    }
+
+    function showDashboard() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      initCalendar();
+      loadBookings();
+    }
+
+    if (localStorage.getItem("adminLoggedIn") === "true") {
+      setTimeout(showDashboard, 400); // give translations a moment
+    }
+
+    // ────────────────────────────────────────────────
+    // CALENDAR
+    // ────────────────────────────────────────────────
+    function initCalendar() {
+      calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left:   'prev,next today',
+          center: 'title',
+          right:  'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: [],
+        eventClick: (info) => {
+          const b = info.event.extendedProps;
+          const status = t(`admin.booking_card.status.${b.status}`) || b.status.toUpperCase();
+          showToast(
+            t('admin.calendar.event_click_fallback', {
+              name: b.name,
+              status: status,
+              datetime: info.event.start.toLocaleString()
+            }),
+            "info"
+          );
+        },
+        height: 'auto',
+        contentHeight: 480,
+        editable: false,
+        selectable: false,
+        eventDisplay: 'block',
+        eventTimeFormat: {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        }
+      });
+      calendar.render();
+    }
+
+    // ────────────────────────────────────────────────
+    // LOAD & RENDER BOOKINGS
+    // ────────────────────────────────────────────────
+    async function loadBookings() {
+      const container = document.getElementById("bookingsContainer");
+      container.innerHTML = `<p class="text-center text-gray-400 py-24 text-xl">${t('admin.loading_bookings_message')}</p>`;
+
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings`, {
+          headers: {
+            'Authorization': 'Basic ' + btoa(ADMIN_EMAIL + ':' + ADMIN_PASSWORD)
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error(await res.text() || `HTTP ${res.status}`);
+        }
+
+        const bookings = await res.json();
+
+        // Update calendar events
+        if (calendar) {
+          calendar.removeAllEvents();
+          bookings.forEach(b => {
+            if (!b.date || !b.time) return;
+            const startStr = `${b.date}T${b.time.padStart(5, '0')}`;
+            const statusLabel = t(`admin.booking_card.status.${b.status}`) || b.status;
+            calendar.addEvent({
+              id: b.id,
+              title: `${b.name} (${statusLabel})`,
+              start: startStr,
+              extendedProps: b,
+              backgroundColor:
+                b.status === 'cancelled'  ? '#991b1b' :
+                b.status === 'confirmed'  ? '#166534' :
+                b.status === 'completed'  ? '#1e40af' :
+                '#ca8a04',
+              borderColor: 'transparent',
+              textColor: 'white'
+            });
+          });
+        }
+
+        // List view
+        if (!bookings.length) {
+          container.innerHTML = `<p class="text-center text-gray-400 py-24 text-xl">${t('admin.no_bookings_message')}</p>`;
+          return;
+        }
+
+        const groups = {};
+        bookings.forEach(b => {
+          if (!groups[b.date]) groups[b.date] = [];
+          groups[b.date].push(b);
+        });
+
+        const appOne = t('admin.appointments_one');
+        const appMany = t('admin.appointments_many');
+
+        container.innerHTML = Object.keys(groups).sort().reverse().map(date => `
+          <div class="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden shadow-xl">
+            <div class="bg-gray-800 px-6 py-4 border-b border-gray-700">
+              <h2 class="text-2xl font-bold text-gold">${date}</h2>
+              <p class="text-gray-400 mt-1">${groups[date].length} ${groups[date].length === 1 ? appOne : appMany}</p>
+            </div>
+            <div class="divide-y divide-gray-800">
+              ${groups[date].map(b => {
+                const statusKey = b.status;
+                const statusLabel = t(`admin.booking_card.status.${statusKey}`) || statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
+                const paidBadge = b.paid ? `<span class="px-3 py-1 rounded-full text-xs font-medium bg-purple-900/40 text-purple-300">${t('admin.booking_card.paid.yes_badge')}</span>` : '';
+                const paidBtnText = b.paid ? t('admin.booking_card.paid.already_paid_button') : t('admin.booking_card.paid.mark_paid_button');
+                const paidBtnClass = b.paid ? 'bg-purple-900/40 text-purple-200' : 'bg-purple-700 hover:bg-purple-600';
+
+                return `
+                <div class="p-6 hover:bg-gray-800/40 transition-colors" data-id="${b.id}">
+                  <div class="flex flex-col lg:flex-row lg:justify-between gap-8">
+                    <div class="flex-1 space-y-4">
+                      <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-bold text-lg">${b.name}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                          statusKey === 'confirmed'  ? 'bg-green-900/40 text-green-300' :
+                          statusKey === 'completed'  ? 'bg-blue-900/40 text-blue-300'   :
+                          statusKey === 'cancelled'  ? 'bg-red-900/40 text-red-300'    :
+                          'bg-amber-900/40 text-amber-300'
+                        }">
+                          ${statusLabel}
+                        </span>
+                        ${paidBadge}
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm text-gray-300">
+                        <div>
+                          <span class="text-gray-500">${t('admin.labels.time')}</span> ${b.time}<br>
+                          <span class="text-gray-500">${t('admin.labels.email')}</span> ${b.email}<br>
+                          <span class="text-gray-500">${t('admin.labels.phone')}</span> ${b.phone || t('admin.labels.missing_phone')}<br>
+                        </div>
+                        <div>
+                          <span class="text-gray-500">${t('admin.labels.total')}</span> £${Number(b.total).toFixed(2)}<br>
+                          <span class="text-gray-500">${t('admin.labels.created')}</span> ${new Date(b.created_at).toLocaleString()}<br>
+                          <span class="text-gray-500">${t('admin.labels.updated')}</span> ${new Date(b.updated_at).toLocaleString()}
+                        </div>
+                      </div>
+
+                      <div class="mt-3">
+                        <p class="text-gray-500 text-sm">${t('admin.booking_card.services_label')}</p>
+                        <p class="mt-1 text-gray-200">${JSON.parse(b.services ?? '[]').map(s => s.name).join(", ") || t('admin.booking_card.no_services')}</p>
+                      </div>
+
+                      <div class="mt-5">
+                        <label class="block text-sm text-gray-400 mb-2">${t('admin.booking_card.admin_notes_label')}</label>
+                        <textarea class="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none text-sm resize-y min-h-[90px]" data-id="${b.id}">${b.notes || ''}</textarea>
+                        <button onclick="saveNotes(${b.id}, this.previousElementSibling.value)" class="mt-3 px-5 py-2 bg-gold/20 hover:bg-gold/40 text-gold text-sm rounded transition">
+                          ${t('admin.booking_card.save_note_button')}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 min-w-[200px]">
+                      <select onchange="updateStatus(${b.id}, this.value)" class="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none">
+                        <option value="pending"    ${statusKey==='pending'?'selected':''}>${t('admin.booking_card.status.pending')}</option>
+                        <option value="confirmed"  ${statusKey==='confirmed'?'selected':''}>${t('admin.booking_card.status.confirmed')}</option>
+                        <option value="completed"  ${statusKey==='completed'?'selected':''}>${t('admin.booking_card.status.completed')}</option>
+                        <option value="cancelled"  ${statusKey==='cancelled'?'selected':''}>${t('admin.booking_card.status.cancelled')}</option>
+                      </select>
+
+                      <button onclick="markAsPaid(${b.id}, ${!b.paid})" class="px-5 py-3 ${paidBtnClass} rounded-lg transition font-medium">
+                        ${paidBtnText}
+                      </button>
+
+                      <div class="flex gap-2">
+                        <input type="date" id="reschedDate_${b.id}" value="${b.date}" class="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm w-full">
+                        <input type="time" id="reschedTime_${b.id}" value="${b.time}" class="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm w-full">
+                      </div>
+                      <button onclick="rescheduleBooking(${b.id}, document.getElementById('reschedDate_${b.id}').value, document.getElementById('reschedTime_${b.id}').value)" class="px-5 py-3 bg-blue-900/50 hover:bg-blue-800/70 rounded-lg transition font-medium">
+                        ${t('admin.booking_card.actions.reschedule_button')}
+                      </button>
+
+                      <button onclick="cancelBooking(${b.id})" class="px-5 py-3 bg-red-900/60 hover:bg-red-800/80 rounded-lg transition font-medium">
+                        ${t('admin.booking_card.actions.cancel_button')}
+                      </button>
+
+                      <button onclick="sendEmailConfirmation(${b.id})" class="px-5 py-3 bg-green-900/50 hover:bg-green-800/70 rounded-lg transition font-medium">
+                        ${t('admin.booking_card.actions.send_email_button')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `}).join('')}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="text-center text-red-400 py-24 text-xl">${t('admin.toast.error_prefix')}${err.message || t('admin.toast.error_loading_bookings')}</p>`;
+      }
+    }
+
+    // ────────────────────────────────────────────────
+    // ADMIN ACTIONS
+    // ────────────────────────────────────────────────
+    async function saveNotes(id, notes) {
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/notes`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          },
+          body: JSON.stringify({ notes })
+        });
+        if (!res.ok) throw new Error();
+        showToast(t('admin.toast.note_saved'), "success");
+      } catch {
+        showToast(t('admin.toast.error_saving_note'), "error");
+      }
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          },
+          body: JSON.stringify({ status })
+        });
+        if (!res.ok) throw new Error();
+        showToast(t('admin.toast.status_updated'), "success");
+        loadBookings();
+      } catch {
+        showToast(t('admin.toast.error_updating_status'), "error");
+      }
+    }
+
+    async function markAsPaid(id, paid) {
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/paid`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          },
+          body: JSON.stringify({ paid })
+        });
+        if (!res.ok) throw new Error();
+        showToast(paid ? t('admin.toast.marked_paid') : t('admin.toast.marked_unpaid'), "success");
+        loadBookings();
+      } catch {
+        showToast(t('admin.toast.error_updating_payment'), "error");
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm(t('admin.confirm.cancel_booking'))) return;
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/cancel`, {
+          method: "POST",
+          headers: {
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          }
+        });
+        if (!res.ok) throw new Error();
+        showToast(t('admin.toast.booking_cancelled'), "success");
+        loadBookings();
+      } catch {
+        showToast(t('admin.toast.error_cancelling'), "error");
+      }
+    }
+
+    async function rescheduleBooking(id, date, time) {
+      if (!date || !time) {
+        showToast(t('admin.toast.error_missing_date_time'), "error");
+        return;
+      }
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/reschedule`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          },
+          body: JSON.stringify({ date, time })
+        });
+        if (!res.ok) throw new Error(await res.text() || t('admin.toast.error_rescheduling'));
+        showToast(t('admin.toast.booking_rescheduled'), "success");
+        loadBookings();
+      } catch (err) {
+        showToast(`${t('admin.toast.error_prefix')}${err.message}`, "error");
+      }
+    }
+
+    async function sendEmailConfirmation(id) {
+      if (!confirm(t('admin.confirm.send_email'))) return;
+      try {
+        const res = await fetch(`${BACKEND}/admin/bookings/${id}/send-email`, {
+          method: "POST",
+          headers: {
+            "Authorization": "Basic " + btoa(ADMIN_EMAIL + ":" + ADMIN_PASSWORD)
+          }
+        });
+        if (!res.ok) throw new Error();
+        showToast(t('admin.toast.email_sent'), "success");
+      } catch {
+        showToast(t('admin.toast.error_sending_email'), "error");
+      }
+    }
+
+    // ────────────────────────────────────────────────
+    // HELPERS
+    // ────────────────────────────────────────────────
+    function showToast(message, type = "info") {
+      const colors = {
+        success: "bg-green-700 border-green-600",
+        error:   "bg-red-700 border-red-600",
+        info:    "bg-blue-700 border-blue-600"
+      };
+      const bg = colors[type] || "bg-gray-800 border-gray-700";
+
+      const toast = document.createElement("div");
+      toast.className = `px-6 py-4 rounded-lg border shadow-2xl text-white font-medium ${bg} animate-in fade-in slide-in-from-bottom-5 duration-300`;
+      toast.textContent = message;
+
+      document.getElementById("toastContainer").appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-4");
+        setTimeout(() => toast.remove(), 400);
+      }, 3200);
+    }
+
+    function filterBookings() {
+      const term = document.getElementById("searchFilter").value.toLowerCase().trim();
+      document.querySelectorAll("[data-id]").forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(term) ? "" : "none";
+      });
+    }
+
+    function exportToCSV() {
+      // Placeholder – in real version you would build this from `bookings` array
+      const csv = t('admin.export.csv.headers') + "\n" +
+                  t('admin.export.csv.example_row') + "\n";
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = t('admin.export.filename_prefix') + new Date().toISOString().split('T')[0] + ".csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

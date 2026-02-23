@@ -1,185 +1,194 @@
-// ---------------- server.js ----------------
+// server.js - The OG Barber Booking Server
+// Main entry point: config, middleware, DB, language, email, and route mounting
+
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
+import mysql from "mysql2/promise";
 import nodemailer from "nodemailer";
-import cron from "node-cron";
-import fetch from "node-fetch";
+import path from "path";
+import { fileURLToPath } from "url";
+import yaml from "js-yaml";
+import fs from "fs/promises";
+import cookieParser from "cookie-parser";   // ← added for auth cookies
+import jwt from "jsonwebtoken";              // ← added for JWT verification
+
+// Route handlers
+import { setupRoutes } from "./routes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 const PORT = 5000;
-const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa"; // <-- put your webhook here
 
-const BOOKED_FILE = path.join(process.cwd(), "bookedSlots.json");
-const USERS_FILE = path.join(process.cwd(), "users.json");
+// ─── MIDDLEWARE ────────────────────────────────────────────────────────────
+app.use(cors({
+  origin: true,               // or specify your frontend URL e.g. "http://localhost:3000"
+  credentials: true,          // ← very important for cookies to work cross-origin
+}));
+app.use(express.json());
+app.use(cookieParser());      // ← added — parses cookies
 
-let bookedSlots = [];
-let users = [];
+// ─── LOAD TRANSLATIONS ─────────────────────────────────────────────────────
+let lang = {};
 
-// ------------------ LOAD / SAVE ------------------
-function loadBookedSlots() {
-    if (!fs.existsSync(BOOKED_FILE)) fs.writeFileSync(BOOKED_FILE, "[]");
-    bookedSlots = JSON.parse(fs.readFileSync(BOOKED_FILE, "utf8") || "[]");
-}
+(async () => {
+  try {
+    const langPath = path.join(__dirname, "language.yaml");
+    const fileContents = await fs.readFile(langPath, "utf8");
+    lang = yaml.load(fileContents) || {};
 
-function saveBookedSlots() {
-    fs.writeFileSync(BOOKED_FILE, JSON.stringify(bookedSlots, null, 2));
-}
-
-function loadUsers() {
-    if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
-    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8") || "[]");
-}
-
-function saveUsers() {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-
-// ------------------ CLEAN PAST BOOKINGS ------------------
-function removePastBookings() {
-    const today = new Date().toISOString().split("T")[0];
-    bookedSlots = bookedSlots.filter(b => b.date >= today);
-    saveBookedSlots();
-}
-
-// ------------------ EMAIL SETUP ------------------
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-        user: "bearwallbear1@gmail.com",
-        pass: "qvut-ljig-nxbs-unqh" // your app password
+    if (Object.keys(lang).length === 0) {
+      console.warn("Translations file loaded but appears empty");
+    } else {
+      console.log(`Translations loaded successfully from ${langPath}`);
+      console.log(`Loaded sections: ${Object.keys(lang).join(", ")}`);
+      console.log(`Test: errors.unauthorized → ${t('errors', 'unauthorized')}`);
     }
+  } catch (err) {
+    console.error("Failed to load language.yaml:", err.message);
+    if (err.code === 'ENOENT') {
+      console.error(`File not found. Expected: ${path.resolve(__dirname, "language.yaml")}`);
+    } else if (err.name === 'YAMLException') {
+      console.error("YAML parsing error — check indentation/quotes");
+    }
+    lang = {}; // fallback — t() returns key
+  }
+})();
+
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+// Move sensitive values to .env in production!
+export const JWT_SECRET = process.env.JWT_SECRET || "change-this-to-a-very-long-random-secret-9876543210abcdef";
+
+export const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+
+export const ADMIN_EMAIL    = "admin@ogbarber.co.uk";
+export const ADMIN_PASSWORD = "SuperSecret2026!";
+
+export const LOGO_URL       = "https://i.imgur.com/4dIWLpI.jpeg";
+
+export const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "bearwallbear1@gmail.com",
+    pass: "igsp hsyq umcm jcjj", // ← consider app password or moving to .env
+  },
+  tls: {
+    rejectUnauthorized: true,
+    minVersion: "TLSv1.2"
+  }
 });
 
-function sendEmail(to, subject, text) {
-    transporter.sendMail({ from: '"The OG Barber" <bearwallbear1@gmail.com>', to, subject, text }, (err, info) => {
-        if (err) console.error("Email error:", err);
-        else console.log("Email sent:", info.response);
-    });
+transporter.verify((error) => {
+  if (error) {
+    console.error("SMTP verification failed:", error);
+  } else {
+    console.log("SMTP connection ready");
+  }
+});
+
+// ─── TRANSLATION HELPERS ───────────────────────────────────────────────────
+export function t(section, key, fallback = null) {
+  return lang?.[section]?.[key] ?? fallback ?? key;
 }
 
-// ------------------ DISCORD WEBHOOK ------------------
-async function sendDiscordWebhook(title, description, color = 3447003) {
+export function tEmailSubject(key, fallback = null) {
+  return lang?.email?.subjects?.[key] ?? fallback ?? key;
+}
+
+export function tEmailLabel(key, fallback = null) {
+  return lang?.email?.labels?.[key] ?? fallback ?? key;
+}
+
+// ─── MYSQL POOL ────────────────────────────────────────────────────────────
+export const pool = mysql.createPool({
+  host: "node1.infinityhosting.org",
+  port: 3306,
+  user: "u26_uwHqsRd4bn",
+  password: "WCI6m5n4hL3rYJxkPT@zHT3!",
+  database: "s26_the_og_barber",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  timezone: "Z",
+  dateStrings: true,
+});
+
+// Initialize tables (unchanged)
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("MySQL connected");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        username VARCHAR(100) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bookings (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        date DATE NOT NULL,
+        time TIME NOT NULL,
+        services JSON NOT NULL,
+        total DECIMAL(10,2) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(20) DEFAULT NULL,
+        status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
+        notes TEXT DEFAULT NULL,
+        paid BOOLEAN DEFAULT FALSE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_slot (date, time),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_date (date)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+
+    conn.release();
+  } catch (err) {
+    console.error("MySQL setup failed:", err);
+    process.exit(1);
+  }
+})();
+
+// ─── ADMIN AUTH MIDDLEWARE (updated — supports both Basic and JWT) ─────────
+export function isAdmin(req, res, next) {
+  // Option 1: Basic Auth (your original method — keep for admin panel if needed)
+  const auth = req.headers.authorization;
+  if (auth && auth === `Basic ${Buffer.from(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}`).toString('base64')}`) {
+    return next();
+  }
+
+  // Option 2: JWT (for future admin JWT login)
+  const token = req.cookies?.accessToken;
+  if (token) {
     try {
-        const response = await fetch(DISCORD_WEBHOOK, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [{ title, description, color }] })
-        });
-        if (!response.ok) {
-            const text = await response.text();
-            console.log("Discord webhook error:", response.status, text);
-        } else {
-            console.log("Discord webhook sent:", title);
-        }
+      const decoded = jwt.verify(token, JWT_SECRET);
+      // You could check if decoded has admin role here if you add roles later
+      return next();
     } catch (err) {
-        console.log("Discord webhook failed:", err.message);
+      // token invalid/expired → fall through to unauthorized
     }
+  }
+
+  res.status(401).json({ error: t('errors', 'unauthorized', "Unauthorized") });
 }
 
-// ------------------ SIGNUP ------------------
-app.post("/user/signup", async (req, res) => {
-    loadUsers();
-    const { email, username } = req.body;
-    if (!email || !username) return res.status(400).json({ ok: false, error: "Missing info" });
-    if (users.find(u => u.email === email)) return res.status(400).json({ ok: false, error: "Email already registered" });
+// ─── MOUNT ROUTES ──────────────────────────────────────────────────────────
+setupRoutes(app);
 
-    const user = { email, username };
-    users.push(user);
-    saveUsers();
-
-    await sendDiscordWebhook("📝 New User Signup", `**Username:** ${username}\n**Email:** ${email}`);
-
-    res.json({ ok: true, user });
+// ─── START SERVER ──────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`OG Barber server running → http://localhost:${PORT}`);
+  console.log("Health check:   http://localhost:5000/health");
+  console.log("Test email:     http://localhost:5000/test-email");
 });
-
-// ------------------ LOGIN ------------------
-app.post("/user/login", (req, res) => {
-    loadUsers();
-    const { email } = req.body;
-    const user = users.find(u => u.email === email);
-    if (!user) return res.status(400).json({ ok: false, error: "User not found" });
-    res.json({ ok: true, user });
-});
-
-// ------------------ GET BOOKED SLOTS ------------------
-app.get("/booked/:date", (req, res) => {
-    loadBookedSlots();
-    const date = req.params.date;
-    const slots = bookedSlots.filter(b => b.date === date).map(b => b.time);
-    res.json(slots);
-});
-
-// ------------------ MAKE BOOKING ------------------
-app.post("/book", async (req, res) => {
-    loadBookedSlots();
-    const { name, date, time, services, total, email } = req.body;
-
-    if (!name || !date || !time || !email || !services?.length)
-        return res.status(400).json({ ok: false, error: "Missing info" });
-
-    removePastBookings();
-
-    if (bookedSlots.some(b => b.date === date && b.time === time))
-        return res.status(400).json({ ok: false, error: "Slot already booked" });
-
-    bookedSlots.push({ name, date, time, services, total, email });
-    saveBookedSlots();
-
-    // Send Discord webhook
-    await sendDiscordWebhook(
-        "📅 New Booking",
-        `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services.join(", ")}\n**Total:** £${total}`,
-        16753920
-    );
-
-    // Send email confirmation immediately
-    sendEmail(
-        email,
-        "Booking Confirmed",
-        `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\nTotal: £${total}\n\nThank you!`
-    );
-
-    // Schedule reminders
-    scheduleReminders({ name, date, time, email, services, total });
-
-    res.json({ ok: true });
-});
-
-// ------------------ SCHEDULE REMINDERS ------------------
-function scheduleReminders(booking) {
-    const bookingDate = new Date(`${booking.date}T${booking.time}:00`);
-
-    // 1 day before
-    const dayBefore = new Date(bookingDate.getTime() - 24 * 60 * 60 * 1000);
-    cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
-        sendEmail(
-            booking.email,
-            "Reminder: Your Booking Tomorrow",
-            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`
-        );
-    });
-
-    // 1 hour before
-    const hourBefore = new Date(bookingDate.getTime() - 60 * 60 * 1000);
-    cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
-        sendEmail(
-            booking.email,
-            "Reminder: Your Booking in 1 Hour",
-            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`
-        );
-    });
-}
-
-// ------------------ START SERVER ------------------
-loadBookedSlots();
-removePastBookings();
-loadUsers();
-
-app.listen(PORT, () => console.log(`✅ Booking server running on port ${PORT}`));

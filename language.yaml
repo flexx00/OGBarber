@@ -1,0 +1,217 @@
+# language.yaml
+# Centralized translatable strings for The OG Barber (backend + frontend + admin)
+# Edit values here — do NOT change keys unless you also update the JS/HTML code
+
+shop:
+  name: "The OG Barber"
+  phone: "+44 113 456 7890"
+  address: "123 High Street, Leeds, LS1 2AB"
+  admin_email: "admin@ogbarber.co.uk"
+
+email:
+  subjects:
+    booking_confirmed:        "Your Appointment is Confirmed – The OG Barber"
+    reminder_tomorrow:        "Tomorrow – Your OG Barber Appointment"
+    reminder_one_hour:        "Your OG Barber Appointment – 1 Hour"
+    booking_cancelled:        "Your Appointment Has Been Cancelled"
+    admin_confirmation:       "Your Appointment Confirmation – The OG Barber"
+    test_email:               "Test – Premium Email with Logo"
+
+  greeting:                   "Hi {name},"
+  booking_success_intro:      "Your appointment has been successfully booked. We look forward to seeing you."
+  reminder_tomorrow_intro:    "This is a reminder that your appointment is tomorrow."
+  reminder_one_hour_intro:    "Your appointment is in one hour."
+  cancelled_intro:            "Your appointment has been cancelled as requested."
+  cancelled_alt_intro:        "Your appointment has been cancelled."
+  admin_manual_intro:         "This is to confirm / remind you of your upcoming appointment."
+  closing_standard:           "Please arrive a few minutes early. If your plans change, contact us at least 24 hours in advance."
+  closing_tomorrow:           "We’re looking forward to your visit. Please arrive a few minutes early."
+  closing_one_hour:           "We’ll be ready for you. See you soon."
+  closing_cancelled:          "If this was unintentional or you would like to rebook, please contact us as soon as possible."
+  closing_cancelled_alt:      "If this was unintentional or you would like to rebook, please get in touch."
+  closing_manual:             "Should your plans change, please let us know as soon as possible."
+  test_intro:                 "This is a test of the new HTML email template with logo."
+  test_closing:               "If you see this with the logo → success!"
+
+  labels:
+    date:      "Date"
+    time:      "Time"
+    services:  "Services"
+    total:     "Total"
+    location:  "Location"
+    feature:   "Feature"
+    logo:      "Logo"
+
+discord:
+  new_signup_title:    "New Signup"
+  new_booking_title:   "New Booking"
+  color_new_booking:   16753920
+
+errors:
+  missing_fields:                "Missing fields"
+  email_already_registered:      "Email already registered"
+  email_required:                "Email is required."
+  user_not_found:                "User not found"
+  missing_or_invalid_fields:     "Missing or invalid fields"
+  slot_already_booked:           "This time slot is already booked"
+  unauthorized:                  "Unauthorized"
+  invalid_status:                "Invalid status"
+  date_time_required:            "Date and time required"
+  server_error:                  "Server error"
+  booking_not_found:             "Booking not found"
+  invalid_email:                 "Please enter a valid email address."
+  username_required:             "Username is required."
+  username_too_short:            "Username must be at least 4 characters."
+  phone_required_or_invalid:     ""
+  no_services_selected:          "Please select at least one service."
+  no_date_selected:              "Please select a date."
+  no_time_selected:              "Please select a time slot."
+  must_be_signed_in_booking:     "Please sign in to confirm your booking."
+  must_be_signed_in_cart:        "Please sign in to add items to cart."
+  cart_empty:                    "Your cart is empty."
+  please_sign_in_or_create:      "Please sign in or create an account first."
+  please_select_date_first:      "Please select a date first."
+
+frontend:
+  title:                     "The OG Barber – Premium Grooming"
+  header:
+    main_title:              "The OG Barber"
+    back_button:             "← Back"
+  nav:
+    book_now:                "Book Now"
+    shop:                    "Shop"
+  auth:
+    create_account_title:    "Create Your Account"
+    welcome_back_title:      "Welcome Back"
+    signup_button:           "Sign Up"
+    signin_button:           "Sign In"
+    already_member:          "Already a member?"
+    sign_in_link:            "Sign in"
+    new_here:                "New here?"
+    create_account_link:     "Create account"
+  booking:
+    select_services_title:   "Select Services"
+    name_placeholder:        "Name for the booking (optional)"
+    phone_label:             ""
+    phone_placeholder:       ""
+    phone_helper:            ""
+    total_label:             "Total: £{amount}"
+    continue_to_date:        "Continue to Date"
+    choose_date_title:       "Choose Date"
+    continue_to_time:        "Continue to Time"
+    choose_time_title:       "Choose Time"
+    confirm_booking:         "Confirm Booking"
+    booking_confirmed_title: "Booking Confirmed"
+    book_another:            "Book Another Appointment"
+    confirmation_message:    |
+      Thank you, {name}!
+
+      Your appointment is booked for:
+      {date} at {time}
+
+      Services: {services}
+      Total: £{total}
+
+      We'll notify you via email on your booking
+  products:
+    premium_products_title:  "Premium Products"
+    cart_button:             "🛒 Cart ({count})"
+    your_cart_title:         "Your Cart"
+    cart_empty_message:      "Your cart is empty"
+    total_label:             "Total:"
+    proceed_to_checkout:     "Proceed to Checkout"
+    checkout_title:          "Checkout"
+    confirm_purchase:        "Confirm Purchase"
+  toasts:
+    account_created:         "Account created successfully – welcome!"
+    welcome_back:            "Welcome back, {username}!"
+    booking_confirmed:       "Booking confirmed! We'll text you soon."
+    item_added:              "{product} added to cart"
+    payment_processing:      "Payment processing... (demo mode)"
+    purchase_completed:      "Purchase completed successfully!"
+
+admin:
+  page_title:                  "OG Barber Admin Panel"
+  login_title:                 "OG Barber Admin"
+  login_email_placeholder:     "Email"
+  login_password_placeholder:  "Password"
+  login_button:                "Login"
+
+  dashboard_title:             "Bookings Management"
+  export_csv_button:           "Export CSV"
+  logout_button:               "Logout"
+
+  calendar_title:              "Calendar Overview"
+
+  search_placeholder:          "Search name, email, phone..."
+
+  loading_bookings_message:    "Loading bookings..."
+  no_bookings_message:         "No bookings found."
+  appointments_one:            "appointment"
+  appointments_many:           "appointments"
+
+  booking_card:
+    services_label:            "Services:"
+    no_services:               "—"
+    admin_notes_label:         "Admin Notes"
+    save_note_button:          "Save Note"
+
+    status:
+      pending:                 "Pending"
+      confirmed:               "Confirmed"
+      completed:               "Completed"
+      cancelled:               "Cancelled"
+
+    paid:
+      yes_badge:               "Paid"
+      mark_paid_button:        "Mark Paid"
+      already_paid_button:     "Paid ✓"
+
+    actions:
+      reschedule_button:       "Reschedule"
+      cancel_button:           "Cancel"
+      send_email_button:       "Send Email"
+
+  labels:
+    time:                      "Time:"
+    email:                     "Email:"
+    phone:                     "Phone:"
+    total:                     "Total:"
+    created:                   "Created:"
+    updated:                   "Updated:"
+    missing_phone:             "—"
+
+  toast:
+    logged_in_success:         "Logged in successfully"
+    invalid_credentials:       "Invalid email or password"
+    logged_out:                "Logged out"
+    note_saved:                "Note saved"
+    status_updated:            "Status updated"
+    marked_paid:               "Marked as paid"
+    marked_unpaid:             "Marked as unpaid"
+    booking_cancelled:         "Booking cancelled"
+    booking_rescheduled:       "Booking rescheduled"
+    email_sent:                "Email sent successfully"
+    error_prefix:              "Error: "
+    error_saving_note:         "Error saving note"
+    error_updating_status:     "Failed to update status"
+    error_updating_payment:    "Failed to update payment status"
+    error_cancelling:          "Failed to cancel booking"
+    error_rescheduling:        "Failed to reschedule"
+    error_sending_email:       "Failed to send email"
+    error_missing_date_time:   "Please select both date and time"
+    error_loading_bookings:    "Failed to load bookings"
+
+  confirm:
+    cancel_booking:            "Are you sure you want to cancel this booking?"
+    send_email:                "Send confirmation/reminder email to customer?"
+
+  calendar:
+    event_click_fallback:      "{name} — {status}\n{datetime}"
+
+  export:
+    filename_prefix:           "ogbarber-bookings-"
+    csv:
+      headers:                 "ID,Name,Email,Phone,Date,Time,Services,Total,Status,Paid,Notes"
+      example_row:             "1,John Doe,john@example.com,07700900123,2025-03-15,14:00,\"Haircut, Beard Trim\",39.99,confirmed,true,\"Prefers skin fade\""
+      services_quoted_note:    "Services are quoted if they contain commas"

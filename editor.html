@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>language.yaml Editor</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark-dimmed.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/yaml.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+
+  <style>
+    :root {
+      --line-height: 20px;
+      --font-size: 14px;
+      --pad-left: 3.5rem;
+      --pad-top: 1rem;
+      --pad-side: 1rem;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+    }
+
+    .editor-font {
+      font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+      tab-size: 2;
+      letter-spacing: 0;
+    }
+
+    .editor-container {
+      position: relative;
+      overflow: hidden;
+      background: #0f172a; /* slate-900 */
+      border-radius: 0.75rem;
+    }
+
+    #highlighting,
+    #editor {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: var(--pad-top) var(--pad-side) var(--pad-top) var(--pad-left);
+      white-space: pre;
+      overflow: auto;
+      resize: none;
+      font: inherit;
+      line-height: inherit;
+      tab-size: inherit;
+      letter-spacing: inherit;
+      background: transparent;
+      box-sizing: border-box;
+    }
+
+    #editor {
+      color: transparent;
+      caret-color: #93c5fd;
+      z-index: 2;
+      resize: vertical;
+    }
+
+    #highlighting {
+      pointer-events: none;
+      z-index: 1;
+      user-select: none;
+      color: #e2e8f0;
+    }
+
+    #lineNumbers {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--pad-left);
+      padding-top: var(--pad-top);
+      padding-right: 0.75rem;
+      text-align: right;
+      color: #64748b;
+      background: #020617;
+      border-right: 1px solid #334155;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+      z-index: 3;
+      line-height: var(--line-height);
+      font-size: var(--font-size);
+    }
+
+    #lineNumbers > div {
+      height: var(--line-height);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen antialiased">
+
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+  <h1 class="text-3xl font-bold text-blue-400 mb-6">language.yaml Editor</h1>
+
+  <div class="flex flex-wrap items-center gap-4 mb-6">
+    <input type="file" id="fileInput" accept=".yaml,.yml"
+           class="text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
+
+    <button onclick="loadFromFile()"
+            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition">
+      Load file
+    </button>
+
+    <button onclick="saveAsFile()"
+            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded transition">
+      Save as…
+    </button>
+
+    <span id="status" class="text-sm text-slate-400"></span>
+  </div>
+
+  <div class="relative border border-slate-700 bg-slate-900 rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+
+    <div class="editor-container min-h-[70vh] editor-font">
+
+      <!-- Line numbers -->
+      <div id="lineNumbers"></div>
+
+      <!-- Syntax highlighting layer -->
+      <pre id="highlighting"></pre>
+
+      <!-- Editable textarea -->
+      <textarea id="editor" spellcheck="false" autocorrect="off" autocapitalize="off"
+                placeholder="Loading language.yaml … or use the Load button"></textarea>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Elements
+const editor       = document.getElementById('editor');
+const highlighting = document.getElementById('highlighting');
+const lineNumbers  = document.getElementById('lineNumbers');
+const status       = document.getElementById('status');
+const fileInput    = document.getElementById('fileInput');
+
+const yaml = window.jsyaml;
+
+// ─── Update highlighting + line numbers ────────────────────────────────
+function updateHighlightAndLines() {
+  const text = editor.value || ' ';
+
+  // Highlight (use hljs directly)
+  const highlighted = hljs.highlight(text, { language: 'yaml', ignoreIllegals: true }).value;
+  highlighting.innerHTML = highlighted;
+
+  // Line numbers
+  const lineCount = (text.match(/\n/g) || []).length + 1;
+  lineNumbers.innerHTML = Array.from({ length: lineCount }, (_, i) => 
+    `<div>${i + 1}</div>`
+  ).join('');
+}
+
+// ─── Scroll synchronization ────────────────────────────────────────────
+function syncScroll() {
+  lineNumbers.scrollTop = editor.scrollTop;
+  highlighting.scrollTop = editor.scrollTop;
+  highlighting.scrollLeft = editor.scrollLeft;
+}
+
+// ─── Full update ───────────────────────────────────────────────────────
+function updateAll() {
+  updateHighlightAndLines();
+  syncScroll();
+}
+
+// ─── Input & scroll events ─────────────────────────────────────────────
+editor.addEventListener('input', updateAll);
+editor.addEventListener('scroll', syncScroll);
+
+// ─── Tab → insert 2 spaces ─────────────────────────────────────────────
+editor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = editor.selectionStart;
+    const end   = editor.selectionEnd;
+    editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+    editor.selectionStart = editor.selectionEnd = start + 2;
+    updateAll();
+  }
+
+  // Enter → keep indent
+  if (e.key === 'Enter') {
+    setTimeout(() => {
+      const pos = editor.selectionStart;
+      const before = editor.value.slice(0, pos - 1);
+      const indentMatch = before.match(/(^|\n)( *)$/);
+      if (indentMatch?.[2]) {
+        const indent = indentMatch[2];
+        editor.value = editor.value.slice(0, pos) + indent + editor.value.slice(pos);
+        editor.selectionStart = editor.selectionEnd = pos + indent.length;
+        updateAll();
+      }
+    }, 0);
+  }
+});
+
+// ─── Auto-load from same directory ─────────────────────────────────────
+async function tryAutoLoad() {
+  try {
+    const res = await fetch('language.yaml', { cache: 'no-store' });
+    if (!res.ok) throw new Error();
+    const text = await res.text();
+    yaml.load(text); // validate
+    editor.value = text;
+    updateAll();
+    status.textContent = 'Auto-loaded language.yaml';
+  } catch {
+    status.textContent = 'No language.yaml found on server';
+  }
+}
+
+// ─── Load from uploaded file ───────────────────────────────────────────
+async function loadFromFile() {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    yaml.load(text);
+    editor.value = text;
+    updateAll();
+    status.textContent = `Loaded: ${file.name}`;
+  } catch (err) {
+    status.textContent = 'Invalid YAML: ' + err.message;
+  }
+}
+
+// ─── Save as file ──────────────────────────────────────────────────────
+function saveAsFile() {
+  const content = editor.value.trim();
+  if (!content) return;
+
+  try {
+    yaml.load(content);
+  } catch (err) {
+    if (!confirm('Invalid YAML. Save anyway?\n\n' + err.message)) return;
+  }
+
+  const blob = new Blob([content + '\n'], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'language.yaml';
+  a.click();
+  URL.revokeObjectURL(url);
+  status.textContent = 'Download started';
+}
+
+// Start
+tryAutoLoad();
+</script>
+
+</body>
+</html>
