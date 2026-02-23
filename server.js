@@ -4,8 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const cron = require('node-cron');
-const { default: fetch } = require('node-fetch');
-
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const app = express();
 app.use(cors());
 app.use(express.json());
