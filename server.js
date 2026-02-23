@@ -1,18 +1,18 @@
-// ---------------- SERVER.JS ----------------
+// ---------------- server.js ----------------
 import express from "express";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
-import fetch from "node-fetch";  // node-fetch v3+ is pure ESM
+import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = 5000;
-const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa"; // <-- put your webhook here
 
 const BOOKED_FILE = path.join(process.cwd(), "bookedSlots.json");
 const USERS_FILE = path.join(process.cwd(), "users.json");
@@ -20,7 +20,7 @@ const USERS_FILE = path.join(process.cwd(), "users.json");
 let bookedSlots = [];
 let users = [];
 
-// ------------------ LOAD / SAVE FILES ------------------
+// ------------------ LOAD / SAVE ------------------
 function loadBookedSlots() {
     if (!fs.existsSync(BOOKED_FILE)) fs.writeFileSync(BOOKED_FILE, "[]");
     bookedSlots = JSON.parse(fs.readFileSync(BOOKED_FILE, "utf8") || "[]");
@@ -53,40 +53,31 @@ const transporter = nodemailer.createTransport({
     secure: false,
     auth: {
         user: "bearwallbear1@gmail.com",
-        pass: "qvut-ljig-nxbs-unqh"
+        pass: "qvut-ljig-nxbs-unqh" // your app password
     }
 });
 
 function sendEmail(to, subject, text) {
-    transporter.sendMail({
-        from: '"The OG Barber" <bearwallbear1@gmail.com>',
-        to,
-        subject,
-        text
-    }, (err, info) => {
+    transporter.sendMail({ from: '"The OG Barber" <bearwallbear1@gmail.com>', to, subject, text }, (err, info) => {
         if (err) console.error("Email error:", err);
         else console.log("Email sent:", info.response);
     });
 }
 
-// ------------------ DISCORD WEBHOOK HELPER ------------------
+// ------------------ DISCORD WEBHOOK ------------------
 async function sendDiscordWebhook(title, description, color = 3447003) {
     try {
-        // Try sending as embed
-        let response = await fetch(DISCORD_WEBHOOK, {
+        const response = await fetch(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ embeds: [{ title, description, color }] })
         });
         if (!response.ok) {
-            // Fallback: send simple content
-            await fetch(DISCORD_WEBHOOK, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: `${title}\n${description}` })
-            });
+            const text = await response.text();
+            console.log("Discord webhook error:", response.status, text);
+        } else {
+            console.log("Discord webhook sent:", title);
         }
-        console.log("Discord webhook sent:", title);
     } catch (err) {
         console.log("Discord webhook failed:", err.message);
     }
@@ -103,12 +94,7 @@ app.post("/user/signup", async (req, res) => {
     users.push(user);
     saveUsers();
 
-    // Send Discord webhook
-    await sendDiscordWebhook(
-        "📝 New User Signup",
-        `**Username:** ${username}\n**Email:** ${email}`,
-        3447003
-    );
+    await sendDiscordWebhook("📝 New User Signup", `**Username:** ${username}\n**Email:** ${email}`);
 
     res.json({ ok: true, user });
 });
@@ -134,12 +120,13 @@ app.get("/booked/:date", (req, res) => {
 app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
-    if (!name || !date || !time || !email || !services?.length) 
+
+    if (!name || !date || !time || !email || !services?.length)
         return res.status(400).json({ ok: false, error: "Missing info" });
 
     removePastBookings();
 
-    if (bookedSlots.some(b => b.date === date && b.time === time)) 
+    if (bookedSlots.some(b => b.date === date && b.time === time))
         return res.status(400).json({ ok: false, error: "Slot already booked" });
 
     bookedSlots.push({ name, date, time, services, total, email });
@@ -152,35 +139,41 @@ app.post("/book", async (req, res) => {
         16753920
     );
 
-    // Send email confirmation
+    // Send email confirmation immediately
     sendEmail(
         email,
         "Booking Confirmed",
-        `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\n\nTotal: £${total}\n\nThank you!`
+        `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\nTotal: £${total}\n\nThank you!`
     );
 
-    // Schedule email reminders
+    // Schedule reminders
     scheduleReminders({ name, date, time, email, services, total });
 
     res.json({ ok: true });
 });
 
-// ------------------ SCHEDULE EMAIL REMINDERS ------------------
+// ------------------ SCHEDULE REMINDERS ------------------
 function scheduleReminders(booking) {
     const bookingDate = new Date(`${booking.date}T${booking.time}:00`);
 
     // 1 day before
     const dayBefore = new Date(bookingDate.getTime() - 24 * 60 * 60 * 1000);
     cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth() + 1} *`, () => {
-        sendEmail(booking.email, "Reminder: Your Booking Tomorrow",
-            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
+        sendEmail(
+            booking.email,
+            "Reminder: Your Booking Tomorrow",
+            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`
+        );
     });
 
     // 1 hour before
     const hourBefore = new Date(bookingDate.getTime() - 60 * 60 * 1000);
     cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth() + 1} *`, () => {
-        sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
-            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
+        sendEmail(
+            booking.email,
+            "Reminder: Your Booking in 1 Hour",
+            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`
+        );
     });
 }
 
