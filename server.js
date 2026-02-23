@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
-import fetch from "node-fetch";
+import fetch from "node-fetch";  // node-fetch v3+ is pure ESM
 
 const app = express();
 app.use(cors());
