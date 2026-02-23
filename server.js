@@ -53,7 +53,7 @@ const transporter = nodemailer.createTransport({
     secure: false,
     auth: {
         user: "bearwallbear1@gmail.com",
-        pass: "qvut-ljig-nxbs-unqh" // Use your Gmail app password
+        pass: "qvut-ljig-nxbs-unqh"
     }
 });
 
@@ -72,17 +72,21 @@ function sendEmail(to, subject, text) {
 // ------------------ DISCORD WEBHOOK HELPER ------------------
 async function sendDiscordWebhook(title, description, color = 3447003) {
     try {
-        const response = await fetch(DISCORD_WEBHOOK, {
+        // Try sending as embed
+        let response = await fetch(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ embeds: [{ title, description, color }] })
         });
         if (!response.ok) {
-            const text = await response.text();
-            console.log("Discord webhook error:", response.status, text);
-        } else {
-            console.log("Discord webhook sent:", title);
+            // Fallback: send simple content
+            await fetch(DISCORD_WEBHOOK, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: `${title}\n${description}` })
+            });
         }
+        console.log("Discord webhook sent:", title);
     } catch (err) {
         console.log("Discord webhook failed:", err.message);
     }
@@ -100,7 +104,11 @@ app.post("/user/signup", async (req, res) => {
     saveUsers();
 
     // Send Discord webhook
-    await sendDiscordWebhook("📝 New User Signup", `**Username:** ${username}\n**Email:** ${email}`, 3447003);
+    await sendDiscordWebhook(
+        "📝 New User Signup",
+        `**Username:** ${username}\n**Email:** ${email}`,
+        3447003
+    );
 
     res.json({ ok: true, user });
 });
@@ -126,7 +134,6 @@ app.get("/booked/:date", (req, res) => {
 app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
-
     if (!name || !date || !time || !email || !services?.length) 
         return res.status(400).json({ ok: false, error: "Missing info" });
 
@@ -145,8 +152,12 @@ app.post("/book", async (req, res) => {
         16753920
     );
 
-    // Send email confirmation immediately
-    sendEmail(email, "Booking Confirmed", `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\n\nTotal: £${total}\n\nThank you!`);
+    // Send email confirmation
+    sendEmail(
+        email,
+        "Booking Confirmed",
+        `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\n\nTotal: £${total}\n\nThank you!`
+    );
 
     // Schedule email reminders
     scheduleReminders({ name, date, time, email, services, total });
