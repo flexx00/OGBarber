@@ -258,14 +258,28 @@ async function loadTimeSlots(date){
     timesDiv.innerHTML=""; selectedTime="";
     let booked=[];
     try{ const res=await fetch(`${BACKEND_BOOKED_URL}/${date}`); if(res.ok) booked=await res.json(); }catch{}
-    defaultTimes.forEach(time=>{
-        const div=document.createElement("div"); div.className="time"; div.innerText=time;
-        if(booked.includes(time)){ div.classList.add("booked"); div.innerText=time+" (Booked)";}
-        else{ div.onclick=()=>{ document.querySelectorAll(".time").forEach(t=>t.classList.remove("selected")); div.classList.add("selected"); selectedTime=time; } }
-        timesDiv.appendChild(div);
-    });
-}
+defaultTimes.forEach(time => {
+    const div = document.createElement("div");
+    div.className = "time";
+    div.innerText = time;
 
+    const timeDate = new Date(`${date}T${time}:00`);
+    const now = new Date();
+
+    if (booked.includes(time) || timeDate < now) {
+        div.classList.add("booked");
+        div.innerText = time + " (Booked)";
+    } else {
+        div.onclick = () => {
+            document.querySelectorAll(".time").forEach(t => t.classList.remove("selected"));
+            div.classList.add("selected");
+            selectedTime = time;
+        };
+    }
+
+    timesDiv.appendChild(div);
+});
+}
 // ---------------- CONFIRM BOOKING ----------------
 async function confirmBooking(){
     if(!currentUser) return alert("You must be logged in to book");
