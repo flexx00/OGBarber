@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
 import cron from "node-cron";
-import fetch from "node-fetch"; // ESM import
+import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
@@ -20,7 +20,7 @@ const USERS_FILE = path.join(process.cwd(), "users.json");
 let bookedSlots = [];
 let users = [];
 
-// ------------------ LOAD FILES ------------------
+// ------------------ LOAD / SAVE FILES ------------------
 function loadBookedSlots() {
     if (!fs.existsSync(BOOKED_FILE)) fs.writeFileSync(BOOKED_FILE, "[]");
     bookedSlots = JSON.parse(fs.readFileSync(BOOKED_FILE, "utf8") || "[]");
@@ -52,12 +52,11 @@ const transporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-        user: "bearwallbear1@gmail.com",       
-        pass: "qvut-ljig-nxbs-unqh"           
+        user: "bearwallbear1@gmail.com",
+        pass: "qvut-ljig-nxbs-unqh"
     }
 });
 
-// ------------------ HELPER: SEND EMAIL ------------------
 function sendEmail(to, subject, text) {
     transporter.sendMail({
         from: '"The OG Barber" <bearwallbear1@gmail.com>',
@@ -70,25 +69,22 @@ function sendEmail(to, subject, text) {
     });
 }
 
-// ------------------ HELPER: DISCORD WEBHOOK ------------------
+// ------------------ DISCORD WEBHOOK HELPER ------------------
 async function sendDiscordWebhook(title, description, color = 3447003) {
-    if (!DISCORD_WEBHOOK) return;
     try {
-        const res = await fetch(DISCORD_WEBHOOK, {
+        const response = await fetch(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                embeds: [{ title, description, color }]
-            })
+            body: JSON.stringify({ embeds: [{ title, description, color }] })
         });
-        if (!res.ok) {
-            const text = await res.text();
-            console.error("Discord webhook failed:", text);
+        if (!response.ok) {
+            const text = await response.text();
+            console.log("Discord webhook error:", response.status, text);
         } else {
             console.log("Discord webhook sent:", title);
         }
     } catch (err) {
-        console.error("Discord webhook error:", err.message);
+        console.log("Discord webhook failed:", err.message);
     }
 }
 
@@ -97,19 +93,13 @@ app.post("/user/signup", async (req, res) => {
     loadUsers();
     const { email, username } = req.body;
     if (!email || !username) return res.status(400).json({ ok: false, error: "Missing info" });
-
     if (users.find(u => u.email === email)) return res.status(400).json({ ok: false, error: "Email already registered" });
 
     const user = { email, username };
     users.push(user);
     saveUsers();
 
-    // Discord webhook
-    await sendDiscordWebhook(
-        "📝 New User Signup",
-        `**Username:** ${username}\n**Email:** ${email}`,
-        3447003
-    );
+    await sendDiscordWebhook("📝 New User Signup", `**Username:** ${username}\n**Email:** ${email}`, 3447003);
 
     res.json({ ok: true, user });
 });
@@ -135,29 +125,28 @@ app.get("/booked/:date", (req, res) => {
 app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
-    if (!name || !date || !time || !email || !services || services.length === 0)
-        return res.status(400).json({ ok: false, error: "Missing info or no services selected" });
+    if (!name || !date || !time || !email || !services?.length) 
+        return res.status(400).json({ ok: false, error: "Missing info" });
 
     removePastBookings();
 
-    const exists = bookedSlots.some(b => b.date === date && b.time === time);
-    if (exists) return res.status(400).json({ ok: false, error: "Slot already booked" });
+    if (bookedSlots.some(b => b.date === date && b.time === time)) 
+        return res.status(400).json({ ok: false, error: "Slot already booked" });
 
     bookedSlots.push({ name, date, time, services, total, email });
     saveBookedSlots();
 
-    // Discord webhook
+    // Send Discord webhook
     await sendDiscordWebhook(
         "📅 New Booking",
         `**Name:** ${name}\n**Date:** ${date}\n**Time:** ${time}\n**Services:** ${services.join(", ")}\n**Total:** £${total}`,
         16753920
     );
 
-    // SEND IMMEDIATE EMAIL CONFIRMATION
-    sendEmail(email, "Booking Confirmed - The OG Barber",
-        `Hi ${name},\n\nYour booking has been confirmed!\n\nDate: ${date}\nTime: ${time}\nServices: ${services.join(", ")}\nTotal: £${total}\n\nSee you soon!`);
+    // Send email confirmation immediately
+    sendEmail(email, "Booking Confirmed", `Hi ${name},\n\nYour booking for ${services.join(", ")} on ${date} at ${time} is confirmed.\n\nTotal: £${total}\n\nThank you!`);
 
-    // Schedule future reminders
+    // Schedule email reminders
     scheduleReminders({ name, date, time, email, services, total });
 
     res.json({ ok: true });
