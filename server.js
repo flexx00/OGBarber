@@ -53,7 +53,7 @@ const transporter = nodemailer.createTransport({
     secure: false,
     auth: {
         user: "bearwallbear1@gmail.com",
-        pass: "qvut-ljig-nxbs-unqh"
+        pass: "qvut-ljig-nxbs-unqh" // Use your Gmail app password
     }
 });
 
@@ -99,6 +99,7 @@ app.post("/user/signup", async (req, res) => {
     users.push(user);
     saveUsers();
 
+    // Send Discord webhook
     await sendDiscordWebhook("📝 New User Signup", `**Username:** ${username}\n**Email:** ${email}`, 3447003);
 
     res.json({ ok: true, user });
@@ -125,6 +126,7 @@ app.get("/booked/:date", (req, res) => {
 app.post("/book", async (req, res) => {
     loadBookedSlots();
     const { name, date, time, services, total, email } = req.body;
+
     if (!name || !date || !time || !email || !services?.length) 
         return res.status(400).json({ ok: false, error: "Missing info" });
 
