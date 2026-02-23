@@ -1,154 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>The OG Barber</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>The OG Barber</title>
 <style>
-/* GENERAL STYLES */
-body { font-family: Arial; margin:0; background:#f5f5f5; transition: background 0.3s, color 0.3s; color:#222; }
+/* --- GENERAL --- */
+body { font-family: Arial; margin:0; background:#f5f5f5; color:#222; transition: background 0.3s, color 0.3s;}
 .dark-mode { background:#555; color:#fff; }
 
-/* HEADER */
-header {
-    background:#222;
-    color:rgb(255, 174, 0);
-    padding:20px;
-    text-align:center;
-    position:relative;
-}
-.back-btn {
-    position:absolute;
-    left:20px;
-    top:20px;
-    background:transparent;
-    border:1px solid white;
-    color:white;
-    padding:5px 12px;
-    border-radius:5px;
-    cursor:pointer;
-    display:none;
-}
+/* --- HEADER --- */
+header { background:#222; color:rgb(255,174,0); padding:20px; text-align:center; position:relative;}
+.back-btn { position:absolute; left:20px; top:20px; background:transparent; border:1px solid white; color:white; padding:5px 12px; border-radius:5px; cursor:pointer; display:none; }
 
-/* NAVIGATION */
-.nav-tabs {
-    background:#111;
-    text-align:center;
-    padding:10px 0;
-}
-.nav-tabs button {
-    background:transparent;
-    border:none;
-    color:white;
-    margin:0 20px;
-    font-size:16px;
-    cursor:pointer;
-}
-.nav-tabs button:hover { color:rgb(255, 174, 0); }
+/* --- NAV --- */
+.nav-tabs { background:#111; text-align:center; padding:10px 0; }
+.nav-tabs button { background:transparent; border:none; color:white; margin:0 20px; font-size:16px; cursor:pointer;}
+.nav-tabs button:hover { color:rgb(255,174,0); }
 
-/* PRODUCTS SECTION */
-.products-section {
-    display:none;
-    padding:50px 20px;
-    text-align:center;
-    background:#ccc;
-    transition: background 0.3s, color 0.3s;
-}
+/* --- PRODUCTS --- */
+.products-section { display:none; padding:50px 20px; text-align:center; background:#ccc; transition: background 0.3s, color 0.3s;}
 .products-section h2 { margin-bottom:20px; }
-.products-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
-    gap:30px;
-    max-width:1200px;
-    margin:auto;
-}
-.product-card {
-    background:#bbb;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.08);
-    transition:0.3s ease, background 0.3s, color 0.3s;
-}
+.products-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:30px; max-width:1200px; margin:auto;}
+.product-card { background:#bbb; padding:20px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); transition:0.3s ease, background 0.3s, color 0.3s;}
 .product-card:hover { transform:translateY(-5px); }
 .product-card img { width:100%; height:250px; object-fit:cover; border-radius:10px; }
 .product-card h3, .product-card p { margin-top:5px; color:#222; }
-.product-card button {
-    margin-top:10px;
-    padding:8px 15px;
-    border:none;
-    background:#222;
-    color:rgb(255, 174, 0);
-    border-radius:5px;
-    cursor:pointer;
-}
+.product-card button { margin-top:10px; padding:8px 15px; border:none; background:#222; color:rgb(255,174,0); border-radius:5px; cursor:pointer;}
 .product-card button:hover { opacity:0.8; }
 
-/* CART ICON AND DROPDOWN */
-.cart-icon {
-    position:absolute;
-    top:20px;
-    right:20px;
-    background:#222;
-    color:rgb(255, 174, 0);
-    padding:10px 15px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
-}
+/* --- CART --- */
+.cart-icon { position:absolute; top:20px; right:20px; background:#222; color:rgb(255,174,0); padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; }
 .cart-count { margin-left:5px; }
-.cart-dropdown {
-    display:none;
-    position:absolute;
-    top:60px;
-    right:20px;
-    background:#ccc;
-    color:#000;
-    border:1px solid #999;
-    width:300px;
-    padding:15px;
-    border-radius:8px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.2);
-    z-index:100;
-    text-align:left;
-}
-.cart-item {
-    display:flex;
-    justify-content:space-between;
-    margin-bottom:10px;
-}
-.cart-item button {
-    background:red;
-    color:white;
-    border:none;
-    padding:2px 6px;
-    cursor:pointer;
-    border-radius:4px;
-}
+.cart-dropdown { display:none; position:absolute; top:60px; right:20px; background:#ccc; color:#000; border:1px solid #999; width:300px; padding:15px; border-radius:8px; box-shadow:0 5px 15px rgba(0,0,0,0.2); z-index:100; text-align:left; }
+.cart-item { display:flex; justify-content:space-between; margin-bottom:10px;}
+.cart-item button { background:red; color:white; border:none; padding:2px 6px; cursor:pointer; border-radius:4px; }
 
-/* CHECKOUT MENU */
-#checkoutMenu {
-    display:none;
-    position:fixed;
-    top:0;
-    right:0;
-    width:400px;
-    height:100%;
-    background:#ccc;
-    color:#222;
-    padding:20px;
-    box-shadow:-5px 0 15px rgba(0,0,0,0.3);
-    z-index:200;
-    overflow-y:auto;
-}
+/* --- CHECKOUT --- */
+#checkoutMenu { display:none; position:fixed; top:0; right:0; width:400px; height:100%; background:#ccc; color:#222; padding:20px; box-shadow:-5px 0 15px rgba(0,0,0,0.3); z-index:200; overflow-y:auto;}
 #checkoutMenu.dark-mode { background:#555; color:#fff; }
-#checkoutMenu h2 { margin-bottom:20px; }
-#checkoutItems { margin-bottom:20px; }
 #checkoutItems div { display:flex; justify-content:space-between; margin-bottom:10px; }
 #checkoutItems button { background:red; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; }
 #checkoutClose { background:black; color:rgb(255,174,0); padding:10px 15px; border:none; border-radius:5px; cursor:pointer; float:right; }
 
-/* BOOKING SYSTEM */
+/* --- BOOKING --- */
 .container { max-width:1000px; margin:40px auto; padding:20px; }
 .card { background:#ccc; padding:20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:20px; transition:0.4s ease, background 0.3s, color 0.3s; color:#222; }
 .card.success { background:#d4edda; color:#000; }
@@ -163,22 +58,10 @@ button.main-btn:hover { opacity:0.8; }
 .times { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px; }
 .total-box { font-size:20px; font-weight:bold; margin-top:20px; }
 
-/* DARK MODE BUTTON */
-.toggle-mode {
-    position:fixed;
-    top:50%;
-    right:20px;
-    transform:translateY(-50%);
-    background:#222;
-    color:rgb(255,174,0);
-    padding:10px 15px;
-    border-radius:8px;
-    cursor:pointer;
-    z-index:500;
-}
+/* --- DARK MODE --- */
+.toggle-mode { position:fixed; top:50%; right:20px; transform:translateY(-50%); background:#222; color:rgb(255,174,0); padding:10px 15px; border-radius:8px; cursor:pointer; z-index:500; }
 </style>
 </head>
-
 <body>
 
 <header>
@@ -187,41 +70,63 @@ button.main-btn:hover { opacity:0.8; }
 </header>
 
 <div class="nav-tabs">
-    <button onclick="showBooking()">Home</button>
-    <button onclick="showProducts()">Products</button>
+<button onclick="showBooking()">Home</button>
+<button onclick="showProducts()">Products</button>
 </div>
 
 <button class="toggle-mode" onclick="toggleMode()">🌙</button>
 
+<!-- ---------------- SIGNUP/LOGIN ---------------- -->
+<div class="container" id="authSection">
+<div id="signupCard" class="card">
+<h2>Sign Up</h2>
+<label>Email</label><br>
+<input type="email" id="signupEmail" placeholder="Enter your email" style="padding:10px;width:100%;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;">
+<label>Username</label><br>
+<input type="text" id="signupUsername" placeholder="Enter a username" style="padding:10px;width:100%;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;">
+<button class="main-btn" onclick="signup()">Sign Up</button>
+<p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</div>
+
+<div id="loginCard" class="card hidden">
+<h2>Login</h2>
+<label>Email</label><br>
+<input type="email" id="loginEmail" placeholder="Enter your email" style="padding:10px;width:100%;margin-bottom:10px;border-radius:6px;border:1px solid #ccc;">
+<button class="main-btn" onclick="login()">Login</button>
+<p>Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+</div>
+</div>
+
+<!-- ---------------- PRODUCTS ---------------- -->
 <section class="products-section" id="productsSection">
 <h2>My Products</h2>
 <div class="cart-icon" onclick="toggleCart()">🛒 <span class="cart-count" id="cartCount">0</span></div>
 
 <div class="cart-dropdown" id="cartDropdown">
-    <div id="cartItems"></div>
-    <hr>
-    <div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
-    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
+<div id="cartItems"></div>
+<hr>
+<div><strong>Total: £<span id="cartTotal">0.00</span></strong></div>
+<button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="openCheckout()">Checkout</button>
 </div>
 
 <div class="products-grid" id="productsGrid"></div>
 </section>
 
 <div id="checkoutMenu">
-    <button id="checkoutClose" onclick="closeCheckout()">Close</button>
-    <h2>Checkout</h2>
-    <div id="checkoutItems"></div>
-    <hr>
-    <div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
-    <button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
+<button id="checkoutClose" onclick="closeCheckout()">Close</button>
+<h2>Checkout</h2>
+<div id="checkoutItems"></div>
+<hr>
+<div><strong>Total: £<span id="checkoutTotal">0.00</span></strong></div>
+<button style="margin-top:10px; width:100%; padding:10px; background:#222; color:rgb(255,174,0);" onclick="confirmCheckout()">Confirm Purchase</button>
 </div>
 
-<div class="container" id="bookingSection">
+<!-- ---------------- BOOKING ---------------- -->
+<div class="container hidden" id="bookingSection">
 <div id="step1" class="card">
 <h2>Select Services</h2>
 <label style="font-weight:bold;">Name for booking</label>
-<input id="customerName" placeholder="What is the name for the booking?"
-style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;">
+<input id="customerName" placeholder="What is the name for the booking?" style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;">
 <div id="services"></div>
 <div class="total-box">Total: £<span id="total">0</span></div>
 <button class="main-btn" onclick="goToCalendar()">Next</button>
@@ -247,19 +152,20 @@ style="padding:10px;width:100%;margin-bottom:15px;border-radius:6px;border:1px s
 </div>
 
 <script>
+// ---------------- GLOBAL VARIABLES ----------------
 let currentStep = 1;
 let selectedServices = [];
 let total = 0;
 let selectedDate = "";
 let selectedTime = "";
 let cart = [];
+let currentUser = null; // store logged-in user
 
 const servicesDiv = document.getElementById("services");
 const calendarDiv = document.getElementById("calendar");
 const timesDiv = document.getElementById("times");
 const backBtn = document.getElementById("backBtn");
 const confirmationText = document.getElementById("confirmationText");
-
 const productsGrid = document.getElementById("productsGrid");
 const cartDropdown = document.getElementById("cartDropdown");
 const cartItemsDiv = document.getElementById("cartItems");
@@ -269,259 +175,161 @@ const checkoutMenu = document.getElementById("checkoutMenu");
 const checkoutItemsDiv = document.getElementById("checkoutItems");
 const checkoutTotalSpan = document.getElementById("checkoutTotal");
 
-// Backend URLs
+// Backend endpoints
 const BACKEND_BOOK_URL = "http://localhost:5000/book";
 const BACKEND_BOOKED_URL = "http://localhost:5000/booked";
+const BACKEND_USER_URL = "http://localhost:5000/user";
 
-// ----------------------------
-// SERVICES
-// ----------------------------
-const serviceData = [
-  { name: "Haircut", price: 10 },
-  { name: "Skin Fade", price: 11.99 },
-  { name: "Beard Trim", price: 6.99 },
-  { name: "Hair & Beard", price: 14.99 }
+/* --- AUTH FUNCTIONS --- */
+function showSignup(){ document.getElementById("signupCard").classList.remove("hidden"); document.getElementById("loginCard").classList.add("hidden"); }
+function showLogin(){ document.getElementById("signupCard").classList.add("hidden"); document.getElementById("loginCard").classList.remove("hidden"); }
+
+async function signup(){
+    const email=document.getElementById("signupEmail").value.trim();
+    const username=document.getElementById("signupUsername").value.trim();
+    if(!email||!username) return alert("Fill all fields");
+    try{
+        const res=await fetch(`${BACKEND_USER_URL}/signup`,{
+            method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,username})
+        });
+        const data=await res.json();
+        if(!res.ok) return alert(data.error||"Signup failed");
+        currentUser=data.user;
+        alert("Signup successful! You can now book services.");
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("bookingSection").classList.remove("hidden");
+    }catch(err){ console.error(err); alert("Server error"); }
+}
+
+async function login(){
+    const email=document.getElementById("loginEmail").value.trim();
+    if(!email) return alert("Enter email");
+    try{
+        const res=await fetch(`${BACKEND_USER_URL}/login`,{
+            method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email})
+        });
+        const data=await res.json();
+        if(!res.ok) return alert(data.error||"Login failed");
+        currentUser=data.user;
+        alert("Logged in! You can now book services.");
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("bookingSection").classList.remove("hidden");
+    }catch(err){ console.error(err); alert("Server error"); }
+}
+
+// ---------------- SERVICES ----------------
+const serviceData=[
+    {name:"Haircut",price:10},
+    {name:"Skin Fade",price:11.99},
+    {name:"Beard Trim",price:6.99},
+    {name:"Hair & Beard",price:14.99}
 ];
-
-serviceData.forEach(service => {
-    const div = document.createElement("div");
-    div.className = "service";
-    div.innerHTML = `<span>${service.name} (£${service.price})</span>
-        <input type="checkbox" onchange="toggleService('${service.name}', ${service.price})">`;
+serviceData.forEach(service=>{
+    const div=document.createElement("div");
+    div.className="service";
+    div.innerHTML=`<span>${service.name} (£${service.price})</span>
+        <input type="checkbox" onchange="toggleService('${service.name}',${service.price})">`;
     servicesDiv.appendChild(div);
 });
-
-function toggleService(name, price){
-    if(selectedServices.includes(name)){
-        selectedServices = selectedServices.filter(s => s !== name);
-        total -= price;
-    } else {
-        selectedServices.push(name);
-        total += price;
-    }
-    document.getElementById("total").innerText = total.toFixed(2);
+function toggleService(name,price){
+    if(selectedServices.includes(name)){ selectedServices=selectedServices.filter(s=>s!==name); total-=price;}
+    else{ selectedServices.push(name); total+=price;}
+    document.getElementById("total").innerText=total.toFixed(2);
 }
 
-// ----------------------------
-// PRODUCTS & CART
-// ----------------------------
-const products = [
-    { name: "Texture Paste", price: 8.99, img:"images/paste.png" },
-    { name: "Texture Powder", price: 6.99, img:"images/texture.png" },
-    { name: "Sea Salt Spray", price: 7.99, img:"images/spray.png" }
-];
-
-products.forEach((prod, index) => {
-    const div = document.createElement("div");
-    div.className = "product-card";
-    div.innerHTML = `
-        <img src="${prod.img}" alt="${prod.name}">
-        <h3>${prod.name}</h3>
-        <p>£${prod.price.toFixed(2)}</p>
-        <button onclick="addToCart(${index})">Add to Cart</button>
-    `;
-    productsGrid.appendChild(div);
-});
-
-function addToCart(index){
-    const item = products[index];
-    const exist = cart.find(p => p.name === item.name);
-    if(exist) exist.qty += 1;
-    else cart.push({...item, qty:1});
-    updateCart();
-}
-
-function removeFromCart(index){
-    cart.splice(index,1);
-    updateCart();
-}
-
-function updateCart(){
-    cartItemsDiv.innerHTML = "";
-    checkoutItemsDiv.innerHTML = "";
-    let totalCart = 0;
-
-    cart.forEach((item, i) => {
-        const div1 = document.createElement("div");
-        div1.className = "cart-item";
-        div1.innerHTML = `${item.name} x${item.qty} - £${(item.price*item.qty).toFixed(2)} <button onclick="removeFromCart(${i})">X</button>`;
-        cartItemsDiv.appendChild(div1);
-
-        const div2 = div1.cloneNode(true);
-        checkoutItemsDiv.appendChild(div2);
-
-        totalCart += item.price * item.qty;
-    });
-
-    cartTotalSpan.innerText = totalCart.toFixed(2);
-    checkoutTotalSpan.innerText = totalCart.toFixed(2);
-    cartCountSpan.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
-}
-
-function toggleCart(){ cartDropdown.style.display = cartDropdown.style.display==="block"?"none":"block"; }
-function openCheckout(){ checkoutMenu.style.display="block"; cartDropdown.style.display="none"; }
-function closeCheckout(){ checkoutMenu.style.display="none"; }
-
-function confirmCheckout(){
-    if(cart.length === 0) return alert("Cart is empty!");
-    let summary = cart.map(p => `${p.name} x${p.qty}`).join("\n");
-    alert(`Purchase Confirmed!\n${summary}\nTotal: £${checkoutTotalSpan.innerText}`);
-    cart = [];
-    updateCart();
-    closeCheckout();
-}
-
-// ----------------------------
-// NAVIGATION
-// ----------------------------
-function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
-function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
-
-function showStep(step){
-    for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden");
-    document.getElementById("step"+step).classList.remove("hidden");
-    currentStep = step;
-    backBtn.style.display = step===1 ? "none":"block";
-}
-
-function goBack(){ if(currentStep>1) showStep(currentStep-1); }
-function goHome(){ showStep(1); }
-
-// ----------------------------
-// CALENDAR
-// ----------------------------
-function generateCalendar(){
-    calendarDiv.innerHTML = "";
-    const today = new Date();
+// ---------------- CALENDAR & TIMES ----------------
+const defaultTimes=["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
+async function generateCalendar(){
+    calendarDiv.innerHTML=""; const today=new Date();
     for(let i=0;i<21;i++){
-        const date = new Date();
-        date.setDate(today.getDate() + i);
-        const div = document.createElement("div");
-        div.className = "day";
-        div.innerText = date.toDateString();
-        div.onclick = async () => {
-            document.querySelectorAll(".day").forEach(d => d.classList.remove("selected"));
-            div.classList.add("selected");
-            selectedDate = date.toISOString().split('T')[0];
-            await loadTimeSlots(selectedDate);
-        };
+        const date=new Date(); date.setDate(today.getDate()+i);
+        const iso=date.toISOString().split("T")[0];
+        const div=document.createElement("div"); div.className="day"; div.innerText=date.toDateString();
+        let booked=[];
+        try{ const res=await fetch(`${BACKEND_BOOKED_URL}/${iso}`); if(res.ok) booked=await res.json(); }catch{}
+        if(booked.length>=defaultTimes.length){ div.style.background="#ff4d4d"; div.style.color="white"; div.innerText+="\nFULL"; div.onclick=null;}
+        else{ div.onclick=async ()=>{ document.querySelectorAll(".day").forEach(d=>d.classList.remove("selected")); div.classList.add("selected"); selectedDate=iso; await loadTimeSlots(iso); }; }
         calendarDiv.appendChild(div);
     }
 }
 generateCalendar();
 
-function goToCalendar(){
-    if(selectedServices.length === 0) return alert("Select at least one service.");
-    showStep(2);
-}
-
-function goToTimes(){
-    if(!selectedDate) return alert("Select a date.");
-    showStep(3);
-}
-
-// ----------------------------
-// TIMES
-// ----------------------------
-// ----------------------------
-// TIMES
-// ----------------------------
-const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
-
 async function loadTimeSlots(date){
-    timesDiv.innerHTML = "";
-    let booked = [];
-    try {
-        const res = await fetch(`${BACKEND_BOOKED_URL}/${date}`);
-        if(res.ok) booked = await res.json(); // array of booked times from backend
-    } catch(err){
-        console.error("Failed to fetch booked slots", err);
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    const nowHour = new Date().getHours();
-    const nowMinute = new Date().getMinutes();
-
-    defaultTimes.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "time";
-        div.innerText = t;
-
-        let isBooked = booked.includes(t);
-
-        // Grey out past times for today
-        if(date === today){
-            const [h, m] = t.split(':').map(Number);
-            if(h < nowHour || (h === nowHour && m <= nowMinute)) isBooked = true;
-        }
-
-        if(isBooked){
-            div.classList.add("booked");
-            div.onclick = null; // cannot click
-        } else {
-            div.onclick = () => {
-                // Select only one time
-                document.querySelectorAll(".time").forEach(d => d.classList.remove("selected"));
-                div.classList.add("selected");
-                selectedTime = t;
-            };
-        }
-
+    timesDiv.innerHTML=""; selectedTime="";
+    let booked=[];
+    try{ const res=await fetch(`${BACKEND_BOOKED_URL}/${date}`); if(res.ok) booked=await res.json(); }catch{}
+    defaultTimes.forEach(time=>{
+        const div=document.createElement("div"); div.className="time"; div.innerText=time;
+        if(booked.includes(time)){ div.classList.add("booked"); div.innerText=time+" (Booked)";}
+        else{ div.onclick=()=>{ document.querySelectorAll(".time").forEach(t=>t.classList.remove("selected")); div.classList.add("selected"); selectedTime=time; } }
         timesDiv.appendChild(div);
     });
 }
 
-// ----------------------------
-// BOOKING CONFIRM
-// ----------------------------
-async function confirmBooking() {
-    const name = document.getElementById("customerName")?.value.trim() || "Unknown";
-    if(selectedServices.length===0) return alert("Select at least one service.");
-    if(!selectedDate) return alert("Select a date.");
-    if(!selectedTime) return alert("Select a time.");
-
-    const bookingData = { name, date:selectedDate, time:selectedTime, services:selectedServices, total:total.toFixed(2) };
-
-    let res;
-    try {
-        res = await fetch(BACKEND_BOOK_URL, {
-            method:"POST",
-            headers: { "Content-Type":"application/json" },
-            body: JSON.stringify(bookingData)
-        });
-    } catch(err) {
-        console.error("Booking failed:", err);
-        return alert("Booking server not reachable.");
-    }
-
-    if(!res.ok) return alert("Time slot already booked or server error.");
-
-    // Show confirmation
-    confirmationText.innerText = `Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
-    showStep(4);
-
-    // Reload times to immediately grey out the booked slot
-    await loadTimeSlots(selectedDate);
-
-    // Reset selections
-    selectedServices = [];
-    selectedDate = "";
-    selectedTime = "";
-    total = 0;
-    document.getElementById("total").innerText = "0";
-    document.querySelectorAll("#services input[type=checkbox]").forEach(cb=>cb.checked=false);
-    document.querySelectorAll(".day").forEach(el=>el.classList.remove("selected"));
+// ---------------- CONFIRM BOOKING ----------------
+async function confirmBooking(){
+    if(!currentUser) return alert("You must be logged in to book");
+    const name=document.getElementById("customerName").value.trim()||currentUser.username;
+    if(selectedServices.length===0) return alert("Select at least one service");
+    if(!selectedDate) return alert("Select a date");
+    if(!selectedTime) return alert("Select a time");
+    try{
+        const res=await fetch(BACKEND_BOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,date:selectedDate,time:selectedTime,services:selectedServices,total:total.toFixed(2),email:currentUser.email})});
+        if(!res.ok) return alert("Time slot already booked or server error");
+        confirmationText.innerText=`Booking Confirmed for ${name} on ${selectedDate} at ${selectedTime}`;
+        showStep(4);
+        await loadTimeSlots(selectedDate); await generateCalendar();
+        selectedServices=[]; selectedDate=""; selectedTime=""; total=0;
+        document.getElementById("total").innerText="0";
+        document.querySelectorAll("#services input").forEach(cb=>cb.checked=false);
+        document.querySelectorAll(".day").forEach(el=>el.classList.remove("selected"));
+    }catch(err){ console.error(err); alert("Server not reachable"); }
 }
 
-// ----------------------------
-// DARK MODE
-// ----------------------------
-function toggleMode(){
-    document.body.classList.toggle("dark-mode");
-    checkoutMenu.classList.toggle("dark-mode");
-    document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));
+// ---------------- CART ----------------
+const products=[
+    {name:"Texture Paste",price:8.99,img:"images/paste.png"},
+    {name:"Texture Powder",price:6.99,img:"images/texture.png"},
+    {name:"Sea Salt Spray",price:7.99,img:"images/spray.png"}
+];
+products.forEach((prod,index)=>{
+    const div=document.createElement("div"); div.className="product-card";
+    div.innerHTML=`<img src="${prod.img}" alt="${prod.name}"><h3>${prod.name}</h3><p>£${prod.price.toFixed(2)}</p>
+    <button onclick="addToCart(${index})">Add to Cart</button>`;
+    productsGrid.appendChild(div);
+});
+function addToCart(index){
+    if(!currentUser) return alert("Login to add products to cart");
+    const item=products[index]; const exist=cart.find(p=>p.name===item.name); if(exist) exist.qty+=1; else cart.push({...item,qty:1}); updateCart();
 }
+function updateCart(){
+    cartItemsDiv.innerHTML=""; let total=0;
+    cart.forEach(item=>{
+        total+=item.price*item.qty;
+        const div=document.createElement("div"); div.className="cart-item";
+        div.innerHTML=`${item.name} x${item.qty} <span>£${(item.price*item.qty).toFixed(2)}</span>
+        <button onclick="removeFromCart('${item.name}')">X</button>`;
+        cartItemsDiv.appendChild(div);
+    });
+    cartTotalSpan.innerText=total.toFixed(2); cartCountSpan.innerText=cart.reduce((a,b)=>a+b.qty,0);
+}
+function removeFromCart(name){ cart=cart.filter(i=>i.name!==name); updateCart();}
+function toggleCart(){ cartDropdown.style.display=cartDropdown.style.display==="block"?"none":"block"; }
+function openCheckout(){ checkoutMenu.style.display="block"; renderCheckout(); }
+function closeCheckout(){ checkoutMenu.style.display="none"; }
+function renderCheckout(){ checkoutItemsDiv.innerHTML=""; let total=0; cart.forEach(item=>{ total+=item.price*item.qty; const div=document.createElement("div"); div.innerHTML=`${item.name} x${item.qty} <span>£${(item.price*item.qty).toFixed(2)}</span><button onclick="removeFromCart('${item.name}');renderCheckout()">X</button>`; checkoutItemsDiv.appendChild(div);}); checkoutTotalSpan.innerText=total.toFixed(2);}
+function confirmCheckout(){ if(cart.length===0) return alert("Cart is empty"); alert("Checkout successful!"); cart=[]; updateCart(); closeCheckout(); }
+
+// ---------------- NAVIGATION ----------------
+function showStep(step){ for(let i=1;i<=4;i++) document.getElementById("step"+i).classList.add("hidden"); document.getElementById("step"+step).classList.remove("hidden"); currentStep=step; backBtn.style.display=step===1?"none":"block"; }
+function goBack(){ if(currentStep>1) showStep(currentStep-1);}
+function goHome(){ showStep(1);}
+function goToCalendar(){ showStep(2);}
+function goToTimes(){ if(!selectedDate) return alert("Select a date"); showStep(3);}
+function startNewBooking(){ showStep(1);}
+function showBooking(){ document.getElementById("productsSection").style.display="none"; document.getElementById("bookingSection").style.display="block"; }
+function showProducts(){ document.getElementById("bookingSection").style.display="none"; document.getElementById("productsSection").style.display="block"; }
+function toggleMode(){ document.body.classList.toggle("dark-mode"); checkoutMenu.classList.toggle("dark-mode"); document.querySelectorAll('.card').forEach(c=>c.classList.toggle('dark-mode'));}
 </script>
-
 </body>
 </html>

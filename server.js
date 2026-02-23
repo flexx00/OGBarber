@@ -1,111 +1,186 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const app = express();
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
+const { default: fetch } = require('node-fetch');
 
-// Middleware
+const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = 5000;
 const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+
 const BOOKED_FILE = path.join(__dirname, 'bookedSlots.json');
+const USERS_FILE = path.join(__dirname, 'users.json');
 
-// Global bookedSlots array
 let bookedSlots = [];
+let users = [];
 
-// Load booked slots from file
+// ------------------ LOAD FILES ------------------
 function loadBookedSlots() {
-    try {
-        if (fs.existsSync(BOOKED_FILE)) {
-            const data = fs.readFileSync(BOOKED_FILE, 'utf-8').trim();
-            bookedSlots = data ? JSON.parse(data) : [];
-        } else {
-            bookedSlots = [];
-        }
-    } catch (err) {
-        console.error("Failed to read booked slots file:", err);
-        bookedSlots = [];
-    }
+    if (!fs.existsSync(BOOKED_FILE)) fs.writeFileSync(BOOKED_FILE, "[]");
+    bookedSlots = JSON.parse(fs.readFileSync(BOOKED_FILE, "utf8") || "[]");
 }
 
-// Save booked slots to file
 function saveBookedSlots() {
     fs.writeFileSync(BOOKED_FILE, JSON.stringify(bookedSlots, null, 2));
 }
 
-// Remove past bookings
+function loadUsers() {
+    if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
+    users = JSON.parse(fs.readFileSync(USERS_FILE, "utf8") || "[]");
+}
+
+function saveUsers() {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+// ------------------ CLEAN PAST BOOKINGS ------------------
 function removePastBookings() {
-    const today = new Date().toISOString().split('T')[0];
-    bookedSlots = bookedSlots.filter(slot => slot.date >= today);
+    const today = new Date().toISOString().split("T")[0];
+    bookedSlots = bookedSlots.filter(b => b.date >= today);
     saveBookedSlots();
 }
 
-// Initial load
-loadBookedSlots();
-removePastBookings();
-
-
-// GET booked slots for a specific date
-app.get('/booked/:date', (req, res) => {
-    loadBookedSlots(); // always reload latest
-    const dateParam = new Date(req.params.date).toISOString().split('T')[0];
-    const slots = bookedSlots
-        .filter(s => s.date === dateParam)
-        .map(s => s.time)
-        .sort((a, b) => {
-            const [ah, am] = a.split(':').map(Number);
-            const [bh, bm] = b.split(':').map(Number);
-            return ah - bh || am - bm;
-        });
-    res.json(slots);
+// ------------------ EMAIL SETUP ------------------
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,  
+    auth: {
+        user: "bearwallbear1@gmail.com",
+        pass: "qvut-ljig-nxbs-unqh" // 16-char App Password
+    }
 });
 
+function sendEmail(to, subject, text) {
+    transporter.sendMail({
+        from: '"The OG Barber" <bearwallbear1@gmail.com>',
+        to,
+        subject,
+        text
+    }, (err, info) => {
+        if(err) console.error("Email error:", err);
+        else console.log("Email sent:", info.response);
+    });
+}
 
-// POST /book a new slot
-app.post('/book', async (req, res) => {
-    const booking = req.body; 
-    // booking should have { name, date, time, services, total }
+// ------------------ USER SIGNUP ------------------
+app.post("/user/signup", async (req, res) => {
+    loadUsers();
+    const { email, username } = req.body;
+    if (!email || !username) return res.status(400).json({ ok: false, error: "Missing info" });
+    if (users.find(u => u.email === email)) return res.status(400).json({ ok: false, error: "Email already registered" });
 
-    if (!booking.date || !booking.time || !booking.name) {
-        return res.status(400).json({ ok: false, error: "Missing booking info" });
-    }
+    const user = { email, username };
+    users.push(user);
+    saveUsers();
 
-    loadBookedSlots();
-    removePastBookings();
-
-    const bookingDate = new Date(booking.date).toISOString().split('T')[0];
-    const bookingTime = booking.time;
-
-    // Prevent double booking
-    const exists = bookedSlots.some(s => s.date === bookingDate && s.time === bookingTime);
-    if (exists) return res.status(400).json({ ok: false, error: "Slot already booked" });
-
-    bookedSlots.push({ date: bookingDate, time: bookingTime });
-    saveBookedSlots();
-
-    // Send to Discord webhook
+    // Discord notification
     try {
-        const { default: fetch } = await import('node-fetch');
         await fetch(DISCORD_WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 embeds: [{
-                    title: "New Booking",
-                    description: `**Name:** ${booking.name}\n**Date:** ${bookingDate}\n**Time:** ${bookingTime}\n**Services:** ${booking.services?.join(", ") || "None"}\n**Total:** £${booking.total || 0}`,
+                    title: "📝 New User Signup",
+                    description: `**Username:** ${username}\n**Email:** ${email}`,
+                    color: 3447003
+                }]
+            })
+        });
+    } catch (err) { console.log("Discord webhook failed:", err.message); }
+
+    res.json({ ok: true, user });
+});
+
+// ------------------ LOGIN ------------------
+app.post("/user/login", (req, res) => {
+    loadUsers();
+    const { email } = req.body;
+    const user = users.find(u => u.email === email);
+    if (!user) return res.status(400).json({ ok: false, error: "User not found" });
+    res.json({ ok: true, user });
+});
+
+// ------------------ GET BOOKED SLOTS ------------------
+app.get("/booked/:date", (req, res) => {
+    loadBookedSlots();
+    const date = req.params.date;
+    const slots = bookedSlots.filter(b => b.date === date).map(b => b.time);
+    res.json(slots);
+});
+
+// ------------------ MAKE BOOKING ------------------
+app.post("/book", async (req, res) => {
+    loadBookedSlots();
+    const { name, date, time, services, total, email } = req.body;
+    if (!name || !date || !time || !email) return res.status(400).json({ ok: false, error: "Missing info" });
+
+    removePastBookings();
+
+    // Limit 1 booking per user per day
+    const existingBooking = bookedSlots.find(b => b.date === date && b.email === email);
+    if (existingBooking) return res.status(400).json({ ok: false, error: "You already have a booking on this day" });
+
+    // Prevent double booking on the same slot
+    const slotTaken = bookedSlots.some(b => b.date === date && b.time === time);
+    if (slotTaken) return res.status(400).json({ ok: false, error: "Slot already booked" });
+
+    bookedSlots.push({ name, date, time, services, total, email });
+    saveBookedSlots();
+
+    // Discord notification
+    try {
+        await fetch(DISCORD_WEBHOOK, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                embeds: [{
+                    title: "📅 New Booking",
+                    description:
+                        `**Name:** ${name}\n` +
+                        `**Date:** ${date}\n` +
+                        `**Time:** ${time}\n` +
+                        `**Services:** ${services?.join(", ") || "None"}\n` +
+                        `**Total:** £${total || 0}`,
                     color: 16753920
                 }]
             })
         });
-        res.json({ ok: true, date: bookingDate, time: bookingTime });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ ok: false, error: err.message });
-    }
+    } catch (err) { console.log("Discord webhook failed:", err.message); }
+
+    // Schedule reminders
+    scheduleReminders({ name, date, time, email, services, total });
+
+    res.json({ ok: true });
 });
 
+// ------------------ EMAIL REMINDERS ------------------
+function scheduleReminders(booking) {
+    const bookingDate = new Date(`${booking.date}T${booking.time}:00`);
 
-const PORT = 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Booking server running on port ${PORT}`));
+    // 1 day before
+    const dayBefore = new Date(bookingDate.getTime() - 24*60*60*1000);
+    cron.schedule(`${dayBefore.getMinutes()} ${dayBefore.getHours()} ${dayBefore.getDate()} ${dayBefore.getMonth()+1} *`, () => {
+        sendEmail(booking.email, "Reminder: Your Booking Tomorrow", 
+            `Hi ${booking.name},\nYou have a booking for ${booking.services.join(", ")} on ${booking.date} at ${booking.time}.`);
+    });
+
+    // 1 hour before
+    const hourBefore = new Date(bookingDate.getTime() - 60*60*1000);
+    cron.schedule(`${hourBefore.getMinutes()} ${hourBefore.getHours()} ${hourBefore.getDate()} ${hourBefore.getMonth()+1} *`, () => {
+        sendEmail(booking.email, "Reminder: Your Booking in 1 Hour",
+            `Hi ${booking.name},\nYour booking for ${booking.services.join(", ")} is in 1 hour at ${booking.time}.`);
+    });
+}
+
+// ------------------ START SERVER ------------------
+loadBookedSlots();
+removePastBookings();
+loadUsers();
+
+app.listen(PORT, () => console.log(`✅ Booking server running on port ${PORT}`));

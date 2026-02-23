@@ -7,7 +7,7 @@ app = Flask(__name__)
 WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa"
 ROLE_ID = "PASTE_ROLE_ID"   # optional
 
-BOOKINGS_FILE = "bookings.json"
+BOOKINGS_FILE = "bookedSlots.json"
 
 def load_bookings():
     if os.path.exists(BOOKINGS_FILE):
