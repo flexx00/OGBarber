@@ -20,26 +20,29 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;  // Your chosen port
+const PORT = 3000;  // Changed to 3000 – more reliable for phone testing
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: [
-    "http://localhost:5500",           // VS Code Live Server
-    "http://127.0.0.1:5500",
-    "http://localhost:3000",           // Vite/React dev server
-    process.env.FRONTEND_URL || "*"    // Production domain from .env
-  ],
+  origin: true,  // Allow all origins for local dev (change to specific in production)
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+// Handle OPTIONS preflight requests explicitly (fixes phone POST issues)
+app.options("*", cors());
+
+// Log every incoming request (very useful for debugging phone → server)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip} - Body:`, req.body);
+  next();
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
 // ─── ROOT ROUTE ────────────────────────────────────────────────────────────
-// Added so http://192.168.0.8:8080/ shows a nice page instead of "Cannot GET /"
 app.get("/", (req, res) => {
   res.send(`
     <h1 style="text-align: center; color: #c9a347; font-family: 'Playfair Display', serif; margin-top: 50px;">
@@ -89,7 +92,7 @@ export const ADMIN_PASSWORD = "SuperSecret2026!";
 
 export const LOGO_URL       = "https://i.imgur.com/4dIWLpI.jpeg";
 
-// Nodemailer transporter (using .env values)
+// Nodemailer transporter
 export const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
@@ -232,8 +235,10 @@ app.listen(PORT, () => {
   console.log(`Health check:   http://localhost:${PORT}/health`);
   console.log(`Test email:     http://localhost:${PORT}/test-email`);
   console.log(`Root status:    http://localhost:${PORT}/`);
-  console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden for security)");
-  console.log("\nIMPORTANT for phone testing:");
-  console.log(`Update index.html with: const BACKEND = "http://192.168.0.8:${PORT}";`);
+  console.log(`Full URL for phone: http://192.168.0.8:${PORT}/health`);
+  console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden)");
+  console.log("\nIMPORTANT:");
+  console.log(`Update index.html: const BACKEND = "http://192.168.0.8:${PORT}";`);
   console.log("Then reload your website on phone and try signup again.");
+  console.log("Server is now logging all requests — watch terminal when you click Sign Up.");
 });
