@@ -20,23 +20,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;  // Your chosen port
+const PORT = 3000;
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: true,  // Allow all origins for local dev (restrict in production)
+  origin: true,  // Allow all for local dev (change to specific array in production)
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Log every incoming request (helps debug phone → server)
+// Explicitly handle OPTIONS preflight (fixes some phone browser issues with POST)
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(204);
+});
+
+// Log ALL incoming requests (critical for seeing if phone sends POST /user/signup)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
+  if (req.method === "POST" || req.method === "PUT") {
+    console.log("Body:", req.body);
+  }
   next();
 });
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));  // Increased limit just in case
 app.use(cookieParser());
 
 // ─── ROOT ROUTE ────────────────────────────────────────────────────────────
@@ -234,6 +246,7 @@ app.listen(PORT, () => {
   console.log(`Phone test URL: http://192.168.0.8:${PORT}/health`);
   console.log("JWT_SECRET loaded:", JWT_SECRET ? "YES" : "MISSING");
   console.log("\nIMPORTANT:");
-  console.log(`Update index.html: const BACKEND = "http://192.168.0.8:${PORT}";`);
-  console.log("Server now logs all requests — watch terminal when you click Sign Up on phone.");
+  console.log(`Make sure index.html has: const BACKEND = "http://192.168.0.8:${PORT}";`);
+  console.log("Server now logs EVERY request — watch terminal when you click Sign Up on phone.");
+  console.log("If no POST /user/signup appears → problem is in browser / index.html");
 });
