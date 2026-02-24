@@ -215,7 +215,7 @@ import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
 // ─── START SERVER ──────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, () => {const BACKEND = "http://192.168.0.8:5000";   // ← REPLACE with YOUR computer's IPv4 address
   console.log(`OG Barber server running → http://localhost:${PORT}`);
   console.log("Health check:   http://localhost:5000/health");
   console.log("Test email:     http://localhost:5000/test-email");
