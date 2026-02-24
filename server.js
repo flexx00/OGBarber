@@ -36,8 +36,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Handle preflight OPTIONS requests (fixes iOS Safari "Load failed" on POST)
-app.options("*", cors());
+// NO NEED for app.options("*", cors()) — the above middleware handles OPTIONS automatically
 
 app.use(express.json());
 app.use(cookieParser());
@@ -66,7 +65,8 @@ let lang = {};
 export const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  console.error("JWT_SECRET is not set in .env file! Authentication will fail.");
+  console.error("JWT_SECRET is missing from .env file! Set it to a strong random value.");
+  console.error("Example: JWT_SECRET=$(openssl rand -base64 48)");
   process.exit(1);
 }
 
@@ -219,5 +219,5 @@ app.listen(PORT, () => {
   console.log(`OG Barber server running → http://localhost:${PORT}`);
   console.log("Health check:   http://localhost:5000/health");
   console.log("Test email:     http://localhost:5000/test-email");
-  console.log("JWT_SECRET loaded from .env:", JWT_SECRET ? "YES" : "MISSING!");
+  console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden for security)");
 });
