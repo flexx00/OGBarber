@@ -2,7 +2,7 @@
 <html lang="en" class="bg-[#0b0b0b] text-[#f4f0e8] min-h-screen">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>The OG Barber – Premium Grooming</title>
 
   <link rel="icon" href="https://i.imgur.com/4dIWLpI.jpeg" type="image/jpeg">
@@ -96,10 +96,10 @@
 
     input[type="checkbox"].remember-me {
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 1.25rem;
+      height: 1.25rem;
       border: 2px solid #c9a347;
-      border-radius: 4px;
+      border-radius: 0.25rem;
       background: #1a1a1a;
       cursor: pointer;
       position: relative;
@@ -120,15 +120,27 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 0.875rem;
     }
 
     input[type="checkbox"].remember-me:hover {
       border-color: #e0c070;
     }
+
+    /* Enhanced touch targets */
+    button, input[type="checkbox"], .nav-btn {
+      min-width: 44px;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+
+    /* Prevent zoom on inputs for iOS */
+    input, textarea {
+      font-size: 16px;
+    }
   </style>
 </head>
-<body class="font-sans bg-bg-dark text-text-light min-h-screen">
+<body class="font-sans bg-bg-dark text-text-light min-h-screen antialiased">
 
   <!-- Header with logo -->
   <header class="bg-gradient-to-b from-bg-dark to-[#0f0f0f] py-6 md:py-10 px-6 text-center border-b border-border-gold shadow-heavy relative">
@@ -168,17 +180,17 @@
   <div id="authSection" class="container max-w-3xl mx-auto px-6 py-12">
     <div id="signupCard" class="bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Create Your Account</h2>
-      <input id="signupEmail" type="email" placeholder="Email address" class="w-full p-4 mb-5 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none">
-      <input id="signupUsername" type="text" placeholder="Username" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none">
-      <button onclick="signup()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all">
+      <input id="signupEmail" type="email" placeholder="Email address" class="w-full p-4 mb-5 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
+      <input id="signupUsername" type="text" placeholder="Username" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Username">
+      <button onclick="signup()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="signupBtn">
         Sign Up
       </button>
-      <p class="text-center mt-6 text-text-dim">Already a member? <a href="#" onclick="showLogin()" class="text-gold hover:underline">Sign in</a></p>
+      <p class="text-center mt-6 text-text-dim">Already a member? <a href="#" onclick="showLogin(); event.preventDefault();" class="text-gold hover:underline">Sign in</a></p>
     </div>
 
     <div id="loginCard" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Welcome Back</h2>
-      <input id="loginEmail" type="email" placeholder="Email address" class="w-full p-4 mb-4 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none">
+      <input id="loginEmail" type="email" placeholder="Email address" class="w-full p-4 mb-4 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
 
       <div class="flex items-center mb-6">
         <input type="checkbox" id="rememberMe" class="remember-me">
@@ -187,10 +199,10 @@
         </label>
       </div>
 
-      <button onclick="login()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all">
+      <button onclick="login()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="loginBtn">
         Sign In
       </button>
-      <p class="text-center mt-6 text-text-dim">New here? <a href="#" onclick="showSignup()" class="text-gold hover:underline">Create account</a></p>
+      <p class="text-center mt-6 text-text-dim">New here? <a href="#" onclick="showSignup(); event.preventDefault();" class="text-gold hover:underline">Create account</a></p>
     </div>
   </div>
 
@@ -198,7 +210,7 @@
   <div id="bookingSection" class="hidden container max-w-5xl mx-auto px-6 py-12">
     <div id="step1" class="bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Select Services</h2>
-      <input id="customerName" placeholder="Name for the booking (optional)" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none">
+      <input id="customerName" placeholder="Name for the booking (optional)" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" aria-label="Name for the booking">
 
       <div id="services" class="space-y-5 mb-8"></div>
       <div class="text-center text-2xl font-bold text-gold-light mb-6">
@@ -220,7 +232,7 @@
     <div id="step3" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Choose Time</h2>
       <div id="times" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-      <button onclick="confirmBooking()" class="mt-8 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all" id="confirmBookingBtn">
+      <button onclick="confirmBooking()" class="mt-8 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirmBookingBtn">
         Confirm Booking
       </button>
     </div>
@@ -304,14 +316,21 @@
 
     async function signup() {
       console.log("signup() called");
-      showToast("Sign Up clicked", 'success');
+      const signupBtn = document.getElementById("signupBtn");
+      signupBtn.disabled = true;
+      showToast("Signing up...", 'info');
 
       try {
         const email = document.getElementById("signupEmail")?.value?.trim() || "";
         const username = document.getElementById("signupUsername")?.value?.trim() || "";
 
         if (!email || !username) {
-          showToast("Fill email and username", 'error');
+          showToast("Please fill in email and username", 'error');
+          return;
+        }
+
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          showToast("Invalid email format", 'error');
           return;
         }
 
@@ -321,25 +340,38 @@
           body: JSON.stringify({ email, username })
         });
 
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: `Server error ${res.status}` }));
+          throw new Error(errorData.message || `Server error ${res.status}`);
+        }
 
         const data = await res.json();
         currentUser = data.user;
-        showToast("Account created!", 'success');
+        showToast("Account created successfully!", 'success');
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
+        console.error("Signup error:", err);
         showToast("Signup failed: " + err.message, 'error');
+      } finally {
+        signupBtn.disabled = false;
       }
     }
 
     async function login() {
       console.log("login() called");
-      showToast("Sign In clicked", 'success');
+      const loginBtn = document.getElementById("loginBtn");
+      loginBtn.disabled = true;
+      showToast("Logging in...", 'info');
 
       try {
         const email = document.getElementById("loginEmail")?.value?.trim() || "";
-        if (!email) return showToast("Email required", 'error');
+        if (!email) return showToast("Email is required", 'error');
+
+        if (!/\S+@\S+\.\S+/.test(email)) {
+          showToast("Invalid email format", 'error');
+          return;
+        }
 
         const res = await fetch(`${BACKEND}/user/login`, {
           method: "POST",
@@ -347,15 +379,28 @@
           body: JSON.stringify({ email })
         });
 
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: `Server error ${res.status}` }));
+          throw new Error(errorData.message || `Server error ${res.status}`);
+        }
 
         const data = await res.json();
         currentUser = data.user;
-        showToast("Logged in!", 'success');
+
+        if (document.getElementById("rememberMe").checked) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+
+        showToast("Logged in successfully!", 'success');
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
+        console.error("Login error:", err);
         showToast("Login failed: " + err.message, 'error');
+      } finally {
+        loginBtn.disabled = false;
       }
     }
 
@@ -435,6 +480,7 @@
 
           if (d < today) {
             dayEl.classList.add("opacity-40", "cursor-not-allowed", "bg-[#1a1a1a]");
+            dayEl.setAttribute('aria-disabled', 'true');
           } else {
             dayEl.onclick = () => {
               document.querySelectorAll("#calendar > div").forEach(el => el.classList.remove("bg-gold", "text-bg-dark"));
@@ -442,6 +488,8 @@
               selectedDate = iso;
               loadTimeSlots(iso);
             };
+            dayEl.setAttribute('role', 'button');
+            dayEl.setAttribute('tabindex', '0');
           }
 
           container.appendChild(dayEl);
@@ -452,15 +500,24 @@
       }
     }
 
-    function loadTimeSlots(date) {
+    async function loadTimeSlots(date) {
       try {
         const container = document.getElementById("times");
         if (!container) throw new Error("Times container missing");
         container.innerHTML = "";
         selectedTime = "";
 
-        // Placeholder booked times (replace with real fetch later)
-        const booked = []; // e.g. ["10:00", "14:00"]
+        // Fetch booked times from backend (assuming endpoint exists)
+        let booked = [];
+        try {
+          const res = await fetch(`${BACKEND}/bookings?date=${date}`);
+          if (res.ok) {
+            const data = await res.json();
+            booked = data.bookedTimes || [];
+          }
+        } catch (err) {
+          console.warn("Failed to fetch booked times:", err);
+        }
 
         const now = new Date();
         const isToday = date === now.toISOString().split("T")[0];
@@ -469,6 +526,8 @@
           const el = document.createElement("div");
           el.className = "text-center p-5 rounded-xl border border-border-gold cursor-pointer transition-all hover:border-gold hover:bg-gold/10";
           el.textContent = t;
+          el.setAttribute('role', 'button');
+          el.setAttribute('tabindex', '0');
 
           let isPast = false;
           if (isToday) {
@@ -481,9 +540,11 @@
           if (booked.includes(t)) {
             el.classList.add("booked");
             el.title = "Already booked";
+            el.setAttribute('aria-disabled', 'true');
           } else if (isPast) {
             el.classList.add("past-time");
             el.title = "Past time";
+            el.setAttribute('aria-disabled', 'true');
           } else {
             el.onclick = () => {
               document.querySelectorAll("#times > div").forEach(e => e.classList.remove("bg-gold", "text-bg-dark"));
@@ -506,7 +567,9 @@
     // ──────────────────────────────────────────────────────────────────────────────
     async function confirmBooking() {
       console.log("confirmBooking called");
-      showToast("Confirming...", 'info');
+      const confirmBtn = document.getElementById("confirmBookingBtn");
+      confirmBtn.disabled = true;
+      showToast("Confirming booking...", 'info');
 
       try {
         if (!currentUser) {
@@ -533,7 +596,10 @@
           })
         });
 
-        if (!res.ok) throw new Error("Booking failed");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({ message: "Booking failed" }));
+          throw new Error(errorData.message || "Booking failed");
+        }
 
         const data = await res.json();
         const servicesList = selectedServices.map(s => s.name).join(", ");
@@ -557,6 +623,8 @@
       } catch (err) {
         console.error("Booking error:", err);
         showToast("Booking failed: " + err.message, 'error');
+      } finally {
+        confirmBtn.disabled = false;
       }
     }
 
@@ -619,21 +687,41 @@
 
     function toggleMode() {
       document.documentElement.classList.toggle("light");
+      localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
     // SAFE INITIALIZATION
     // ──────────────────────────────────────────────────────────────────────────────
-    try {
-      renderServices();
-      generateCalendar();
-      showBooking();
-      console.log("App fully initialized");
-      showToast("Calendar & bookings loaded", 'success');
-    } catch (err) {
-      console.error("Init failed:", err);
-      showToast("Some features failed to load – refresh page", 'error');
+    function init() {
+      try {
+        renderServices();
+        generateCalendar();
+        showBooking();
+
+        // Load remembered email
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
+        if (rememberedEmail) {
+          document.getElementById("loginEmail").value = rememberedEmail;
+          document.getElementById("rememberMe").checked = true;
+        }
+
+        // Load theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+          document.documentElement.classList.add('light');
+        }
+
+        console.log("App fully initialized");
+        showToast("Calendar & bookings loaded", 'success');
+      } catch (err) {
+        console.error("Init failed:", err);
+        showToast("Some features failed to load – please refresh the page", 'error');
+      }
     }
+
+    // Run init on DOMContentLoaded for better reliability
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
