@@ -20,10 +20,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 8080;
+const PORT = 8080;  // ← your chosen port
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
-// CORS – explicit origins for security + Safari/iOS compatibility
 app.use(cors({
   origin: [
     "http://localhost:5500",           // VS Code Live Server
@@ -36,10 +35,23 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// NO NEED for app.options("*", cors()) — the above middleware handles OPTIONS automatically
-
 app.use(express.json());
 app.use(cookieParser());
+
+// ─── ROOT ROUTE ────────────────────────────────────────────────────────────
+// Added so http://192.168.0.8:8080/ shows something useful instead of "Cannot GET /"
+app.get("/", (req, res) => {
+  res.send(`
+    <h1 style="text-align: center; color: #c9a347; font-family: 'Playfair Display', serif; margin-top: 50px;">
+      The OG Barber Backend is Running!
+    </h1>
+    <p style="text-align: center; font-size: 1.2em; color: #f4f0e8;">
+      Server online on port ${PORT}<br><br>
+      <a href="/health" style="color: #e0c070;">Check health status</a><br>
+      <a href="/test-email" style="color: #e0c070;">Test email sending</a>
+    </p>
+  `);
+});
 
 // ─── LOAD TRANSLATIONS ─────────────────────────────────────────────────────
 let lang = {};
@@ -215,9 +227,11 @@ import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
 // ─── START SERVER ──────────────────────────────────────────────────────────
-app.listen(PORT, () => {const BACKEND = "http://192.168.0.8:8080";   // ← REPLACE with YOUR computer's IPv4 address
+app.listen(PORT, () => {
   console.log(`OG Barber server running → http://localhost:${PORT}`);
-  console.log("Health check:   http://localhost:8080/health");
-  console.log("Test email:     http://localhost:5000/test-email");
+  console.log(`Health check:   http://localhost:${PORT}/health`);
+  console.log(`Test email:     http://localhost:${PORT}/test-email`);
   console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden for security)");
+  console.log("IMPORTANT: Update index.html BACKEND to match:");
+  console.log(`const BACKEND = "http://192.168.0.8:${PORT}";`);
 });
