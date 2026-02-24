@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The OG Barber – Premium Grooming</title>
+  <title>The OG Barber</title>
+
+  <!-- Favicon (browser tab icon) – replace with your own 32x32 or 512x512 PNG/ICO -->
+  <link rel="icon" href="https://i.imgur.com/4dIWLpI.jpeg" type="image/jpeg">
+  <!-- Optional: better mobile/home screen icon -->
+  <link rel="apple-touch-icon" href="https://i.imgur.com/4dIWLpI.jpeg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -123,14 +128,20 @@
 </head>
 <body class="font-sans bg-bg-dark text-text-light min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-gradient-to-b from-bg-dark to-[#0f0f0f] py-10 px-6 text-center border-b border-border-gold shadow-heavy relative">
-    <button id="backBtn" onclick="goBack()" class="absolute left-6 top-8 hidden border border-gold text-gold px-5 py-2 font-medium transition-all hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_22px_rgba(201,163,71,0.4)]">
+  <!-- Header with logo -->
+  <header class="bg-gradient-to-b from-bg-dark to-[#0f0f0f] py-6 md:py-10 px-6 text-center border-b border-border-gold shadow-heavy relative">
+    <button id="backBtn" onclick="goBack()" class="absolute left-6 top-6 md:top-8 hidden border border-gold text-gold px-4 py-2 font-medium transition-all hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_22px_rgba(201,163,71,0.4)]">
       ← Back
     </button>
-    <h1 onclick="goHome()" class="text-5xl md:text-7xl font-serif font-bold tracking-wide text-gold drop-shadow-[0_4px_18px_rgba(201,163,71,0.28)] cursor-pointer">
-      The OG Barber
-    </h1>
+
+    <!-- Logo (replace src with your actual logo file or URL) -->
+    <div onclick="goHome()" class="cursor-pointer inline-block">
+      <img 
+        src="https://i.imgur.com/4dIWLpI.jpeg" 
+        alt="The OG Barber Logo" 
+        class="mx-auto h-16 md:h-24 lg:h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(201,163,71,0.5)] transition-transform hover:scale-105"
+      >
+    </div>
   </header>
 
   <!-- Navigation -->
@@ -182,7 +193,7 @@
     </div>
   </div>
 
-  <!-- Booking Section – phone removed -->
+  <!-- Booking Section -->
   <div id="bookingSection" class="hidden container max-w-5xl mx-auto px-6 py-12">
     <div id="step1" class="bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
       <h2 id="selectServicesTitle" class="text-4xl font-serif text-gold mb-8">Select Services</h2>
@@ -222,7 +233,7 @@
     </div>
   </div>
 
-  <!-- Products Section – Coming Soon only -->
+  <!-- Products Section – Coming Soon -->
   <div id="productsSection" class="hidden container max-w-6xl mx-auto px-6 py-12">
     <h2 id="premiumProductsTitle" class="text-5xl font-serif text-gold text-center mb-12">Premium Products</h2>
 
@@ -239,7 +250,7 @@
 
   <script>
     // ──────────────────────────────────────────────────────────────────────────────
-    // LANGUAGE LOADING (cleaned up – removed phone strings)
+    // LANGUAGE LOADING
     // ──────────────────────────────────────────────────────────────────────────────
     let lang = {
       frontend: {},
@@ -584,7 +595,7 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // BOOKING CONFIRMATION – no phone
+    // BOOKING CONFIRMATION
     // ──────────────────────────────────────────────────────────────────────────────
     async function confirmBooking() {
       if (!currentUser) {
