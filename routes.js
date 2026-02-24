@@ -1,29 +1,18 @@
-import path from "node:path";
-import fs from "node:fs/promises";
-import yaml from "js-yaml";
-import jwt from "jsonwebtoken";        
-import cookieParser from "cookie-parser";
+// routes.js - All API endpoints for The OG Barber
 
-import {
-  pool,
-  t,
-  tEmailSubject,
-  tEmailLabel,
-  isAdmin,
-  transporter,
-  LOGO_URL,
-  ADMIN_EMAIL,
-  DISCORD_WEBHOOK
-} from "./server.js";
-
+import express from "express";
+import { pool, transporter, JWT_SECRET, LOGO_URL, ADMIN_EMAIL, DISCORD_WEBHOOK } from "./server.js";
+import jwt from "jsonwebtoken";
 import fetch from "node-fetch";
-import cron from "node-cron"; // Tip: node-cron → node-schedule is often more reliable for dynamic scheduling
+import cron from "node-cron";
+import yaml from "js-yaml";
+import fs from "fs/promises";
+import path from "path";
 
 // ────────────────────────────────────────────────
-// Language object & loader (unchanged)
+// Language loading & helpers (self-contained)
 // ────────────────────────────────────────────────
-
-export let lang = {
+let lang = {
   shop: {},
   email: { subjects: {}, labels: {} },
   discord: {},
@@ -35,7 +24,6 @@ export let lang = {
 async function loadLanguage() {
   const yamlPath = path.join(process.cwd(), "language.yaml");
   try {
-    await fs.access(yamlPath);
     const fileContent = await fs.readFile(yamlPath, "utf8");
     const data = yaml.load(fileContent);
 
@@ -60,18 +48,28 @@ async function loadLanguage() {
   }
 }
 
+// Load once when routes are initialized
 await loadLanguage();
 
-// ─── JWT Secret ─────────────────────────────────────────────────────────────
-// Move this to .env in production!
-const JWT_SECRET = process.env.JWT_SECRET || "kqpghdexhofltdpwpljspqfsgdnmqcvbglphatncfqfpdfnuwyvnmbnirmenglvxdmqmcygxxxpbxrtqsyfiipbsweuquaheatjjsdcugtyfryktlxkhaycmhwzxxkhw"; // ← CHANGE THIS
-const ACCESS_TOKEN_EXPIRY  = "15m";   // short-lived
-const REFRESH_TOKEN_EXPIRY_NORMAL = "1d";   // session style
-const REFRESH_TOKEN_EXPIRY_REMEMBER = "30d"; // remember me
+// Translation helpers (local to this file)
+function t(section, key, fallback = null) {
+  return lang?.[section]?.[key] ?? fallback ?? key;
+}
+
+function tEmailSubject(key, fallback = null) {
+  return lang?.email?.subjects?.[key] ?? fallback ?? key;
+}
+
+function tEmailLabel(key, fallback = null) {
+  return lang?.email?.labels?.[key] ?? fallback ?? key;
+}
+
+// ─── JWT Config ─────────────────────────────────────────────────────────────
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY_NORMAL = "1d";
+const REFRESH_TOKEN_EXPIRY_REMEMBER = "30d";
 
 // ─── EMAIL & DISCORD HELPERS ───────────────────────────────────────────────
-// (unchanged — keeping your original code here for completeness)
-
 function buildEmailHtml({ subject, greetingName, intro, details = {}, closing }) {
   const detailRows = Object.entries(details)
     .map(([key, value]) => `
@@ -88,11 +86,7 @@ function buildEmailHtml({ subject, greetingName, intro, details = {}, closing })
   return `
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-</head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${subject}</title></head>
 <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f5f5f5;color:#333;">
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:30px 10px;">
     <tr><td align="center">
@@ -122,9 +116,9 @@ function buildEmailHtml({ subject, greetingName, intro, details = {}, closing })
 
 function buildPlainTextFallback({ greetingName, intro, details = {}, closing }) {
   let text = `${t('shop','name')}\n\nHi ${greetingName},\n\n${intro}\n\n`;
-  for (const [k, v] of Object.entries(details)) {
+  Object.entries(details).forEach(([k, v]) => {
     text += `${tEmailLabel(k.toLowerCase(), k).padEnd(14)} ${v}\n`;
-  }
+  });
   text += `\n${closing}\n\nContact Us,\nThe OG Barber Team\n${ADMIN_EMAIL}\n${t('shop','phone')}\n`;
   return text.trim();
 }
@@ -139,8 +133,11 @@ async function sendEmail(to, subjectKey, { greetingName, introKey, details = {},
 
   try {
     const info = await transporter.sendMail({
-      from: `"${t('shop','name')}" <bearwallbear1@gmail.com>`,
-      to, subject, text, html,
+      from: `"${t('shop','name')}" <${process.env.GMAIL_USER}>`,
+      to,
+      subject,
+      text,
+      html,
     });
     console.log(`Email sent to ${to} — ${subject} (${info.messageId})`);
     return true;
@@ -156,7 +153,10 @@ async function sendDiscordWebhook(titleKey, description, color = 3447003) {
     const res = await fetch(DISCORD_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "Notification", embeds: [{ title, description, color }] }),
+      body: JSON.stringify({
+        content: "Notification",
+        embeds: [{ title, description, color }]
+      }),
     });
     if (!res.ok) throw new Error(await res.text());
     console.log(`Discord sent: ${title}`);
@@ -192,49 +192,50 @@ function scheduleReminders({ name, date, time, email, services }) {
 }
 
 // ─── REGISTER ALL ROUTES ───────────────────────────────────────────────────
-
 export function setupRoutes(app) {
-
-  // Make sure cookie-parser is used (add this in server.js if not already)
-  // app.use(cookieParser());
-
   // ── Public routes ────────────────────────────────────────
 
   app.post("/user/signup", async (req, res) => {
     const { email, username } = req.body;
-    if (!email || !username) return res.status(400).json({ error: t('errors','missing_fields') });
+    if (!email || !username) {
+      return res.status(400).json({ error: t('errors', 'missing_fields', 'Missing email or username') });
+    }
 
     try {
       const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
-      if (rows.length) return res.status(409).json({ error: t('errors','email_already_registered') });
+      if (rows.length) {
+        return res.status(409).json({ error: t('errors', 'email_already_registered', 'Email already in use') });
+      }
 
-      const [result] = await pool.query("INSERT INTO users (email, username) VALUES (?, ?)", [email, username]);
+      const [result] = await pool.query(
+        "INSERT INTO users (email, username) VALUES (?, ?)",
+        [email, username]
+      );
 
       await sendDiscordWebhook("new_signup_title", `**${username}** | ${email}`);
 
       res.json({ user: { id: result.insertId, email, username } });
     } catch (err) {
-      res.status(500).json({ error: t('errors','server_error') });
+      console.error("Signup error:", err);
+      res.status(500).json({ error: t('errors', 'server_error', 'Server error') });
     }
   });
 
-  // ── Updated: Real login with JWT + Remember Me ─────────────────────────────
   app.post("/user/login", async (req, res) => {
     const { email, rememberMe = false } = req.body;
 
     if (!email) {
-      return res.status(400).json({ error: t('errors','email_required') });
+      return res.status(400).json({ error: t('errors', 'email_required', 'Email is required') });
     }
 
     try {
       const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       if (!rows.length) {
-        return res.status(404).json({ error: t('errors','user_not_found') });
+        return res.status(404).json({ error: t('errors', 'user_not_found', 'User not found') });
       }
 
       const user = rows[0];
 
-      // Create tokens
       const accessToken = jwt.sign(
         { id: user.id, email: user.email, username: user.username },
         JWT_SECRET,
@@ -248,42 +249,27 @@ export function setupRoutes(app) {
         { expiresIn: refreshExpiry }
       );
 
-      // Set httpOnly cookies
       const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", // ← very important in prod!
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
       };
 
-      res.cookie("accessToken", accessToken, {
-        ...cookieOptions,
-        maxAge: 15 * 60 * 1000, // 15 minutes (matches expiry)
-      });
+      res.cookie("accessToken", accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+      res.cookie("refreshToken", refreshToken, { ...cookieOptions, maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 });
 
-      res.cookie("refreshToken", refreshToken, {
-        ...cookieOptions,
-        maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
-      });
-
-      // Optional: return minimal user info (frontend shouldn't need tokens anymore)
       res.json({
         success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-        },
+        user: { id: user.id, email: user.email, username: user.username },
         rememberMeUsed: rememberMe,
       });
-
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: t('errors','server_error') });
+      console.error("Login error:", err);
+      res.status(500).json({ error: t('errors', 'server_error', 'Server error') });
     }
   });
 
-  // ── Optional: Refresh token endpoint (call when access token expires) ─────
   app.post("/user/refresh", (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) return res.status(401).json({ error: "No refresh token" });
@@ -312,33 +298,36 @@ export function setupRoutes(app) {
     }
   });
 
-  // Logout – clear cookies
   app.post("/user/logout", (req, res) => {
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
     res.json({ success: true });
   });
 
-  // ── Your other routes remain unchanged ────────────────────────────────
-
+  // ── Booking routes ──────────────────────────────────────
   app.get("/booked/:date", async (req, res) => {
     try {
-      const [rows] = await pool.query("SELECT TIME_FORMAT(time, '%H:%i') AS time FROM bookings WHERE date = ?", [req.params.date]);
+      const [rows] = await pool.query(
+        "SELECT TIME_FORMAT(time, '%H:%i') AS time FROM bookings WHERE date = ?",
+        [req.params.date]
+      );
       res.json(rows.map(r => r.time));
     } catch (err) {
-      res.status(500).json({ error: t('errors','server_error') });
+      console.error(err);
+      res.status(500).json({ error: t('errors', 'server_error', 'Server error') });
     }
   });
 
   app.post("/book", async (req, res) => {
     const { name, date, time, services, total, email, phone } = req.body;
+
     if (!name || !date || !time || !email || !Array.isArray(services) || services.length === 0) {
-      return res.status(400).json({ error: t('errors','missing_or_invalid_fields') });
+      return res.status(400).json({ error: t('errors', 'missing_or_invalid_fields', 'Missing or invalid fields') });
     }
 
     try {
       const [users] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
-      if (!users.length) return res.status(404).json({ error: t('errors','user_not_found') });
+      if (!users.length) return res.status(404).json({ error: t('errors', 'user_not_found', 'User not found') });
 
       await pool.query(
         "INSERT INTO bookings (user_id, name, date, time, services, total, email, phone) VALUES (?,?,?,?,?,?,?,?)",
@@ -360,23 +349,16 @@ export function setupRoutes(app) {
 
       res.json({ success: true });
     } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") return res.status(409).json({ error: t('errors','slot_already_booked') });
-      res.status(500).json({ error: t('errors','server_error') });
+      console.error("Booking error:", err);
+      if (err.code === "ER_DUP_ENTRY") {
+        return res.status(409).json({ error: t('errors', 'slot_already_booked', 'Slot already booked') });
+      }
+      res.status(500).json({ error: t('errors', 'server_error', 'Server error') });
     }
   });
 
-  // ── Admin routes (unchanged) ─────────────────────────────────────────
-
-  app.get("/admin/bookings", isAdmin, async (req, res) => { /* ... */ });
-  app.patch("/admin/bookings/:id/notes", isAdmin, async (req, res) => { /* ... */ });
-  app.patch("/admin/bookings/:id/status", isAdmin, async (req, res) => { /* ... */ });
-  app.patch("/admin/bookings/:id/paid", isAdmin, async (req, res) => { /* ... */ });
-  app.post("/admin/bookings/:id/cancel", isAdmin, async (req, res) => { /* ... */ });
-  app.patch("/admin/bookings/:id/reschedule", isAdmin, async (req, res) => { /* ... */ });
-  app.post("/admin/bookings/:id/send-email", isAdmin, async (req, res) => { /* ... */ });
-
-  // ── Dev/test routes (unchanged) ─────────────────────────────
-
-  app.get("/test-email", async (req, res) => { /* ... */ });
-  app.get("/health", async (req, res) => { /* ... */ });
+  // ── Admin routes (placeholder) ──────────────────────────
+  app.get("/admin/bookings", (req, res) => {
+    res.json({ message: "Admin bookings endpoint – implement later" });
+  });
 }

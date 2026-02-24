@@ -1,5 +1,4 @@
-// server.js - The OG Barber Booking Server
-// Main entry point: config, middleware, DB, language, email, routes
+// server.js - The OG Barber Booking Server (fixed & updated 2025)
 
 import express from "express";
 import cors from "cors";
@@ -13,7 +12,7 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,34 +23,25 @@ const PORT = 3000;
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: true,  // Allow all for local dev (change to specific array in production)
+  origin: true,                    // Allow all origins for local development
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Explicitly handle OPTIONS preflight (fixes some phone browser issues with POST)
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(204);
-});
-
-// Log ALL incoming requests (critical for seeing if phone sends POST /user/signup)
+// Log every incoming request + body for POST/PUT (critical for debugging signup)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
   if (req.method === "POST" || req.method === "PUT") {
-    console.log("Body:", req.body);
+    console.log("Request body:", req.body);
   }
   next();
 });
 
-app.use(express.json({ limit: "1mb" }));  // Increased limit just in case
+app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-// ─── ROOT ROUTE ────────────────────────────────────────────────────────────
+// ─── ROOT ROUTE (status page) ──────────────────────────────────────────────
 app.get("/", (req, res) => {
   res.send(`
     <h1 style="text-align: center; color: #c9a347; font-family: 'Playfair Display', serif; margin-top: 50px;">
@@ -89,8 +79,8 @@ let lang = {};
 export const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-  console.error("JWT_SECRET is missing from .env file!");
-  process.exit(1);
+  console.warn("JWT_SECRET missing in .env – using temporary fallback (NOT SECURE!)");
+  process.env.JWT_SECRET = "temporary-secret-for-local-testing-only";
 }
 
 export const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
@@ -108,19 +98,12 @@ export const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: true,
-    minVersion: "TLSv1.2"
   }
 });
 
-transporter.verify((error) => {
-  if (error) {
-    console.error("SMTP verification failed:", error.message);
-  } else {
-    console.log("SMTP connection ready");
-  }
+transporter.verify((err) => {
+  if (err) console.error("SMTP verification failed:", err.message);
+  else console.log("SMTP connection ready");
 });
 
 // ─── TRANSLATION HELPERS ───────────────────────────────────────────────────
@@ -128,15 +111,7 @@ export function t(section, key, fallback = null) {
   return lang?.[section]?.[key] ?? fallback ?? key;
 }
 
-export function tEmailSubject(key, fallback = null) {
-  return lang?.email?.subjects?.[key] ?? fallback ?? key;
-}
-
-export function tEmailLabel(key, fallback = null) {
-  return lang?.email?.labels?.[key] ?? fallback ?? key;
-}
-
-// ─── MYSQL POOL ────────────────────────────────────────────────────────────
+// ─── MYSQL POOL & TABLES ───────────────────────────────────────────────────
 export const pool = mysql.createPool({
   host: process.env.DB_HOST || "node1.infinityhosting.org",
   port: Number(process.env.DB_PORT) || 3306,
@@ -150,7 +125,6 @@ export const pool = mysql.createPool({
   dateStrings: true,
 });
 
-// Initialize tables
 (async () => {
   try {
     const conn = await pool.getConnection();
@@ -214,7 +188,7 @@ export function isAdmin(req, res, next) {
   res.status(401).json({ error: t('errors', 'unauthorized', "Unauthorized") });
 }
 
-// ─── SIMPLE HEALTH & TEST ROUTES ───────────────────────────────────────────
+// ─── HEALTH & TEST ROUTES ──────────────────────────────────────────────────
 app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
@@ -241,12 +215,10 @@ setupRoutes(app);
 app.listen(PORT, () => {
   console.log(`OG Barber server running → http://localhost:${PORT}`);
   console.log(`Health check:   http://localhost:${PORT}/health`);
-  console.log(`Test email:     http://localhost:${PORT}/test-email`);
-  console.log(`Root status:    http://localhost:${PORT}/`);
   console.log(`Phone test URL: http://192.168.0.8:${PORT}/health`);
   console.log("JWT_SECRET loaded:", JWT_SECRET ? "YES" : "MISSING");
   console.log("\nIMPORTANT:");
   console.log(`Make sure index.html has: const BACKEND = "http://192.168.0.8:${PORT}";`);
-  console.log("Server now logs EVERY request — watch terminal when you click Sign Up on phone.");
-  console.log("If no POST /user/signup appears → problem is in browser / index.html");
+  console.log("Server logs EVERY request — watch terminal when clicking Sign Up on phone.");
+  console.log("If no POST /user/signup log appears → problem is in browser / index.html");
 });
