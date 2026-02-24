@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 8080;  // ← your chosen port
+const PORT = 8080;  // Your chosen port
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
@@ -39,7 +39,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ─── ROOT ROUTE ────────────────────────────────────────────────────────────
-// Added so http://192.168.0.8:8080/ shows something useful instead of "Cannot GET /"
+// Added so http://192.168.0.8:8080/ shows a nice page instead of "Cannot GET /"
 app.get("/", (req, res) => {
   res.send(`
     <h1 style="text-align: center; color: #c9a347; font-family: 'Playfair Display', serif; margin-top: 50px;">
@@ -231,7 +231,9 @@ app.listen(PORT, () => {
   console.log(`OG Barber server running → http://localhost:${PORT}`);
   console.log(`Health check:   http://localhost:${PORT}/health`);
   console.log(`Test email:     http://localhost:${PORT}/test-email`);
+  console.log(`Root status:    http://localhost:${PORT}/`);
   console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden for security)");
-  console.log("IMPORTANT: Update index.html BACKEND to match:");
-  console.log(`const BACKEND = "http://192.168.0.8:${PORT}";`);
+  console.log("\nIMPORTANT for phone testing:");
+  console.log(`Update index.html with: const BACKEND = "http://192.168.0.8:${PORT}";`);
+  console.log("Then reload your website on phone and try signup again.");
 });
