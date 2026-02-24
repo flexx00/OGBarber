@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 5000;
+const PORT = 8080;
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 // CORS – explicit origins for security + Safari/iOS compatibility
@@ -215,9 +215,9 @@ import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
 // ─── START SERVER ──────────────────────────────────────────────────────────
-app.listen(PORT, () => {const BACKEND = "http://192.168.0.8:5000";   // ← REPLACE with YOUR computer's IPv4 address
+app.listen(PORT, () => {const BACKEND = "http://192.168.0.8:8080";   // ← REPLACE with YOUR computer's IPv4 address
   console.log(`OG Barber server running → http://localhost:${PORT}`);
-  console.log("Health check:   http://localhost:5000/health");
+  console.log("Health check:   http://localhost:8080/health");
   console.log("Test email:     http://localhost:5000/test-email");
   console.log("JWT_SECRET loaded:", JWT_SECRET.substring(0, 8) + "... (hidden for security)");
 });
