@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>The OG Barber</title>
+  <title>The OG Barber – Premium Grooming</title>
 
   <!-- Favicon -->
   <link rel="icon" href="https://i.imgur.com/4dIWLpI.jpeg" type="image/jpeg">
@@ -254,7 +254,7 @@
     let lang = {
       frontend: {},
       fallback: {
-        title: "The OG Barber",
+        title: "The OG Barber – Premium Grooming",
         header: { main_title: "The OG Barber", back_button: "← Back" },
         nav: { book_now: "Book Now", shop: "Shop" },
         auth: {
@@ -353,7 +353,7 @@
     let selectedTime = "";
 
     // IMPORTANT: Use your working PC IP and port here
-    const BACKEND = "http://192.168.0.8:3000";
+    const BACKEND = "http://192.168.0.8:8080";
 
     // ──────────────────────────────────────────────────────────────────────────────
     // TOAST NOTIFICATION (improved error display)
@@ -408,8 +408,10 @@
     }
 
     async function signup() {
-      const email = document.getElementById("signupEmail").value.trim();
-      const username = document.getElementById("signupUsername").value.trim();
+      console.log("Sign Up button clicked"); // ← Confirm click works
+
+      const email = document.getElementById("signupEmail")?.value.trim();
+      const username = document.getElementById("signupUsername")?.value.trim();
 
       if (!email) return showToast("Email is required.", 'error');
       if (!isValidEmail(email)) return showToast("Invalid email address.", 'error');
@@ -424,29 +426,39 @@
           body: JSON.stringify({ email, username })
         });
 
+        console.log("Response status:", res.status);
+
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
+          throw new Error(errData.error || `HTTP error ${res.status}`);
         }
 
         const data = await res.json();
+        console.log("Signup success:", data);
+
         currentUser = data.user;
         showToast("Account created successfully – welcome!", 'success');
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
         console.error("Signup failed:", err.message, err.stack);
-        let msg = err.message;
+        let msg = "Signup failed – check console for details";
         if (err.message.includes("Failed to fetch")) {
           msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
+        } else if (err.message.includes("CORS")) {
+          msg = "CORS error – server not allowing this origin.";
+        } else if (err.message.includes("404")) {
+          msg = "Endpoint not found – check server routes.";
         }
         showToast(msg, 'error');
       }
     }
 
     async function login() {
-      const email = document.getElementById("loginEmail").value.trim();
-      const rememberMe = document.getElementById("rememberMe").checked;
+      console.log("Sign In button clicked");
+
+      const email = document.getElementById("loginEmail")?.value.trim();
+      const rememberMe = document.getElementById("rememberMe")?.checked;
 
       if (!email) return showToast("Email is required.", 'error');
       if (!isValidEmail(email)) return showToast("Invalid email address.", 'error');
@@ -460,9 +472,11 @@
           body: JSON.stringify({ email, rememberMe })
         });
 
+        console.log("Login response status:", res.status);
+
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP ${res.status}`);
+          throw new Error(errData.error || `HTTP error ${res.status}`);
         }
 
         const data = await res.json();
@@ -473,7 +487,7 @@
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
         console.error("Login failed:", err.message, err.stack);
-        let msg = err.message;
+        let msg = "Login failed – check console for details";
         if (err.message.includes("Failed to fetch")) {
           msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
         }
