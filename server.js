@@ -19,11 +19,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: true,                    // Allow all origins for local development
+  origin: true,                    // Allow all origins for local development (tighten in production)
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -76,17 +76,16 @@ let lang = {};
 })();
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-export const JWT_SECRET = process.env.JWT_SECRET;
+export const JWT_SECRET = process.env.JWT_SECRET || "temporary-secret-for-local-testing-only";
 
-if (!JWT_SECRET) {
+if (!process.env.JWT_SECRET) {
   console.warn("JWT_SECRET missing in .env – using temporary fallback (NOT SECURE!)");
-  process.env.JWT_SECRET = "temporary-secret-for-local-testing-only";
 }
 
-export const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
 
-export const ADMIN_EMAIL    = "admin@ogbarber.co.uk";
-export const ADMIN_PASSWORD = "SuperSecret2026!";
+export const ADMIN_EMAIL    = process.env.ADMIN_EMAIL || "admin@ogbarber.co.uk";
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "SuperSecret2026!";
 
 export const LOGO_URL       = "https://i.imgur.com/4dIWLpI.jpeg";
 
@@ -207,9 +206,35 @@ app.get("/test-email", async (req, res) => {
   }
 });
 
+// ─── BOOKINGS ROUTE (added for frontend support) ───────────────────────────
+app.get("/bookings", isAdmin, async (req, res) => {
+  const { date } = req.query;
+  if (!date) {
+    return res.status(400).json({ error: "Date is required" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT time FROM bookings WHERE date = ? AND status != 'cancelled'",
+      [date]
+    );
+    const bookedTimes = rows.map((row) => row.time);
+    res.json({ bookedTimes });
+  } catch (err) {
+    console.error("Error fetching bookings:", err.message);
+    res.status(500).json({ error: "Failed to fetch bookings" });
+  }
+});
+
 // ─── MOUNT ROUTES ──────────────────────────────────────────────────────────
 import { setupRoutes } from "./routes.js";
 setupRoutes(app);
+
+// ─── ERROR HANDLING MIDDLEWARE ─────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error("Server error:", err.stack);
+  res.status(500).json({ error: "Internal server error" });
+});
 
 // ─── START SERVER ──────────────────────────────────────────────────────────
 app.listen(PORT, () => {
