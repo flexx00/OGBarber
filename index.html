@@ -50,7 +50,12 @@
 
   <style>
     .toast {
-      transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      animation: fadeIn 0.4s forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     html.light {
       --tw-bg-opacity: 1;
@@ -249,7 +254,7 @@
 
   <script>
     // ──────────────────────────────────────────────────────────────────────────────
-    // LANGUAGE LOADING (fixed & improved)
+    // LANGUAGE LOADING
     // ──────────────────────────────────────────────────────────────────────────────
     let lang = {
       frontend: {},
@@ -305,14 +310,13 @@
     async function loadLanguage() {
       try {
         const res = await fetch('language.yaml');
-        if (!res.ok) throw new Error('Failed to load language.yaml – check file exists');
+        if (!res.ok) throw new Error('Failed to load language.yaml');
         const yamlText = await res.text();
         const loaded = jsyaml.load(yamlText);
         lang = { ...lang, ...loaded };
         applyTranslations();
-        console.log("Language loaded successfully");
       } catch (err) {
-        console.error('Language load failed:', err);
+        console.warn('Language load failed:', err);
         lang.frontend = lang.fallback;
         applyTranslations();
       }
@@ -322,22 +326,22 @@
       document.title = lang.frontend?.title || lang.fallback.title;
       document.querySelector('header h1')?.textContent = lang.frontend?.header?.main_title || lang.fallback.header.main_title;
       document.getElementById('backBtn')?.textContent = lang.frontend?.header?.back_button || lang.fallback.header.back_button;
-      document.querySelectorAll('.nav-btn')[0].textContent = lang.frontend?.nav?.book_now || lang.fallback.nav.book_now;
-      document.querySelectorAll('.nav-btn')[1].textContent = lang.frontend?.nav?.shop || lang.fallback.nav.shop;
-      document.getElementById('createAccountTitle').textContent = lang.frontend?.auth?.create_account_title || lang.fallback.auth.create_account_title;
-      document.getElementById('welcomeBackTitle').textContent = lang.frontend?.auth?.welcome_back_title || lang.fallback.auth.welcome_back_title;
-      document.querySelector('#signupCard button').textContent = lang.frontend?.auth?.signup_button || lang.fallback.auth.signup_button;
-      document.querySelector('#loginCard button').textContent = lang.frontend?.auth?.signin_button || lang.fallback.auth.signin_button;
-      document.getElementById('selectServicesTitle').textContent = lang.frontend?.booking?.select_services_title || lang.fallback.booking.select_services_title;
-      document.getElementById('customerName').placeholder = lang.frontend?.booking?.name_placeholder || lang.fallback.booking.name_placeholder;
-      document.getElementById('continueToDateBtn').textContent = lang.frontend?.booking?.continue_to_date || lang.fallback.booking.continue_to_date;
-      document.getElementById('chooseDateTitle').textContent = lang.frontend?.booking?.choose_date_title || lang.fallback.booking.choose_date_title;
-      document.getElementById('continueToTimeBtn').textContent = lang.frontend?.booking?.continue_to_time || lang.fallback.booking.continue_to_time;
-      document.getElementById('chooseTimeTitle').textContent = lang.frontend?.booking?.choose_time_title || lang.fallback.booking.choose_time_title;
-      document.getElementById('confirmBookingBtn').textContent = lang.frontend?.booking?.confirm_booking || lang.fallback.booking.confirm_booking;
-      document.getElementById('bookingConfirmedTitle').textContent = lang.frontend?.booking?.booking_confirmed_title || lang.fallback.booking.booking_confirmed_title;
-      document.getElementById('bookAnotherBtn').textContent = lang.frontend?.booking?.book_another || lang.fallback.booking.book_another;
-      document.getElementById('premiumProductsTitle').textContent = lang.frontend?.products?.premium_products_title || lang.fallback.products.premium_products_title;
+      document.querySelectorAll('.nav-btn')[0]?.textContent = lang.frontend?.nav?.book_now || lang.fallback.nav.book_now;
+      document.querySelectorAll('.nav-btn')[1]?.textContent = lang.frontend?.nav?.shop || lang.fallback.nav.shop;
+      document.getElementById('createAccountTitle')?.textContent = lang.frontend?.auth?.create_account_title || lang.fallback.auth.create_account_title;
+      document.getElementById('welcomeBackTitle')?.textContent = lang.frontend?.auth?.welcome_back_title || lang.fallback.auth.welcome_back_title;
+      document.querySelector('#signupCard button')?.textContent = lang.frontend?.auth?.signup_button || lang.fallback.auth.signup_button;
+      document.querySelector('#loginCard button')?.textContent = lang.frontend?.auth?.signin_button || lang.fallback.auth.signin_button;
+      document.getElementById('selectServicesTitle')?.textContent = lang.frontend?.booking?.select_services_title || lang.fallback.booking.select_services_title;
+      document.getElementById('customerName')?.placeholder = lang.frontend?.booking?.name_placeholder || lang.fallback.booking.name_placeholder;
+      document.getElementById('continueToDateBtn')?.textContent = lang.frontend?.booking?.continue_to_date || lang.fallback.booking.continue_to_date;
+      document.getElementById('chooseDateTitle')?.textContent = lang.frontend?.booking?.choose_date_title || lang.fallback.booking.choose_date_title;
+      document.getElementById('continueToTimeBtn')?.textContent = lang.frontend?.booking?.continue_to_time || lang.fallback.booking.continue_to_time;
+      document.getElementById('chooseTimeTitle')?.textContent = lang.frontend?.booking?.choose_time_title || lang.fallback.booking.choose_time_title;
+      document.getElementById('confirmBookingBtn')?.textContent = lang.frontend?.booking?.confirm_booking || lang.fallback.booking.confirm_booking;
+      document.getElementById('bookingConfirmedTitle')?.textContent = lang.frontend?.booking?.booking_confirmed_title || lang.fallback.booking.booking_confirmed_title;
+      document.getElementById('bookAnotherBtn')?.textContent = lang.frontend?.booking?.book_another || lang.fallback.booking.book_another;
+      document.getElementById('premiumProductsTitle')?.textContent = lang.frontend?.products?.premium_products_title || lang.fallback.products.premium_products_title;
     }
 
     window.addEventListener('load', loadLanguage);
@@ -352,17 +356,18 @@
     let selectedDate = "";
     let selectedTime = "";
 
-    // IMPORTANT: Use your working PC IP and port here
-    const BACKEND = "http://192.168.0.8:8080";
+    const BACKEND = "http://192.168.0.8:3000";
+
+    console.log("Frontend initialized. Backend URL:", BACKEND);
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // TOAST NOTIFICATION (improved error display)
+    // TOAST NOTIFICATION
     // ──────────────────────────────────────────────────────────────────────────────
     function showToast(message, type = 'error') {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
 
-      toast.className = `flex items-center gap-4 p-5 rounded-xl shadow-2xl border-l-4 transition-all duration-400 ease-out ${
+      toast.className = `flex items-center gap-4 p-5 rounded-xl shadow-2xl border-l-4 transition-all duration-500 ease-out ${
         type === 'success' 
           ? 'border-success-green bg-[#1b2e1b] text-[#e8f5e9]' 
           : 'border-error-red bg-[#1a1a1a] text-[#ffdddd]'
@@ -379,8 +384,8 @@
 
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-x-12');
-        setTimeout(() => toast.remove(), 500);
-      }, 5200);
+        setTimeout(() => toast.remove(), 6000);
+      }, 6000);
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
@@ -395,7 +400,7 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // AUTHENTICATION (added debug logging for phone errors)
+    // AUTHENTICATION (heavy debugging)
     // ──────────────────────────────────────────────────────────────────────────────
     function showSignup() {
       document.getElementById("signupCard").classList.remove("hidden");
@@ -408,33 +413,52 @@
     }
 
     async function signup() {
-      console.log("Sign Up button clicked"); // ← Confirm click works
+      console.log("=== SIGN UP BUTTON CLICKED ===");
 
-      const email = document.getElementById("signupEmail")?.value.trim();
-      const username = document.getElementById("signupUsername")?.value.trim();
+      const emailEl = document.getElementById("signupEmail");
+      const usernameEl = document.getElementById("signupUsername");
+
+      if (!emailEl || !usernameEl) {
+        console.error("Signup form inputs not found in DOM");
+        showToast("Form error – inputs missing. Reload page.", 'error');
+        return;
+      }
+
+      const email = emailEl.value.trim();
+      const username = usernameEl.value.trim();
+
+      console.log("Input values:", { email, username });
 
       if (!email) return showToast("Email is required.", 'error');
       if (!isValidEmail(email)) return showToast("Invalid email address.", 'error');
       if (!username) return showToast("Username is required.", 'error');
       if (!isValidUsername(username)) return showToast("Username must be at least 4 characters.", 'error');
 
+      console.log("Validation passed. Starting fetch...");
+
       try {
-        console.log("Attempting signup to:", `${BACKEND}/user/signup`);
-        const res = await fetch(`${BACKEND}/user/signup`, {
+        const url = `${BACKEND}/user/signup`;
+        console.log("Sending POST to:", url);
+
+        const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, username })
         });
 
-        console.log("Response status:", res.status);
+        console.log("Response received. Status:", response.status);
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP error ${res.status}`);
+        if (!response.ok) {
+          let errorText = await response.text().catch(() => "No response body");
+          try {
+            const errJson = JSON.parse(errorText);
+            errorText = errJson.error || errorText;
+          } catch {}
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
 
-        const data = await res.json();
-        console.log("Signup success:", data);
+        const data = await response.json();
+        console.log("Signup success data:", data);
 
         currentUser = data.user;
         showToast("Account created successfully – welcome!", 'success');
@@ -442,44 +466,63 @@
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
         console.error("Signup failed:", err.message, err.stack);
-        let msg = "Signup failed – check console for details";
+        let msg = "Signup failed – check phone console.";
         if (err.message.includes("Failed to fetch")) {
-          msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
-        } else if (err.message.includes("CORS")) {
-          msg = "CORS error – server not allowing this origin.";
+          msg = "Network error: Cannot reach server. Is server running? Same Wi-Fi?";
         } else if (err.message.includes("404")) {
-          msg = "Endpoint not found – check server routes.";
+          msg = "Signup route not found on server (404).";
+        } else if (err.message.includes("CORS")) {
+          msg = "CORS error – server not allowing request.";
+        } else if (err.message.includes("500")) {
+          msg = "Server internal error (500) – check server logs.";
         }
         showToast(msg, 'error');
       }
     }
 
     async function login() {
-      console.log("Sign In button clicked");
+      console.log("=== SIGN IN BUTTON CLICKED ===");
 
-      const email = document.getElementById("loginEmail")?.value.trim();
-      const rememberMe = document.getElementById("rememberMe")?.checked;
+      const emailEl = document.getElementById("loginEmail");
+      const rememberEl = document.getElementById("rememberMe");
+
+      if (!emailEl || !rememberEl) {
+        console.error("Login form inputs not found");
+        showToast("Form error – inputs missing.", 'error');
+        return;
+      }
+
+      const email = emailEl.value.trim();
+      const rememberMe = rememberEl.checked;
+
+      console.log("Login values:", { email, rememberMe });
 
       if (!email) return showToast("Email is required.", 'error');
       if (!isValidEmail(email)) return showToast("Invalid email address.", 'error');
 
       try {
-        console.log("Attempting login to:", `${BACKEND}/user/login`);
-        const res = await fetch(`${BACKEND}/user/login`, {
+        const url = `${BACKEND}/user/login`;
+        console.log("Sending POST to:", url);
+
+        const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, rememberMe })
         });
 
-        console.log("Login response status:", res.status);
+        console.log("Login response status:", response.status);
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `HTTP error ${res.status}`);
+        if (!response.ok) {
+          let errorText = await response.text().catch(() => "No response body");
+          try {
+            const errJson = JSON.parse(errorText);
+            errorText = errJson.error || errorText;
+          } catch {}
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
 
-        const data = await res.json();
+        const data = await response.json();
         currentUser = data.user;
         const welcomeMsg = (lang.frontend?.toasts?.welcome_back || "Welcome back, {username}!").replace('{username}', currentUser.username || 'friend');
         showToast(welcomeMsg, 'success');
@@ -487,16 +530,16 @@
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
         console.error("Login failed:", err.message, err.stack);
-        let msg = "Login failed – check console for details";
+        let msg = "Login failed – check phone console.";
         if (err.message.includes("Failed to fetch")) {
-          msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
+          msg = "Network error: Cannot reach server.";
         }
         showToast(msg, 'error');
       }
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // SERVICES SELECTION
+    // SERVICES, CALENDAR, BOOKING, NAVIGATION (unchanged – keeping your original code)
     // ──────────────────────────────────────────────────────────────────────────────
     const servicesData = [
       { name: "Haircut",      price: 10    },
@@ -537,9 +580,6 @@
       });
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // CALENDAR & TIME SLOT SELECTION
-    // ──────────────────────────────────────────────────────────────────────────────
     const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
 
     async function generateCalendar() {
@@ -629,9 +669,6 @@
       });
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // BOOKING CONFIRMATION
-    // ──────────────────────────────────────────────────────────────────────────────
     async function confirmBooking() {
       if (!currentUser) {
         showToast("Please sign in to confirm your booking.", 'error');
@@ -687,9 +724,6 @@
       }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // NAVIGATION & STEP MANAGEMENT
-    // ──────────────────────────────────────────────────────────────────────────────
     function showStep(n) {
       document.querySelectorAll('[id^="step"]').forEach(el => el.classList.add("hidden"));
       document.getElementById(`step${n}`).classList.remove("hidden");
