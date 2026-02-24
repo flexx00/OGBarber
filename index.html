@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The OG Barber</title>
 
-  <!-- Favicon (browser tab icon) – replace with your own 32x32 or 512x512 PNG/ICO -->
+  <!-- Favicon -->
   <link rel="icon" href="https://i.imgur.com/4dIWLpI.jpeg" type="image/jpeg">
-  <!-- Optional: better mobile/home screen icon -->
   <link rel="apple-touch-icon" href="https://i.imgur.com/4dIWLpI.jpeg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,7 +133,7 @@
       ← Back
     </button>
 
-    <!-- Logo (replace src with your actual logo file or URL) -->
+    <!-- Logo -->
     <div onclick="goHome()" class="cursor-pointer inline-block">
       <img 
         src="https://i.imgur.com/4dIWLpI.jpeg" 
@@ -250,13 +249,12 @@
 
   <script>
     // ──────────────────────────────────────────────────────────────────────────────
-    // LANGUAGE LOADING
+    // LANGUAGE LOADING (fixed & improved)
     // ──────────────────────────────────────────────────────────────────────────────
     let lang = {
       frontend: {},
-      errors: {},
       fallback: {
-        title: "The OG Barber – Premium Grooming",
+        title: "The OG Barber",
         header: { main_title: "The OG Barber", back_button: "← Back" },
         nav: { book_now: "Book Now", shop: "Shop" },
         auth: {
@@ -307,13 +305,14 @@
     async function loadLanguage() {
       try {
         const res = await fetch('language.yaml');
-        if (!res.ok) throw new Error('Failed to load language file');
+        if (!res.ok) throw new Error('Failed to load language.yaml – check file exists');
         const yamlText = await res.text();
         const loaded = jsyaml.load(yamlText);
         lang = { ...lang, ...loaded };
         applyTranslations();
+        console.log("Language loaded successfully");
       } catch (err) {
-        console.warn('Language file failed to load:', err);
+        console.error('Language load failed:', err);
         lang.frontend = lang.fallback;
         applyTranslations();
       }
@@ -321,8 +320,8 @@
 
     function applyTranslations() {
       document.title = lang.frontend?.title || lang.fallback.title;
-      document.querySelector('header h1').textContent = lang.frontend?.header?.main_title || lang.fallback.header.main_title;
-      document.getElementById('backBtn').textContent = lang.frontend?.header?.back_button || lang.fallback.header.back_button;
+      document.querySelector('header h1')?.textContent = lang.frontend?.header?.main_title || lang.fallback.header.main_title;
+      document.getElementById('backBtn')?.textContent = lang.frontend?.header?.back_button || lang.fallback.header.back_button;
       document.querySelectorAll('.nav-btn')[0].textContent = lang.frontend?.nav?.book_now || lang.fallback.nav.book_now;
       document.querySelectorAll('.nav-btn')[1].textContent = lang.frontend?.nav?.shop || lang.fallback.nav.shop;
       document.getElementById('createAccountTitle').textContent = lang.frontend?.auth?.create_account_title || lang.fallback.auth.create_account_title;
@@ -344,7 +343,7 @@
     window.addEventListener('load', loadLanguage);
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // GLOBAL STATE
+    // GLOBAL STATE & CONFIG
     // ──────────────────────────────────────────────────────────────────────────────
     let currentUser = null;
     let currentStep = 1;
@@ -353,10 +352,11 @@
     let selectedDate = "";
     let selectedTime = "";
 
-    const BACKEND = "http://192.168.0.8:8080";
+    // IMPORTANT: Use your working PC IP and port here
+    const BACKEND = "http://192.168.0.8:3000";
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // TOAST NOTIFICATION
+    // TOAST NOTIFICATION (improved error display)
     // ──────────────────────────────────────────────────────────────────────────────
     function showToast(message, type = 'error') {
       const container = document.getElementById('toast-container');
@@ -384,7 +384,7 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // INPUT VALIDATION HELPERS
+    // INPUT VALIDATION
     // ──────────────────────────────────────────────────────────────────────────────
     function isValidEmail(email) {
       return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim());
@@ -395,7 +395,7 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────────
-    // AUTHENTICATION
+    // AUTHENTICATION (added debug logging for phone errors)
     // ──────────────────────────────────────────────────────────────────────────────
     function showSignup() {
       document.getElementById("signupCard").classList.remove("hidden");
@@ -417,19 +417,30 @@
       if (!isValidUsername(username)) return showToast("Username must be at least 4 characters.", 'error');
 
       try {
+        console.log("Attempting signup to:", `${BACKEND}/user/signup`);
         const res = await fetch(`${BACKEND}/user/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, username })
         });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Signup failed");
         currentUser = data.user;
         showToast("Account created successfully – welcome!", 'success');
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
-        showToast(err.message, 'error');
+        console.error("Signup failed:", err.message, err.stack);
+        let msg = err.message;
+        if (err.message.includes("Failed to fetch")) {
+          msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
+        }
+        showToast(msg, 'error');
       }
     }
 
@@ -441,22 +452,32 @@
       if (!isValidEmail(email)) return showToast("Invalid email address.", 'error');
 
       try {
+        console.log("Attempting login to:", `${BACKEND}/user/login`);
         const res = await fetch(`${BACKEND}/user/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, rememberMe })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
         currentUser = data.user;
         const welcomeMsg = (lang.frontend?.toasts?.welcome_back || "Welcome back, {username}!").replace('{username}', currentUser.username || 'friend');
         showToast(welcomeMsg, 'success');
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("bookingSection").classList.remove("hidden");
       } catch (err) {
-        showToast(err.message, 'error');
+        console.error("Login failed:", err.message, err.stack);
+        let msg = err.message;
+        if (err.message.includes("Failed to fetch")) {
+          msg = "Network error: Cannot reach backend. Check phone Wi-Fi and server running?";
+        }
+        showToast(msg, 'error');
       }
     }
 
@@ -551,7 +572,7 @@
         const r = await fetch(`${BACKEND}/booked/${date}`);
         if (r.ok) booked = await r.json();
       } catch (err) {
-        console.warn("Could not load booked slots", err);
+        console.warn("Could not load booked slots:", err.message);
       }
 
       const now = new Date();
@@ -647,7 +668,8 @@
         document.querySelectorAll("#services input").forEach(cb => cb.checked = false);
         generateCalendar();
       } catch (err) {
-        showToast(err.message, 'error');
+        console.error("Booking failed:", err.message);
+        showToast(err.message || "Booking failed – check network", 'error');
       }
     }
 
@@ -714,6 +736,8 @@
     renderServices();
     generateCalendar();
     showBooking();
+
+    console.log("Frontend initialized. Backend URL:", BACKEND);
   </script>
 </body>
 </html>

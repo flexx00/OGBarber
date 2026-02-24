@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 8080;  // Your chosen port
+const PORT = 3000;  // Your chosen port
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
 app.use(cors({
