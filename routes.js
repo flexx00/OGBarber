@@ -64,7 +64,7 @@ await loadLanguage();
 
 // ─── JWT Secret ─────────────────────────────────────────────────────────────
 // Move this to .env in production!
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-change-me-987654321"; // ← CHANGE THIS
+const JWT_SECRET = process.env.JWT_SECRET || "kqpghdexhofltdpwpljspqfsgdnmqcvbglphatncfqfpdfnuwyvnmbnirmenglvxdmqmcygxxxpbxrtqsyfiipbsweuquaheatjjsdcugtyfryktlxkhaycmhwzxxkhw"; // ← CHANGE THIS
 const ACCESS_TOKEN_EXPIRY  = "15m";   // short-lived
 const REFRESH_TOKEN_EXPIRY_NORMAL = "1d";   // session style
 const REFRESH_TOKEN_EXPIRY_REMEMBER = "30d"; // remember me

@@ -1,5 +1,5 @@
 // server.js - The OG Barber Booking Server
-// Main entry point: config, middleware, DB, language, email, and route mounting
+// Main entry point: config, middleware, DB, language, email, routes
 
 import express from "express";
 import cors from "cors";
@@ -9,11 +9,12 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yaml from "js-yaml";
 import fs from "fs/promises";
-import cookieParser from "cookie-parser";   // ← added for auth cookies
-import jwt from "jsonwebtoken";              // ← added for JWT verification
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
-// Route handlers
-import { setupRoutes } from "./routes.js";
+// Load environment variables from .env file
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,12 +23,24 @@ const app = express();
 const PORT = 5000;
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────
+// CORS – explicit origins for security + Safari/iOS compatibility
 app.use(cors({
-  origin: true,               // or specify your frontend URL e.g. "http://localhost:3000"
-  credentials: true,          // ← very important for cookies to work cross-origin
+  origin: [
+    "http://localhost:5500",           // VS Code Live Server
+    "http://127.0.0.1:5500",
+    "http://localhost:3000",           // Vite/React dev server
+    process.env.FRONTEND_URL || "*"    // Production domain from .env
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Handle preflight OPTIONS requests (fixes iOS Safari "Load failed" on POST)
+app.options("*", cors());
+
 app.use(express.json());
-app.use(cookieParser());      // ← added — parses cookies
+app.use(cookieParser());
 
 // ─── LOAD TRANSLATIONS ─────────────────────────────────────────────────────
 let lang = {};
@@ -42,23 +55,20 @@ let lang = {};
       console.warn("Translations file loaded but appears empty");
     } else {
       console.log(`Translations loaded successfully from ${langPath}`);
-      console.log(`Loaded sections: ${Object.keys(lang).join(", ")}`);
-      console.log(`Test: errors.unauthorized → ${t('errors', 'unauthorized')}`);
     }
   } catch (err) {
     console.error("Failed to load language.yaml:", err.message);
-    if (err.code === 'ENOENT') {
-      console.error(`File not found. Expected: ${path.resolve(__dirname, "language.yaml")}`);
-    } else if (err.name === 'YAMLException') {
-      console.error("YAML parsing error — check indentation/quotes");
-    }
     lang = {}; // fallback — t() returns key
   }
 })();
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-// Move sensitive values to .env in production!
-export const JWT_SECRET = process.env.JWT_SECRET || "change-this-to-a-very-long-random-secret-9876543210abcdef";
+export const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET is not set in .env file! Authentication will fail.");
+  process.exit(1);
+}
 
 export const DISCORD_WEBHOOK = "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
 
@@ -67,13 +77,14 @@ export const ADMIN_PASSWORD = "SuperSecret2026!";
 
 export const LOGO_URL       = "https://i.imgur.com/4dIWLpI.jpeg";
 
+// Nodemailer transporter (using .env values)
 export const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
   auth: {
-    user: "bearwallbear1@gmail.com",
-    pass: "igsp hsyq umcm jcjj", // ← consider app password or moving to .env
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
   },
   tls: {
     rejectUnauthorized: true,
@@ -83,7 +94,7 @@ export const transporter = nodemailer.createTransport({
 
 transporter.verify((error) => {
   if (error) {
-    console.error("SMTP verification failed:", error);
+    console.error("SMTP verification failed:", error.message);
   } else {
     console.log("SMTP connection ready");
   }
@@ -104,11 +115,11 @@ export function tEmailLabel(key, fallback = null) {
 
 // ─── MYSQL POOL ────────────────────────────────────────────────────────────
 export const pool = mysql.createPool({
-  host: "node1.infinityhosting.org",
-  port: 3306,
-  user: "u26_uwHqsRd4bn",
-  password: "WCI6m5n4hL3rYJxkPT@zHT3!",
-  database: "s26_the_og_barber",
+  host: process.env.DB_HOST || "node1.infinityhosting.org",
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || "u26_uwHqsRd4bn",
+  password: process.env.DB_PASSWORD || "WCI6m5n4hL3rYJxkPT@zHT3!",
+  database: process.env.DB_NAME || "s26_the_og_barber",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -116,7 +127,7 @@ export const pool = mysql.createPool({
   dateStrings: true,
 });
 
-// Initialize tables (unchanged)
+// Initialize tables
 (async () => {
   try {
     const conn = await pool.getConnection();
@@ -155,35 +166,52 @@ export const pool = mysql.createPool({
 
     conn.release();
   } catch (err) {
-    console.error("MySQL setup failed:", err);
+    console.error("MySQL setup failed:", err.message);
     process.exit(1);
   }
 })();
 
-// ─── ADMIN AUTH MIDDLEWARE (updated — supports both Basic and JWT) ─────────
+// ─── ADMIN AUTH MIDDLEWARE ─────────────────────────────────────────────────
 export function isAdmin(req, res, next) {
-  // Option 1: Basic Auth (your original method — keep for admin panel if needed)
   const auth = req.headers.authorization;
   if (auth && auth === `Basic ${Buffer.from(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}`).toString('base64')}`) {
     return next();
   }
 
-  // Option 2: JWT (for future admin JWT login)
   const token = req.cookies?.accessToken;
   if (token) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      // You could check if decoded has admin role here if you add roles later
+      jwt.verify(token, JWT_SECRET);
       return next();
     } catch (err) {
-      // token invalid/expired → fall through to unauthorized
+      console.warn("Invalid JWT token:", err.message);
     }
   }
 
   res.status(401).json({ error: t('errors', 'unauthorized', "Unauthorized") });
 }
 
+// ─── SIMPLE HEALTH & TEST ROUTES ───────────────────────────────────────────
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
+
+app.get("/test-email", async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: "test@example.com",
+      subject: "Test Email from OG Barber",
+      text: "This is a test email. If you see this, SMTP is working!"
+    });
+    res.json({ success: true, message: "Test email sent" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ─── MOUNT ROUTES ──────────────────────────────────────────────────────────
+import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
 // ─── START SERVER ──────────────────────────────────────────────────────────
@@ -191,4 +219,5 @@ app.listen(PORT, () => {
   console.log(`OG Barber server running → http://localhost:${PORT}`);
   console.log("Health check:   http://localhost:5000/health");
   console.log("Test email:     http://localhost:5000/test-email");
+  console.log("JWT_SECRET loaded from .env:", JWT_SECRET ? "YES" : "MISSING!");
 });
