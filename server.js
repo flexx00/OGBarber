@@ -11,7 +11,7 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-// Load .env locally only
+// ────────────── Load .env locally ──────────────
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
@@ -27,7 +27,7 @@ app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-// CORS configuration
+// ────────────── CORS ──────────────
 app.use(cors({
   origin: process.env.FRONTEND_URL || true,
   credentials: true,
@@ -35,15 +35,12 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// OPTIONS preflight fix
 app.options("/*all", cors());
 
-// Logging middleware
+// ────────────── Logging ──────────────
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  if (req.method === "POST" || req.method === "PUT") {
-    console.log("Body:", req.body);
-  }
+  if (["POST", "PUT"].includes(req.method)) console.log("Body:", req.body);
   next();
 });
 
@@ -60,15 +57,14 @@ async function loadLanguage() {
 }
 
 // ────────────── Environment & Secrets ──────────────
-export const JWT_SECRET = process.env.JWT_SECRET;
+export const JWT_SECRET = process.env.JWT_SECRET || null;
 if (!JWT_SECRET) {
-  console.error("❌ JWT_SECRET is missing in .env or Render environment variables");
-  process.exit(1);
+  console.warn("⚠️ JWT_SECRET not set! Authentication routes will not work.");
 }
 
 export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "";
 
-// ────────────── MySQL Connection ──────────────
+// ────────────── MySQL Pool ──────────────
 export const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
@@ -116,11 +112,11 @@ async function initDatabase() {
     conn.release();
   } catch (err) {
     console.error("Database initialization failed:", err.message);
-    process.exit(1);
+    throw err;
   }
 }
 
-// ────────────── Nodemailer Email ──────────────
+// ────────────── Nodemailer ──────────────
 export const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -142,9 +138,14 @@ async function verifySMTP() {
 import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
-// Default homepage route
+// Default homepage
 app.get("/", (_, res) => {
   res.send("🚀 OG Barber API is running! Use /signup or /login endpoints.");
+});
+
+// Test route to help Render detect port
+app.get("/test-port", (_, res) => {
+  res.send("Port is working!");
 });
 
 // Health check
@@ -153,9 +154,7 @@ app.get("/health", (_, res) => {
 });
 
 // 404 handler
-app.use((_, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
+app.use((_, res) => res.status(404).json({ error: "Route not found" }));
 
 // Global error handler
 app.use((err, _, res, __) => {
@@ -165,19 +164,24 @@ app.use((err, _, res, __) => {
 
 // ────────────── Start server ──────────────
 async function startServer() {
-  await loadLanguage();
-  await initDatabase();
-  await verifySMTP();
+  try {
+    await loadLanguage();
+    await initDatabase();
+    await verifySMTP();
 
-  app.listen(PORT, () => {
-    console.log(`🚀 OG Barber API running on http://localhost:${PORT}`);
-    console.log(`Health:              http://localhost:${PORT}/health`);
-  });
+    app.listen(PORT, () => {
+      console.log(`🚀 OG Barber API running on port ${PORT}`);
+      console.log(`Health: http://localhost:${PORT}/health`);
+    });
 
-  process.on("SIGINT", () => {
-    console.log("\nShutting down...");
-    process.exit(0);
-  });
+    process.on("SIGINT", () => {
+      console.log("\nShutting down...");
+      process.exit(0);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err.message);
+    process.exit(1);
+  }
 }
 
 startServer();
