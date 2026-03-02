@@ -2,6 +2,7 @@
 import { pool, transporter, JWT_SECRET, DISCORD_WEBHOOK } from "./server.js";
 import jwt from "jsonwebtoken";
 import cron from "node-cron";
+import bcrypt from "bcrypt";
 
 const ACCESS_TOKEN_EXPIRY  = "15m";
 const REFRESH_NORMAL       = "1d";
@@ -58,7 +59,7 @@ function scheduleReminder(email, name, date, time) {
         `<p>Hi ${name},</p><p>Your appointment is tomorrow at <strong>${time}</strong>.</p>`
       );
     },
-    { scheduled: true, timezone: "Europe/London" } // ← adjust timezone if needed
+    { scheduled: true, timezone: "Europe/London" }
   );
 }
 
@@ -76,22 +77,24 @@ function requireAuth(req, res, next) {
 
 export function setupRoutes(app) {
 
-  // ── TEST ENDPOINTS ───────────────────────────────
+  // ── TEST ENDPOINT ──
   app.get("/api/test", (_, res) => res.json({ status: "ok" }));
 
-  // ── SIGNUP ───────────────────────────────────────
+  // ── SIGNUP ──
   app.post("/user/signup", async (req, res) => {
-    const { email, username } = req.body;
-    if (!email || !username) return res.status(400).json({ error: "Email and username required" });
+    const { email, username, password } = req.body;
+    if (!email || !username || !password) return res.status(400).json({ error: "Email, username, and password required" });
     if (!validEmail(email)) return res.status(400).json({ error: "Invalid email format" });
 
     try {
       const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
       if (existing.length) return res.status(409).json({ error: "Email already registered" });
 
+      const hashed = await bcrypt.hash(password, 10);
+
       const [result] = await pool.query(
-        "INSERT INTO users (email, username) VALUES (?, ?)",
-        [email, username]
+        "INSERT INTO users (email, username, password) VALUES (?, ?, ?)",
+        [email, username, hashed]
       );
 
       const user = { id: result.insertId, email, username };
@@ -110,23 +113,20 @@ export function setupRoutes(app) {
     }
   });
 
-  // ── LOGIN ────────────────────────────────────────
+  // ── LOGIN ──
   app.post("/user/login", async (req, res) => {
-    const { email, rememberMe = false } = req.body;
-    if (!email) return res.status(400).json({ error: "Email required" });
+    const { email, password, rememberMe = false } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
     try {
       const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
       if (!rows.length) return res.status(404).json({ error: "User not found" });
 
       const user = rows[0];
+      const valid = await bcrypt.compare(password, user.password || "");
+      if (!valid) return res.status(400).json({ error: "Invalid credentials" });
 
-      const accessToken = jwt.sign(
-        { id: user.id, email: user.email, username: user.username },
-        JWT_SECRET,
-        { expiresIn: ACCESS_TOKEN_EXPIRY }
-      );
-
+      const accessToken = jwt.sign({ id: user.id, email: user.email, username: user.username }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
       const refreshExpiry = rememberMe ? REFRESH_REMEMBER : REFRESH_NORMAL;
       const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: refreshExpiry });
 
@@ -135,25 +135,21 @@ export function setupRoutes(app) {
         rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
       ));
 
-      res.json({ success: true });
+      res.json({ success: true, user: { id: user.id, email: user.email, username: user.username } });
     } catch (err) {
       console.error("Login error:", err);
       res.status(500).json({ error: "Login failed" });
     }
   });
 
-  // ── REFRESH TOKEN ────────────────────────────────
+  // ── REFRESH TOKEN ──
   app.post("/user/refresh", async (req, res) => {
     const token = req.cookies?.refreshToken;
     if (!token) return res.status(401).json({ error: "No refresh token provided" });
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      const [rows] = await pool.query(
-        "SELECT id, email, username FROM users WHERE id = ?",
-        [decoded.id]
-      );
-
+      const [rows] = await pool.query("SELECT id, email, username FROM users WHERE id = ?", [decoded.id]);
       if (!rows.length) return res.status(401).json({ error: "User no longer exists" });
 
       const accessToken = jwt.sign(rows[0], JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
@@ -166,42 +162,32 @@ export function setupRoutes(app) {
     }
   });
 
-  // ── LOGOUT ───────────────────────────────────────
+  // ── LOGOUT ──
   app.post("/user/logout", (req, res) => {
     res.clearCookie("accessToken", { path: "/" });
     res.clearCookie("refreshToken", { path: "/" });
     res.json({ success: true });
   });
 
-  // ── GET CURRENT USER ─────────────────────────────
+  // ── GET CURRENT USER ──
   app.get("/user/me", requireAuth, (req, res) => {
     res.json({ user: req.user });
   });
 
-  // ── CREATE BOOKING ───────────────────────────────
+  // ── CREATE BOOKING ──
   app.post("/book", requireAuth, async (req, res) => {
     const { name, date, time, services, total, email } = req.body;
-
-    if (!name || !date || !time || !email) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
+    if (!name || !date || !time || !email) return res.status(400).json({ error: "Missing required fields" });
     if (!validEmail(email)) return res.status(400).json({ error: "Invalid email format" });
-
     const bookingDateTime = new Date(`${date}T${time}`);
-    if (bookingDateTime < new Date()) {
-      return res.status(400).json({ error: "Cannot book in the past" });
-    }
+    if (bookingDateTime < new Date()) return res.status(400).json({ error: "Cannot book in the past" });
 
     try {
       const [existing] = await pool.query(
         "SELECT id FROM bookings WHERE date = ? AND time = ? AND status != 'cancelled'",
         [date, time]
       );
-
-      if (existing.length) {
-        return res.status(409).json({ error: "This time slot is already booked" });
-      }
+      if (existing.length) return res.status(409).json({ error: "This time slot is already booked" });
 
       await pool.query(
         "INSERT INTO bookings (user_id, name, date, time, services, total, email) VALUES (?,?,?,?,?,?,?)",
@@ -213,11 +199,9 @@ export function setupRoutes(app) {
         <h2>Booking Confirmed!</h2>
         <p>Hello ${name},</p>
         <p>Your appointment is set for <strong>${date}</strong> at <strong>${time}</strong>.</p>
-        <p>We look forward to seeing you!</p>
       `);
 
       scheduleReminder(email, name, date, time);
-
       res.json({ success: true });
     } catch (err) {
       console.error("Booking error:", err);
@@ -225,7 +209,7 @@ export function setupRoutes(app) {
     }
   });
 
-  // ── GET BOOKED TIMES FOR A DATE ──────────────────
+  // ── GET BOOKED TIMES ──
   app.get("/booked/:date", async (req, res) => {
     try {
       const [rows] = await pool.query(
@@ -238,4 +222,5 @@ export function setupRoutes(app) {
       res.status(500).json({ error: "Failed to fetch booked times" });
     }
   });
+
 }
