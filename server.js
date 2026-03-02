@@ -11,7 +11,10 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-dotenv.config();
+// Load .env locally only
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,15 +29,16 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || true,  // true = reflect request origin (dev friendly)
+  origin: process.env.FRONTEND_URL || true,
   credentials: true,
   methods: ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// IMPORTANT: Fix for Express 5 – named wildcard for OPTIONS preflight
+// OPTIONS preflight fix
 app.options("/*all", cors());
 
+// Logging middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   if (req.method === "POST" || req.method === "PUT") {
@@ -43,9 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ───────────────────────────────────────────────
-// Language (optional – can be removed if not used)
-// ───────────────────────────────────────────────
+// ────────────── Language YAML ──────────────
 let lang = {};
 async function loadLanguage() {
   try {
@@ -57,20 +59,16 @@ async function loadLanguage() {
   }
 }
 
-// ───────────────────────────────────────────────
-// Environment & Secrets
-// ───────────────────────────────────────────────
+// ────────────── Environment & Secrets ──────────────
 export const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  console.error("❌ JWT_SECRET is missing in .env");
+  console.error("❌ JWT_SECRET is missing in .env or Render environment variables");
   process.exit(1);
 }
 
 export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "";
 
-// ───────────────────────────────────────────────
-// MySQL Connection Pool
-// ───────────────────────────────────────────────
+// ────────────── MySQL Connection ──────────────
 export const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 3306),
@@ -122,9 +120,7 @@ async function initDatabase() {
   }
 }
 
-// ───────────────────────────────────────────────
-// Email (Nodemailer)
-// ───────────────────────────────────────────────
+// ────────────── Nodemailer Email ──────────────
 export const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -142,13 +138,16 @@ async function verifySMTP() {
   }
 }
 
-// ───────────────────────────────────────────────
-// Routes
-// ───────────────────────────────────────────────
+// ────────────── Routes ──────────────
 import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
-// Health check endpoint
+// Default homepage route
+app.get("/", (_, res) => {
+  res.send("🚀 OG Barber API is running! Use /signup or /login endpoints.");
+});
+
+// Health check
 app.get("/health", (_, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
@@ -164,9 +163,7 @@ app.use((err, _, res, __) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ───────────────────────────────────────────────
-// Start server
-// ───────────────────────────────────────────────
+// ────────────── Start server ──────────────
 async function startServer() {
   await loadLanguage();
   await initDatabase();
