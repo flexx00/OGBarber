@@ -1,246 +1,210 @@
-// routes.js - OG Barber API (Mobile Safe + Secure 2026)
-
-import { pool, transporter, JWT_SECRET, ADMIN_EMAIL, DISCORD_WEBHOOK } from "./server.js";
+// routes.js
+import { pool, transporter, JWT_SECRET, DISCORD_WEBHOOK } from "./server.js";
 import jwt from "jsonwebtoken";
-import fetch from "node-fetch";
 import cron from "node-cron";
 
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
+const ACCESS_TOKEN_EXPIRY  = "15m";
+const REFRESH_NORMAL       = "1d";
+const REFRESH_REMEMBER     = "30d";
+const isProd = process.env.NODE_ENV === "production";
 
-const ACCESS_TOKEN_EXPIRY = "15m";
-const REFRESH_TOKEN_EXPIRY_NORMAL = "1d";
-const REFRESH_TOKEN_EXPIRY_REMEMBER = "30d";
-
-const isProduction = process.env.NODE_ENV === "production";
-
-// ✅ MOBILE SAFE COOKIE CONFIG
-function getCookieOptions(maxAge) {
+function cookieOptions(maxAge) {
   return {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "None" : "Lax",
+    secure: isProd,
+    sameSite: isProd ? "None" : "Lax",
     path: "/",
-    maxAge,
+    maxAge
   };
 }
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
+function validEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-async function sendDiscordWebhook(title, description, color = 3447003) {
+async function sendDiscord(title, desc, color = 3447003) {
   if (!DISCORD_WEBHOOK) return;
   try {
     await fetch(DISCORD_WEBHOOK, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embeds: [{ title, description, color }] })
+      body: JSON.stringify({ embeds: [{ title, description: desc, color }] })
     });
-  } catch (err) {
-    console.error("Discord webhook failed:", err.message);
-  }
+  } catch {}
 }
 
 async function sendEmail(to, subject, html) {
   try {
     await transporter.sendMail({
       from: `"OG Barber" <${process.env.GMAIL_USER}>`,
-      to,
-      subject,
-      html
+      to, subject, html
     });
-  } catch (err) {
-    console.error("Email failed:", err.message);
+  } catch (e) {
+    console.warn("Email failed:", e);
   }
 }
 
 function scheduleReminder(email, name, date, time) {
-  const bookingTime = new Date(`${date}T${time}:00`);
-  const oneHourBefore = new Date(bookingTime.getTime() - 60 * 60 * 1000);
+  const booking = new Date(`${date}T${time}`);
+  const remindAt = new Date(booking.getTime() - 60*60*1000); // 1 hour before
+  if (remindAt < new Date()) return;
 
-  cron.schedule(
-    `${oneHourBefore.getMinutes()} ${oneHourBefore.getHours()} ${oneHourBefore.getDate()} ${oneHourBefore.getMonth() + 1} *`,
-    () => {
-      sendEmail(
-        email,
-        "Appointment Reminder",
-        `<h2>Reminder</h2><p>Hi ${name}, your appointment is at ${time} on ${date}.</p>`
+  const task = cron.schedule(
+    `${remindAt.getMinutes()} ${remindAt.getHours()} ${remindAt.getDate()} ${remindAt.getMonth()+1} *`,
+    async () => {
+      await sendEmail(email, "Appointment Reminder", 
+        `<p>Hi ${name}, your appointment is tomorrow at ${time}.</p>`
       );
+      task.stop();
     }
   );
 }
 
-// ─────────────────────────────────────────────
-// AUTH MIDDLEWARE
-// ─────────────────────────────────────────────
-
 function requireAuth(req, res, next) {
   const token = req.cookies?.accessToken;
-  if (!token) {
-    return res.status(401).json({ error: "Not authenticated" });
-  }
+  if (!token) return res.status(401).json({ error: "Not authenticated" });
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, JWT_SECRET);
     next();
-  } catch (err) {
-    console.warn("Token verification failed:", err.message);
-    return res.status(403).json({ error: "Invalid or expired token" });
+  } catch {
+    res.status(403).json({ error: "Invalid/expired token" });
   }
 }
 
-// ─────────────────────────────────────────────
-// ROUTES
-// ─────────────────────────────────────────────
-
 export function setupRoutes(app) {
 
-  // ───────────────────────── GET CONNECTIVITY TEST
-  app.get("/api/test", (req, res) => {
-    console.log(`GET /api/test hit from IP: ${req.ip}`);
-    res.json({ status: "ok", message: "GET test successful from server" });
-  });
+  // ── TEST ────────────────────────────────────────
+  app.get("/api/test", (_, res) => res.json({ status: "ok" }));
 
-  // ───────────────────────── POST CONNECTIVITY TEST (no auth, echoes body)
-  app.post("/api/test-post", (req, res) => {
-    console.log(`POST /api/test-post hit from IP: ${req.ip}`);
-    console.log("Received body:", req.body);
-    res.json({
-      status: "ok",
-      message: "POST test successful",
-      receivedData: req.body
-    });
-  });
-
-  // ───────────────────────── USER SIGNUP
+  // ── SIGNUP ──────────────────────────────────────
   app.post("/user/signup", async (req, res) => {
-    console.log(`Signup attempt from IP: ${req.ip} | Body:`, req.body);
     const { email, username } = req.body;
-    if (!email || !username) {
-      return res.status(400).json({ error: "Email and username required" });
-    }
+    if (!email || !username) return res.status(400).json({ error: "Email & username required" });
+    if (!validEmail(email)) return res.status(400).json({ error: "Invalid email" });
 
     try {
-      const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
-      if (existing.length) {
-        return res.status(409).json({ error: "Email already registered" });
-      }
+      const [exists] = await pool.query("SELECT 1 FROM users WHERE email = ?", [email]);
+      if (exists.length) return res.status(409).json({ error: "Email already taken" });
 
-      const [result] = await pool.query("INSERT INTO users (email, username) VALUES (?, ?)", [email, username]);
-      const user = { id: result.insertId, email, username };
+      const [r] = await pool.query("INSERT INTO users (email, username) VALUES (?, ?)", [email, username]);
 
-      const accessToken = jwt.sign(user, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
-      const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY_NORMAL });
+      const user = { id: r.insertId, email, username };
+      const access = jwt.sign(user, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
+      const refresh = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: REFRESH_NORMAL });
 
-      res.cookie("accessToken", accessToken, getCookieOptions(15 * 60 * 1000));
-      res.cookie("refreshToken", refreshToken, getCookieOptions(24 * 60 * 60 * 1000));
+      res.cookie("accessToken", access, cookieOptions(15*60*1000));
+      res.cookie("refreshToken", refresh, cookieOptions(24*60*60*1000));
 
-      await sendDiscordWebhook("New Signup", `User: ${username}\nEmail: ${email}`);
+      await sendDiscord("New Signup", `${username} (${email})`);
 
       res.json({ success: true, user });
     } catch (err) {
-      console.error("Signup error:", err.message);
-      res.status(500).json({ error: "Server error during signup" });
+      console.error(err);
+      res.status(500).json({ error: "Signup failed" });
     }
   });
 
-  // ───────────────────────── USER LOGIN
+  // ── LOGIN ───────────────────────────────────────
   app.post("/user/login", async (req, res) => {
-    console.log(`Login attempt from IP: ${req.ip} | Body:`, req.body);
     const { email, rememberMe = false } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: "Email required" });
-    }
+    if (!email) return res.status(400).json({ error: "Email required" });
 
     try {
       const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
-      if (!rows.length) {
-        return res.status(404).json({ error: "User not found" });
-      }
+      if (!rows.length) return res.status(404).json({ error: "User not found" });
 
       const user = rows[0];
-      const accessToken = jwt.sign(
+
+      const access = jwt.sign(
         { id: user.id, email: user.email, username: user.username },
         JWT_SECRET,
         { expiresIn: ACCESS_TOKEN_EXPIRY }
       );
 
-      const refreshExpiry = rememberMe ? REFRESH_TOKEN_EXPIRY_REMEMBER : REFRESH_TOKEN_EXPIRY_NORMAL;
-      const refreshToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: refreshExpiry });
+      const refreshExp = rememberMe ? REFRESH_REMEMBER : REFRESH_NORMAL;
+      const refresh = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: refreshExp });
 
-      res.cookie("accessToken", accessToken, getCookieOptions(15 * 60 * 1000));
-      res.cookie("refreshToken", refreshToken, getCookieOptions(
-        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
-      ));
+      res.cookie("accessToken", access, cookieOptions(15*60*1000));
+      res.cookie("refreshToken", refresh, cookieOptions(rememberMe ? 30*24*60*60*1000 : 24*60*60*1000));
 
       res.json({ success: true });
     } catch (err) {
-      console.error("Login error:", err.message);
-      res.status(500).json({ error: "Server error during login" });
+      res.status(500).json({ error: "Login failed" });
     }
   });
 
-  // ───────────────────────── REFRESH TOKEN
-  app.post("/user/refresh", (req, res) => {
-    const refreshToken = req.cookies?.refreshToken;
-    if (!refreshToken) {
-      return res.status(401).json({ error: "No refresh token provided" });
-    }
+  // ── REFRESH ─────────────────────────────────────
+  app.post("/user/refresh", async (req, res) => {
+    const token = req.cookies?.refreshToken;
+    if (!token) return res.status(401).json({ error: "No refresh token" });
 
     try {
-      const decoded = jwt.verify(refreshToken, JWT_SECRET);
-      const newAccessToken = jwt.sign({ id: decoded.id }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
-      res.cookie("accessToken", newAccessToken, getCookieOptions(15 * 60 * 1000));
+      const { id } = jwt.verify(token, JWT_SECRET);
+      const [rows] = await pool.query("SELECT id,email,username FROM users WHERE id = ?", [id]);
+      if (!rows.length) throw new Error("User gone");
+
+      const access = jwt.sign(rows[0], JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
+      res.cookie("accessToken", access, cookieOptions(15*60*1000));
       res.json({ success: true });
-    } catch (err) {
-      console.warn("Refresh token invalid:", err.message);
-      res.clearCookie("accessToken", { path: "/" });
-      res.clearCookie("refreshToken", { path: "/" });
-      res.status(403).json({ error: "Invalid or expired refresh token" });
+    } catch {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+      res.status(403).json({ error: "Invalid refresh token" });
     }
   });
 
-  // ───────────────────────── LOGOUT
-  app.post("/user/logout", (req, res) => {
+  // ── LOGOUT ──────────────────────────────────────
+  app.post("/user/logout", (_, res) => {
     res.clearCookie("accessToken", { path: "/" });
     res.clearCookie("refreshToken", { path: "/" });
     res.json({ success: true });
   });
 
-  // ───────────────────────── TEST AUTH (requires valid accessToken cookie)
+  // ── WHO AM I ────────────────────────────────────
   app.get("/user/me", requireAuth, (req, res) => {
-    res.json({ success: true, user: req.user });
+    res.json({ user: req.user });
   });
 
-  // ───────────────────────── CREATE BOOKING
+  // ── CREATE BOOKING ──────────────────────────────
   app.post("/book", requireAuth, async (req, res) => {
-    const { name, date, time, services, total, email, phone } = req.body;
+    const { name, date, time, services, total, email } = req.body;
 
-    if (!name || !date || !time || !Array.isArray(services) || !total || !email) {
+    if (!name || !date || !time || !email) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    if (!validEmail(email)) return res.status(400).json({ error: "Invalid email" });
+
+    const dt = new Date(`${date}T${time}`);
+    if (dt < new Date()) return res.status(400).json({ error: "Cannot book past date/time" });
+
     try {
+      const [exists] = await pool.query(
+        "SELECT id FROM bookings WHERE date=? AND time=? AND status!='cancelled'",
+        [date, time]
+      );
+      if (exists.length) return res.status(409).json({ error: "Slot already booked" });
+
       await pool.query(
-        "INSERT INTO bookings (user_id, name, date, time, services, total, email, phone) VALUES (?,?,?,?,?,?,?,?)",
-        [req.user.id, name, date, time, JSON.stringify(services), total, email, phone || null]
+        "INSERT INTO bookings (user_id, name, date, time, services, total, email) VALUES (?,?,?,?,?,?,?)",
+        [req.user.id, name, date, time, JSON.stringify(services || []), total || 0, email]
       );
 
-      await sendDiscordWebhook("New Booking", `${name}\n${date} ${time}\n£${total}`, 16753920);
-
-      await sendEmail(email, "Booking Confirmed", `<h2>Booking Confirmed</h2><p>${date} at ${time}</p>`);
+      await sendDiscord("New Booking", `${name} — ${date} ${time}`);
+      await sendEmail(email, "Booking Confirmed – OG Barber", `
+        <h2>Confirmed!</h2>
+        <p>Hello ${name},</p>
+        <p>Your appointment is booked for <strong>${date}</strong> at <strong>${time}</strong>.</p>
+        <p>We look forward to seeing you!</p>
+      `);
 
       scheduleReminder(email, name, date, time);
 
       res.json({ success: true });
     } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        return res.status(409).json({ error: "Time slot already booked" });
-      }
-      console.error("Booking error:", err.message);
-      res.status(500).json({ error: "Server error during booking" });
+      console.error("Booking error:", err);
+      res.status(500).json({ error: "Could not create booking" });
     }
   });
 }

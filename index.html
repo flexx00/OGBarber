@@ -28,10 +28,6 @@
             'text-light': '#f4f0e8',
             'text-dim': '#c4b9a8',
             'border-gold': 'rgba(201,163,71,0.22)',
-            'error-red': '#c94a4a',
-            'success-green': '#4caf50',
-            'bg-light': '#f8f5f0',
-            'text-dark': '#1a140f',
           },
           fontFamily: {
             serif: ['Playfair Display', 'serif'],
@@ -47,122 +43,62 @@
   </script>
 
   <style>
-    .toast {
-      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-      animation: fadeIn 0.4s forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .toast { transition: all 0.5s cubic-bezier(0.19,1,0.22,1); animation: fadeIn 0.4s forwards; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
 
     html.light {
       --tw-bg-opacity: 1;
       background-color: rgb(248 245 240 / var(--tw-bg-opacity));
       color: #1a140f;
     }
-    html.light .bg-bg-dark { background-color: #f8f5f0; }
-    html.light .bg-bg-card { background-color: white; }
+    html.light .bg-bg-dark     { background-color: #f8f5f0; }
+    html.light .bg-bg-card     { background-color: white; }
     html.light .text-text-light { color: #1a140f; }
-    html.light .text-text-dim { color: #5c4b3a; }
+    html.light .text-text-dim   { color: #5c4b3a; }
     html.light .border-border-gold { border-color: rgba(201,163,71,0.4); }
     html.light .bg-gold { background-color: #c9a347; color: #0b0b0b; }
-    html.light input, html.light textarea {
-      background-color: #fff;
-      border-color: #d1c7b0;
-      color: #1a140f;
-    }
 
     /* Time slot states */
     #times > div.past-time,
     #times > div.booked {
-      opacity: 0.55;
-      cursor: not-allowed !important;
+      opacity: 0.5;
+      cursor: not-allowed;
       pointer-events: none;
     }
-    #times > div.past-time {
-      background-color: rgba(30,30,30,0.7) !important;
-      border-color: #444 !important;
-      color: #888 !important;
-      text-decoration: line-through;
-    }
-    #times > div.booked {
-      background-color: rgba(127,29,29,0.35) !important;
-      border-color: #7f1d1d !important;
-      color: #fda4af !important;
-    }
-    #times > div.selected {
-      background-color: #c9a347 !important;
-      color: #0b0b0b !important;
-      border-color: #e0c070 !important;
-      font-weight: 600;
-    }
+    #times > div.past-time   { text-decoration: line-through; background: rgba(50,50,50,0.6) !important; }
+    #times > div.booked      { background: rgba(127,29,29,0.4) !important; color: #fda4af !important; }
+    #times > div.selected    { background: #c9a347 !important; color: #0b0b0b !important; border-color: #e0c070 !important; font-weight: 600; }
 
-    /* Custom checkbox */
     input[type="checkbox"].remember-me {
       appearance: none;
-      width: 1.25rem;
-      height: 1.25rem;
-      border: 2px solid #c9a347;
-      border-radius: 0.25rem;
-      background: #1a1a1a;
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s;
+      width: 1.25rem; height: 1.25rem;
+      border: 2px solid #c9a347; border-radius: 0.25rem;
+      background: #1a1a1a; cursor: pointer; transition: all 0.2s;
     }
     input[type="checkbox"].remember-me:checked {
-      background: #c9a347;
-      border-color: #c9a347;
+      background: #c9a347; border-color: #c9a347;
     }
     input[type="checkbox"].remember-me:checked::after {
-      content: '✔';
-      position: absolute;
-      inset: 0;
-      color: #0b0b0b;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.875rem;
-    }
-
-    /* Touch / accessibility */
-    button, input[type="checkbox"], .nav-btn {
-      min-width: 44px;
-      min-height: 44px;
-      touch-action: manipulation;
-    }
-    input, textarea {
-      font-size: 16px; /* prevent iOS zoom */
-    }
-
-    /* Calendar day header */
-    .calendar-header {
-      font-weight: 600;
-      color: #c9a347;
-      text-align: center;
-      padding: 0.5rem;
+      content: '✔'; position: absolute; inset: 0;
+      color: #0b0b0b; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
     }
   </style>
 </head>
 <body class="font-sans bg-bg-dark text-text-light min-h-screen antialiased">
 
-  <!-- ─── Header ─────────────────────────────────────── -->
+  <!-- Header -->
   <header class="bg-gradient-to-b from-bg-dark to-[#0f0f0f] py-6 md:py-10 px-6 text-center border-b border-border-gold shadow-heavy relative">
     <button id="backBtn" class="absolute left-6 top-6 md:top-8 hidden border border-gold text-gold px-5 py-2.5 font-medium rounded-lg transition-all hover:bg-gold hover:text-bg-dark hover:shadow-gold">
       ← Back
     </button>
 
     <div onclick="goHome()" class="cursor-pointer inline-block">
-      <img 
-        src="https://i.imgur.com/4dIWLpI.jpeg" 
-        alt="The OG Barber Logo" 
-        class="mx-auto h-16 md:h-24 lg:h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(201,163,71,0.5)] transition-transform hover:scale-105"
-      >
+      <img src="https://i.imgur.com/4dIWLpI.jpeg" alt="The OG Barber Logo" class="mx-auto h-16 md:h-24 lg:h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(201,163,71,0.5)] transition-transform hover:scale-105">
     </div>
   </header>
 
-  <!-- ─── Navigation ─────────────────────────────────── -->
+  <!-- Navigation -->
   <nav class="bg-[#0a0a0a] py-5 border-b border-border-gold text-center flex flex-col md:flex-row justify-center gap-5 md:gap-16">
     <button onclick="showBooking()" class="nav-btn px-8 py-3.5 text-lg font-medium text-text-dim hover:text-gold transition-colors relative after:absolute after:bottom-[-6px] after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-gold after:transition-all hover:after:w-3/5 data-[active=true]:text-gold data-[active=true]:after:w-3/5">
       Book Now
@@ -172,10 +108,10 @@
     </button>
   </nav>
 
-  <!-- Toast Container -->
+  <!-- Toast -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-[10000] max-w-xs md:max-w-sm space-y-3 pointer-events-none"></div>
 
-  <!-- Mode Toggle -->
+  <!-- Theme Toggle -->
   <button onclick="toggleMode()" class="fixed bottom-8 right-20 md:right-8 z-50 w-14 h-14 rounded-full bg-gold/10 border border-gold text-gold flex items-center justify-center text-2xl shadow-gold hover:bg-gold hover:text-bg-dark hover:scale-110 transition-all">
     <span class="dark:hidden">☀</span>
     <span class="hidden dark:inline">☽</span>
@@ -184,40 +120,34 @@
   <!-- ─── AUTH ───────────────────────────────────────── -->
   <div id="authSection" class="container max-w-3xl mx-auto px-6 py-12">
     <div id="signupCard" class="bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
-      <h2 class="text-4xl font-serif text-gold mb-8">Create Your Account</h2>
-      <input id="signupEmail" type="email" placeholder="Email address" class="w-full p-4 mb-5 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
-      <input id="signupUsername" type="text" placeholder="Username" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Username">
-      <button onclick="signup()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="signupBtn">
-        Sign Up
-      </button>
-      <p class="text-center mt-6 text-text-dim">Already a member? <button onclick="showLogin()" class="text-gold hover:underline">Sign in</button></p>
+      <h2 class="text-4xl font-serif text-gold mb-8">Create Account</h2>
+      <input id="signupEmail"    type="email"    placeholder="Email address" class="w-full p-4 mb-5 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required>
+      <input id="signupUsername" type="text"     placeholder="Username"      class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required>
+      <button onclick="signup()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all" id="signupBtn">Sign Up</button>
+      <p class="text-center mt-6 text-text-dim">Already have an account? <button onclick="showLogin()" class="text-gold hover:underline">Sign in</button></p>
     </div>
 
     <div id="loginCard" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Welcome Back</h2>
-      <input id="loginEmail" type="email" placeholder="Email address" class="w-full p-4 mb-4 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
+      <input id="loginEmail" type="email" placeholder="Email address" class="w-full p-4 mb-4 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required>
 
       <div class="flex items-center mb-6">
         <input type="checkbox" id="rememberMe" class="remember-me">
-        <label for="rememberMe" class="ml-3 text-text-dim cursor-pointer hover:text-gold-light transition">
-          Remember me for 30 days
-        </label>
+        <label for="rememberMe" class="ml-3 text-text-dim cursor-pointer hover:text-gold-light">Remember me (30 days)</label>
       </div>
 
-      <button onclick="login()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="loginBtn">
-        Sign In
-      </button>
+      <button onclick="login()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all" id="loginBtn">Sign In</button>
       <p class="text-center mt-6 text-text-dim">New here? <button onclick="showSignup()" class="text-gold hover:underline">Create account</button></p>
     </div>
   </div>
 
   <!-- ─── BOOKING ────────────────────────────────────── -->
-  <div id="bookingSection" class="hidden container max-w-5xl mx-auto px-6 py-12">
+  <div id="bookingSection" class="hidden container max-w-5xl mx-auto px-6 py-12 space-y-8">
 
     <!-- Step 1: Services -->
     <div id="step1" class="bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Select Services</h2>
-      <input id="customerName" placeholder="Name for the booking (optional)" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" aria-label="Name for the booking">
+      <input id="customerName" placeholder="Name (optional)" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none">
 
       <div id="services" class="space-y-5 mb-8"></div>
 
@@ -225,7 +155,7 @@
         Total: £<span id="total">0.00</span>
       </div>
 
-      <button onclick="goToCalendar()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50" id="continueToDateBtn" disabled>
+      <button onclick="goToCalendar()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="continueToDateBtn" disabled>
         Continue to Date
       </button>
     </div>
@@ -233,18 +163,12 @@
     <!-- Step 2: Calendar -->
     <div id="step2" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Choose Date</h2>
-      <div class="grid grid-cols-7 gap-2 mb-4 text-center text-sm font-medium">
-        <div class="calendar-header">Mon</div>
-        <div class="calendar-header">Tue</div>
-        <div class="calendar-header">Wed</div>
-        <div class="calendar-header">Thu</div>
-        <div class="calendar-header">Fri</div>
-        <div class="calendar-header">Sat</div>
-        <div class="calendar-header">Sun</div>
+      <div class="grid grid-cols-7 gap-2 mb-4 text-center text-sm font-medium text-gold">
+        <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
       </div>
       <div id="calendar" class="grid grid-cols-7 gap-2 md:gap-4"></div>
 
-      <button onclick="goToTimes()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50" id="continueToTimeBtn" disabled>
+      <button onclick="goToTimes()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="continueToTimeBtn" disabled>
         Continue to Time
       </button>
     </div>
@@ -254,16 +178,16 @@
       <h2 class="text-4xl font-serif text-gold mb-8">Choose Time</h2>
       <div id="times" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
 
-      <button onclick="confirmBooking()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirmBookingBtn" disabled>
+      <button onclick="confirmBooking()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirmBookingBtn" disabled>
         Confirm Booking
       </button>
     </div>
 
     <!-- Step 4: Confirmation -->
     <div id="step4" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold text-center">
-      <h2 class="text-4xl font-serif text-gold mb-6">Booking Confirmed</h2>
+      <h2 class="text-4xl font-serif text-gold mb-6">Booking Confirmed ✓</h2>
       <p id="confirmationText" class="text-xl mb-10 leading-relaxed whitespace-pre-line"></p>
-      <button onclick="startNewBooking()" class="py-4 px-12 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all">
+      <button onclick="startNewBooking()" class="py-4 px-12 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-gold transition-all">
         Book Another Appointment
       </button>
     </div>
@@ -276,8 +200,7 @@
       <div class="inline-block p-10 md:p-16 rounded-3xl bg-bg-card/70 border border-border-gold/60 shadow-gold">
         <h3 class="text-5xl md:text-6xl font-serif text-gold mb-6 tracking-wide">Coming Soon</h3>
         <p class="text-xl md:text-2xl text-text-dim max-w-2xl mx-auto leading-relaxed">
-          Our premium grooming products are being carefully curated.<br>
-          Stay tuned — launching very soon!
+          Premium grooming products are being curated.<br>Launching soon — stay tuned!
         </p>
       </div>
     </div>
@@ -285,17 +208,12 @@
 
   <script>
     // ───────────────────────────────────────────────
-    // CONFIG
+    // CONFIG & STATE
     // ───────────────────────────────────────────────
-    const BACKEND = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    const API = location.hostname === "localhost" || location.hostname === "127.0.0.1"
       ? "http://localhost:3000"
       : `${location.protocol}//${location.hostname}:3000`;
 
-    console.log("Backend:", BACKEND);
-
-    // ───────────────────────────────────────────────
-    // STATE
-    // ───────────────────────────────────────────────
     let currentUser = null;
     let selectedServices = [];
     let total = 0;
@@ -304,9 +222,9 @@
     let currentStep = 1;
 
     const servicesData = [
-      { name: "Haircut",    price: 10    },
+      { name: "Haircut",    price: 10.00 },
       { name: "Skin Fade",  price: 11.99 },
-      { name: "Beard Trim", price: 6.99  },
+      { name: "Beard Trim", price:  6.99 },
       { name: "Hair & Beard", price: 14.99 }
     ];
 
@@ -323,12 +241,11 @@
       const d = document.createElement("div");
       d.className = `p-4 rounded-lg text-white shadow-xl pointer-events-auto ${
         type === "error" ? "bg-red-700" :
-        type === "success" ? "bg-green-700" :
-        "bg-blue-700/90"
+        type === "success" ? "bg-green-700" : "bg-blue-700/90"
       }`;
       d.textContent = msg;
       c.appendChild(d);
-      setTimeout(() => d.remove(), 4800);
+      setTimeout(() => d.remove(), 5000);
     }
 
     function toggleSection(showId, ...hideIds) {
@@ -336,32 +253,50 @@
       document.getElementById(showId)?.classList.remove("hidden");
     }
 
-    function updateContinueButtons() {
-      const hasServices = selectedServices.length > 0;
-      document.getElementById("continueToDateBtn").disabled = !hasServices;
+    function updateButtons() {
+      document.getElementById("continueToDateBtn").disabled = selectedServices.length === 0;
       document.getElementById("continueToTimeBtn").disabled = !selectedDate;
       document.getElementById("confirmBookingBtn").disabled = !selectedTime;
+    }
+
+    async function apiFetch(endpoint, options = {}) {
+      const res = await fetch(API + endpoint, {
+        ...options,
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...options.headers }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      return res.json();
     }
 
     // ───────────────────────────────────────────────
     // AUTH
     // ───────────────────────────────────────────────
-    async function signup() {
+    async function checkAuth() {
       try {
-        const email = document.getElementById("signupEmail").value.trim();
-        const username = document.getElementById("signupUsername").value.trim();
-        if (!email || !username) return showToast("Please fill all fields", "error");
-
-        const res = await fetch(`${BACKEND}/user/signup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, username })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Signup failed");
-
+        const data = await apiFetch("/user/me");
         currentUser = data.user;
         toggleSection("bookingSection", "authSection", "productsSection");
+      } catch {
+        currentUser = null;
+        toggleSection("authSection", "bookingSection", "productsSection");
+      }
+    }
+
+    async function signup() {
+      const email    = document.getElementById("signupEmail").value.trim();
+      const username = document.getElementById("signupUsername").value.trim();
+      if (!email || !username) return showToast("All fields required", "error");
+
+      try {
+        await apiFetch("/user/signup", {
+          method: "POST",
+          body: JSON.stringify({ email, username })
+        });
+        await checkAuth();
         showToast("Account created!", "success");
       } catch (e) {
         showToast(e.message, "error");
@@ -369,20 +304,16 @@
     }
 
     async function login() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const remember = document.getElementById("rememberMe").checked;
+      if (!email) return showToast("Email required", "error");
+
       try {
-        const email = document.getElementById("loginEmail").value.trim();
-        if (!email) return showToast("Enter email", "error");
-
-        const res = await fetch(`${BACKEND}/user/login`, {
+        await apiFetch("/user/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email, rememberMe: remember })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-
-        currentUser = data.user;
-        toggleSection("bookingSection", "authSection", "productsSection");
+        await checkAuth();
         showToast("Logged in!", "success");
       } catch (e) {
         showToast(e.message, "error");
@@ -396,6 +327,7 @@
       toggleSection("bookingSection", "productsSection", "authSection");
       document.querySelectorAll('[onclick^="show"]').forEach(el => el.dataset.active = "false");
       event.target.dataset.active = "true";
+      if (!currentUser) checkAuth();
     }
 
     function showProducts() {
@@ -404,41 +336,29 @@
       event.target.dataset.active = "true";
     }
 
-    function showLogin() {
-      toggleSection("loginCard", "signupCard");
-    }
-
-    function showSignup() {
-      toggleSection("signupCard", "loginCard");
-    }
+    function showLogin()  { toggleSection("loginCard",  "signupCard"); }
+    function showSignup() { toggleSection("signupCard", "loginCard"); }
 
     function goHome() {
       toggleSection("authSection", "bookingSection", "productsSection");
       document.getElementById("backBtn").classList.add("hidden");
     }
 
-    function goBack() {
-      if (currentStep === 4) startNewBooking();
-      else if (currentStep === 3) goToCalendar();
-      else if (currentStep === 2) document.getElementById("step1").classList.remove("hidden"), document.getElementById("step2").classList.add("hidden");
-      currentStep--;
-      document.getElementById("backBtn").classList.toggle("hidden", currentStep <= 1);
-    }
-
     function goToCalendar() {
+      if (selectedServices.length === 0) return;
       toggleSection("step2", "step1", "step3", "step4");
       currentStep = 2;
       document.getElementById("backBtn").classList.remove("hidden");
       generateCalendar();
-      updateContinueButtons();
+      updateButtons();
     }
 
     function goToTimes() {
-      if (!selectedDate) return showToast("Please select a date", "error");
-      toggleSection("step3", "step1", "step2", "step4");
+      if (!selectedDate) return showToast("Select a date first", "error");
+      toggleSection("step3", "step2", "step1", "step4");
       currentStep = 3;
       loadTimes();
-      updateContinueButtons();
+      updateButtons();
     }
 
     function startNewBooking() {
@@ -450,29 +370,29 @@
       document.getElementById("total").textContent = "0.00";
       document.getElementById("customerName").value = "";
       document.getElementById("confirmationText").textContent = "";
-      toggleSection("step1", "step2", "step3", "step4", "authSection", "productsSection");
+      toggleSection("step1", "step2", "step3", "step4");
       document.getElementById("backBtn").classList.add("hidden");
       renderServices();
-      updateContinueButtons();
+      updateButtons();
     }
 
     // ───────────────────────────────────────────────
     // SERVICES
     // ───────────────────────────────────────────────
     function renderServices() {
-      const c = document.getElementById("services");
-      c.innerHTML = "";
+      const container = document.getElementById("services");
+      container.innerHTML = "";
       servicesData.forEach(s => {
-        const d = document.createElement("label");
-        d.className = "flex justify-between items-center border-b border-border-gold py-3.5 cursor-pointer hover:bg-[#1a1a1a]/40 transition";
-        d.innerHTML = `
+        const label = document.createElement("label");
+        label.className = "flex justify-between items-center border-b border-border-gold py-3.5 cursor-pointer hover:bg-[#1a1a1a]/40 transition";
+        label.innerHTML = `
           <span class="text-lg">${s.name}</span>
           <div class="flex items-center gap-3">
             <span class="text-gold-light font-medium">£${s.price.toFixed(2)}</span>
             <input type="checkbox" class="w-5 h-5 accent-gold">
           </div>
         `;
-        d.querySelector("input").onchange = e => {
+        label.querySelector("input").onchange = e => {
           if (e.target.checked) {
             selectedServices.push(s);
             total += s.price;
@@ -481,47 +401,48 @@
             total -= s.price;
           }
           document.getElementById("total").textContent = total.toFixed(2);
-          updateContinueButtons();
+          updateButtons();
         };
-        c.appendChild(d);
+        container.appendChild(label);
       });
     }
 
     // ───────────────────────────────────────────────
-    // CALENDAR
+    // CALENDAR (starts from tomorrow if today too late)
     // ───────────────────────────────────────────────
     function generateCalendar() {
-      const c = document.getElementById("calendar");
-      c.innerHTML = "";
+      const container = document.getElementById("calendar");
+      container.innerHTML = "";
+
       const today = new Date();
       today.setHours(0,0,0,0);
 
-      for (let i = 0; i < 28; i++) {   // ~4 weeks
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
+      let start = new Date(today);
+      if (today.getHours() >= 16) start.setDate(today.getDate() + 1); // assume closes at 16:00
+
+      for (let i = 0; i < 28; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
         const iso = d.toISOString().split("T")[0];
-        const dayOfWeek = d.getDay();
 
         const el = document.createElement("div");
         el.className = `
           p-3 md:p-4 text-center rounded-lg border border-border-gold cursor-pointer transition
           hover:border-gold-light hover:bg-[#1a1a1a]/60
-          ${d < today ? 'past opacity-50 pointer-events-none' : ''}
-          ${dayOfWeek === 0 || dayOfWeek === 6 ? 'text-gold-light' : ''}
-          ${iso === selectedDate ? 'bg-gold/20 border-gold' : ''}
+          ${iso === selectedDate ? 'bg-gold/30 border-gold' : ''}
         `;
-        el.innerHTML = `<div class="text-sm">${d.toLocaleDateString('en-GB',{day:'numeric'})}</div>
-                        <div class="text-xs opacity-70">${d.toLocaleDateString('en-GB',{weekday:'short'})}</div>`;
+        el.innerHTML = `
+          <div class="text-base font-medium">${d.getDate()}</div>
+          <div class="text-xs opacity-70">${d.toLocaleDateString('en-GB',{weekday:'short'})}</div>
+        `;
 
-        if (!(d < today)) {
-          el.onclick = () => {
-            selectedDate = iso;
-            generateCalendar(); // refresh highlight
-            updateContinueButtons();
-          };
-        }
+        el.onclick = () => {
+          selectedDate = iso;
+          generateCalendar();
+          updateButtons();
+        };
 
-        c.appendChild(el);
+        container.appendChild(el);
       }
     }
 
@@ -529,64 +450,61 @@
     // TIME SLOTS
     // ───────────────────────────────────────────────
     async function loadTimes() {
-      const c = document.getElementById("times");
-      c.innerHTML = "";
+      const container = document.getElementById("times");
+      container.innerHTML = "";
       selectedTime = "";
 
       let booked = [];
       try {
-        const r = await fetch(`${BACKEND}/booked/${selectedDate}`);
-        if (r.ok) booked = await r.json();
+        const data = await apiFetch(`/booked/${selectedDate}`);
+        booked = data;
       } catch {}
 
       const now = new Date();
-      const todayStr = now.toISOString().split("T")[0];
+      const isToday = selectedDate === now.toISOString().split("T")[0];
 
       defaultTimes.forEach(t => {
         const [hh, mm] = t.split(":").map(Number);
-        const slotDate = new Date(selectedDate);
-        slotDate.setHours(hh, mm, 0, 0);
+        const slot = new Date(selectedDate);
+        slot.setHours(hh, mm, 0, 0);
 
-        const isPast = slotDate < now && selectedDate === todayStr;
-        const isBooked = booked.includes(t);
+        const past   = isToday && slot < now;
+        const taken  = booked.includes(t);
 
-        const d = document.createElement("div");
-        d.className = `
+        const div = document.createElement("div");
+        div.className = `
           p-4 text-center rounded-lg border border-border-gold cursor-pointer transition
           hover:border-gold-light hover:bg-[#1a1a1a]/60
-          ${isPast ? 'past-time' : ''}
-          ${isBooked ? 'booked' : ''}
-          ${t === selectedTime ? 'selected' : ''}
+          ${past ? 'past-time' : ''} ${taken ? 'booked' : ''} ${t === selectedTime ? 'selected' : ''}
         `;
-        d.textContent = t;
+        div.textContent = t;
 
-        if (!isPast && !isBooked) {
-          d.onclick = () => {
+        if (!past && !taken) {
+          div.onclick = () => {
             selectedTime = t;
-            [...c.children].forEach(el => el.classList.remove("selected"));
-            d.classList.add("selected");
-            updateContinueButtons();
+            [...container.children].forEach(e => e.classList.remove("selected"));
+            div.classList.add("selected");
+            updateButtons();
           };
         }
 
-        c.appendChild(d);
+        container.appendChild(div);
       });
     }
 
     // ───────────────────────────────────────────────
-    // BOOKING CONFIRM
+    // CONFIRM BOOKING
     // ───────────────────────────────────────────────
     async function confirmBooking() {
+      if (!currentUser) return showToast("Please sign in first", "error");
+      if (!selectedDate || !selectedTime) return showToast("Date & time required", "error");
+      if (!selectedServices.length) return showToast("Select at least one service", "error");
+
+      const name = document.getElementById("customerName").value.trim() || currentUser.username;
+
       try {
-        if (!currentUser) return showToast("Please sign in first", "error");
-        if (!selectedDate || !selectedTime) return showToast("Select date & time", "error");
-        if (!selectedServices.length) return showToast("Select at least one service", "error");
-
-        const name = document.getElementById("customerName").value.trim() || currentUser.username;
-
-        const res = await fetch(`${BACKEND}/book`, {
+        await apiFetch("/book", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name,
             date: selectedDate,
@@ -597,13 +515,9 @@
           })
         });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Booking failed");
-
         document.getElementById("confirmationText").textContent =
           `Thank you, ${name}!\n\n` +
-          `Your appointment is booked for:\n` +
-          `${new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} at ${selectedTime}\n\n` +
+          `Appointment: ${new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} at ${selectedTime}\n\n` +
           `Services:\n${selectedServices.map(s => `• ${s.name} — £${s.price.toFixed(2)}`).join("\n")}\n\n` +
           `Total: £${total.toFixed(2)}`;
 
@@ -611,12 +525,12 @@
         currentStep = 4;
         showToast("Booking confirmed!", "success");
       } catch (e) {
-        showToast(e.message, "error");
+        showToast(e.message.includes("already booked") ? "This time slot was just taken" : e.message, "error");
       }
     }
 
     // ───────────────────────────────────────────────
-    // DARK / LIGHT MODE
+    // THEME
     // ───────────────────────────────────────────────
     function toggleMode() {
       document.documentElement.classList.toggle("light");
@@ -624,8 +538,8 @@
     }
 
     function loadTheme() {
-      if (localStorage.getItem("theme") === "light" ||
-         (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: light)").matches)) {
+      const saved = localStorage.getItem("theme");
+      if (saved === "light" || (!saved && window.matchMedia("(prefers-color-scheme: light)").matches)) {
         document.documentElement.classList.add("light");
       }
     }
@@ -636,10 +550,9 @@
     function init() {
       loadTheme();
       renderServices();
-      updateContinueButtons();
-
-      // Optional: show auth by default
-      toggleSection("authSection", "bookingSection", "productsSection");
+      updateButtons();
+      checkAuth();           // ← most important change
+      document.getElementById("backBtn").onclick = startNewBooking;
     }
 
     document.addEventListener("DOMContentLoaded", init);

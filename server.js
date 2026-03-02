@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
@@ -10,7 +11,6 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-// Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,233 +19,153 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── MIDDLEWARE ────────────────────────────────────────────────────────────
-app.use(cors({
-  origin: true,                    // Allow all origins for local development (tighten in production)
-  credentials: true,
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
-// Handle OPTIONS globally (ensures preflight always succeeds)
-// Use named wildcard '/*all' instead of bare '*' (required in Express 5+)
-app.options('/*all', cors());
-
-// Log every incoming request + body for POST/PUT (critical for debugging signup)
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${req.ip}`);
-  if (req.method === "POST" || req.method === "PUT") {
-    console.log("Request body:", req.body);
-  }
-  next();
-});
+app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-// ─── ROOT ROUTE (status page) ──────────────────────────────────────────────
-app.get("/", (req, res) => {
-  res.send(`
-    <h1 style="text-align: center; color: #c9a347; font-family: 'Playfair Display', serif; margin-top: 50px;">
-      The OG Barber Backend is Running!
-    </h1>
-    <p style="text-align: center; font-size: 1.2em; color: #f4f0e8;">
-      Server online on port ${PORT}<br><br>
-      <a href="/health" style="color: #e0c070;">Check health status</a><br>
-      <a href="/test-email" style="color: #e0c070;">Test email sending</a>
-    </p>
-  `);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true
+}));
+
+app.options("*", cors());
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
 });
 
-// ─── LOAD TRANSLATIONS ─────────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+// Language (optional)
+// ───────────────────────────────────────────────
 let lang = {};
-
-(async () => {
+async function loadLanguage() {
   try {
-    const langPath = path.join(__dirname, "language.yaml");
-    const fileContents = await fs.readFile(langPath, "utf8");
-    lang = yaml.load(fileContents) || {};
+    const file = await fs.readFile(path.join(__dirname, "language.yaml"), "utf8");
+    lang = yaml.load(file) || {};
+    console.log("Translations loaded");
+  } catch {}
+}
+loadLanguage();
 
-    if (Object.keys(lang).length === 0) {
-      console.warn("Translations file loaded but appears empty");
-    } else {
-      console.log(`Translations loaded successfully from ${langPath}`);
-    }
-  } catch (err) {
-    console.error("Failed to load language.yaml:", err.message);
-    lang = {}; // fallback — t() returns key
-  }
-})();
-
-// ─── CONFIG ────────────────────────────────────────────────────────────────
-export const JWT_SECRET = process.env.JWT_SECRET || "temporary-secret-for-local-testing-only";
-
-if (!process.env.JWT_SECRET) {
-  console.warn("JWT_SECRET missing in .env – using temporary fallback (NOT SECURE!)");
+// ───────────────────────────────────────────────
+// ENV & JWT
+// ───────────────────────────────────────────────
+export const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET missing");
+  process.exit(1);
 }
 
-export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "https://canary.discord.com/api/webhooks/1475119321020760256/nrO83jn0qfozhrb_iim7bFcjqgeD3UCG9s4JPaDCSo-05vhE3ylboPVNKVlUtDxjB8sa";
+export const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK || "";
 
-export const ADMIN_EMAIL    = process.env.ADMIN_EMAIL || "admin@ogbarber.co.uk";
-export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "SuperSecret2026!";
-
-export const LOGO_URL       = "https://i.imgur.com/4dIWLpI.jpeg";
-
-// Nodemailer transporter
-export const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  }
-});
-
-transporter.verify((err) => {
-  if (err) console.error("SMTP verification failed:", err.message);
-  else console.log("SMTP connection ready");
-});
-
-// ─── TRANSLATION HELPERS ───────────────────────────────────────────────────
-export function t(section, key, fallback = null) {
-  return lang?.[section]?.[key] ?? fallback ?? key;
-}
-
-// ─── MYSQL POOL & TABLES ───────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+// MySQL Pool
+// ───────────────────────────────────────────────
 export const pool = mysql.createPool({
-  host: process.env.DB_HOST || "node1.infinityhosting.org",
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || "u26_uwHqsRd4bn",
-  password: process.env.DB_PASSWORD || "WCI6m5n4hL3rYJxkPT@zHT3!",
-  database: process.env.DB_NAME || "s26_the_og_barber",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  timezone: "Z",
-  dateStrings: true,
 });
 
-(async () => {
-  try {
-    const conn = await pool.getConnection();
-    console.log("MySQL connected");
+async function initDatabase() {
+  const conn = await pool.getConnection();
+  console.log("MySQL connected");
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        username VARCHAR(100) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      username VARCHAR(100) NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS bookings (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        name VARCHAR(100) NOT NULL,
-        date DATE NOT NULL,
-        time TIME NOT NULL,
-        services JSON NOT NULL,
-        total DECIMAL(10,2) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(20) DEFAULT NULL,
-        status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
-        notes TEXT DEFAULT NULL,
-        paid BOOLEAN DEFAULT FALSE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_slot (date, time),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        INDEX idx_date (date)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      name VARCHAR(100),
+      date DATE NOT NULL,
+      time TIME NOT NULL,
+      services JSON,
+      total DECIMAL(10,2),
+      email VARCHAR(255),
+      phone VARCHAR(20),
+      status ENUM('pending','confirmed','completed','cancelled') DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY unique_slot (date, time, status),
+      INDEX idx_date (date)
+    )
+  `);
 
-    conn.release();
-  } catch (err) {
-    console.error("MySQL setup failed:", err.message);
-    process.exit(1);
-  }
-})();
-
-// ─── ADMIN AUTH MIDDLEWARE ─────────────────────────────────────────────────
-export function isAdmin(req, res, next) {
-  const auth = req.headers.authorization;
-  if (auth && auth === `Basic ${Buffer.from(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}`).toString('base64')}`) {
-    return next();
-  }
-
-  const token = req.cookies?.accessToken;
-  if (token) {
-    try {
-      jwt.verify(token, JWT_SECRET);
-      return next();
-    } catch (err) {
-      console.warn("Invalid JWT token:", err.message);
-    }
-  }
-
-  res.status(401).json({ error: t('errors', 'unauthorized', "Unauthorized") });
+  conn.release();
 }
 
-// ─── HEALTH & TEST ROUTES ──────────────────────────────────────────────────
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", uptime: process.uptime() });
+// ───────────────────────────────────────────────
+// Nodemailer
+// ───────────────────────────────────────────────
+export const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS
+  }
 });
 
-app.get("/test-email", async (req, res) => {
+async function verifySMTP() {
   try {
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
-      to: "test@example.com",
-      subject: "Test Email from OG Barber",
-      text: "This is a test email. If you see this, SMTP is working!"
-    });
-    res.json({ success: true, message: "Test email sent" });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    await transporter.verify();
+    console.log("SMTP verified");
+  } catch (e) {
+    console.warn("SMTP issue:", e.message);
   }
-});
+}
 
-// ─── BOOKINGS ROUTE (added for frontend support) ───────────────────────────
-app.get("/bookings", isAdmin, async (req, res) => {
-  const { date } = req.query;
-  if (!date) {
-    return res.status(400).json({ error: "Date is required" });
-  }
-
-  try {
-    const [rows] = await pool.query(
-      "SELECT time FROM bookings WHERE date = ? AND status != 'cancelled'",
-      [date]
-    );
-    const bookedTimes = rows.map((row) => row.time);
-    res.json({ bookedTimes });
-  } catch (err) {
-    console.error("Error fetching bookings:", err.message);
-    res.status(500).json({ error: "Failed to fetch bookings" });
-  }
-});
-
-// ─── MOUNT ROUTES ──────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────
+// Routes
+// ───────────────────────────────────────────────
 import { setupRoutes } from "./routes.js";
 setupRoutes(app);
 
-// ─── ERROR HANDLING MIDDLEWARE ─────────────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error("Server error:", err.stack);
+// Health
+app.get("/health", (_, res) => res.json({ status: "ok", uptime: process.uptime() }));
+
+// Booked times (called from frontend)
+app.get("/booked/:date", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT time FROM bookings WHERE date = ? AND status != 'cancelled'",
+      [req.params.date]
+    );
+    res.json(rows.map(r => r.time.slice(0,5))); // HH:MM
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// 404 + error
+app.use((_, res) => res.status(404).json({ error: "Not found" }));
+app.use((err, _, res, __) => {
+  console.error(err);
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ─── START SERVER ──────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`OG Barber server running → http://localhost:${PORT}`);
-  console.log(`Health check:   http://localhost:${PORT}/health`);
-  console.log(`Phone test URL: http://192.168.0.8:${PORT}/health`);
-  console.log("JWT_SECRET loaded:", JWT_SECRET ? "YES" : "MISSING");
-  console.log("\nIMPORTANT:");
-  console.log(`Make sure index.html has: const BACKEND = "http://192.168.0.8:${PORT}";`);
-  console.log("Server logs EVERY request — watch terminal when clicking Sign Up on phone.");
-  console.log("If no POST /user/signup log appears → problem is in browser / index.html");
-});
+// ───────────────────────────────────────────────
+async function start() {
+  await initDatabase();
+  await verifySMTP();
+
+  app.listen(PORT, () => {
+    console.log(`OG Barber API → http://localhost:${PORT}`);
+  });
+}
+
+start();
