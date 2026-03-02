@@ -1,5 +1,3 @@
-// server.js - The OG Barber Booking Server (fixed & updated 2025)
-
 import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
@@ -28,6 +26,10 @@ app.use(cors({
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Handle OPTIONS globally (ensures preflight always succeeds)
+// Use named wildcard '/*all' instead of bare '*' (required in Express 5+)
+app.options('/*all', cors());
 
 // Log every incoming request + body for POST/PUT (critical for debugging signup)
 app.use((req, res, next) => {

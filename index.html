@@ -55,6 +55,7 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
     html.light {
       --tw-bg-opacity: 1;
       background-color: rgb(248 245 240 / var(--tw-bg-opacity));
@@ -72,28 +73,32 @@
       color: #1a140f;
     }
 
+    /* Time slot states */
+    #times > div.past-time,
+    #times > div.booked {
+      opacity: 0.55;
+      cursor: not-allowed !important;
+      pointer-events: none;
+    }
     #times > div.past-time {
-      opacity: 0.5;
-      background-color: rgba(30,30,30,0.6) !important;
+      background-color: rgba(30,30,30,0.7) !important;
       border-color: #444 !important;
       color: #888 !important;
-      cursor: not-allowed !important;
       text-decoration: line-through;
     }
-
-    #times > div.past-time:hover {
-      background-color: rgba(30,30,30,0.6) !important;
-      border-color: #444 !important;
-      transform: none;
-    }
-
     #times > div.booked {
-      background-color: rgba(127,29,29,0.25) !important;
+      background-color: rgba(127,29,29,0.35) !important;
       border-color: #7f1d1d !important;
       color: #fda4af !important;
-      cursor: not-allowed !important;
+    }
+    #times > div.selected {
+      background-color: #c9a347 !important;
+      color: #0b0b0b !important;
+      border-color: #e0c070 !important;
+      font-weight: 600;
     }
 
+    /* Custom checkbox */
     input[type="checkbox"].remember-me {
       appearance: none;
       width: 1.25rem;
@@ -105,12 +110,10 @@
       position: relative;
       transition: all 0.2s;
     }
-
     input[type="checkbox"].remember-me:checked {
       background: #c9a347;
       border-color: #c9a347;
     }
-
     input[type="checkbox"].remember-me:checked::after {
       content: '✔';
       position: absolute;
@@ -123,28 +126,30 @@
       font-size: 0.875rem;
     }
 
-    input[type="checkbox"].remember-me:hover {
-      border-color: #e0c070;
-    }
-
-    /* Enhanced touch targets */
+    /* Touch / accessibility */
     button, input[type="checkbox"], .nav-btn {
       min-width: 44px;
       min-height: 44px;
       touch-action: manipulation;
     }
-
-    /* Prevent zoom on inputs for iOS */
     input, textarea {
-      font-size: 16px;
+      font-size: 16px; /* prevent iOS zoom */
+    }
+
+    /* Calendar day header */
+    .calendar-header {
+      font-weight: 600;
+      color: #c9a347;
+      text-align: center;
+      padding: 0.5rem;
     }
   </style>
 </head>
 <body class="font-sans bg-bg-dark text-text-light min-h-screen antialiased">
 
-  <!-- Header with logo -->
+  <!-- ─── Header ─────────────────────────────────────── -->
   <header class="bg-gradient-to-b from-bg-dark to-[#0f0f0f] py-6 md:py-10 px-6 text-center border-b border-border-gold shadow-heavy relative">
-    <button id="backBtn" onclick="goBack()" class="absolute left-6 top-6 md:top-8 hidden border border-gold text-gold px-4 py-2 font-medium transition-all hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_22px_rgba(201,163,71,0.4)]">
+    <button id="backBtn" class="absolute left-6 top-6 md:top-8 hidden border border-gold text-gold px-5 py-2.5 font-medium rounded-lg transition-all hover:bg-gold hover:text-bg-dark hover:shadow-gold">
       ← Back
     </button>
 
@@ -157,18 +162,18 @@
     </div>
   </header>
 
-  <!-- Navigation -->
-  <nav class="bg-[#0a0a0a] py-5 border-b border-border-gold text-center flex flex-col md:flex-row justify-center gap-4 md:gap-12">
-    <button onclick="showBooking()" class="nav-btn px-8 py-3 text-lg font-medium text-text-dim hover:text-gold transition-colors relative after:absolute after:bottom-[-6px] after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-gold after:transition-all hover:after:w-2/5 data-[active=true]:text-gold data-[active=true]:after:w-2/5">
+  <!-- ─── Navigation ─────────────────────────────────── -->
+  <nav class="bg-[#0a0a0a] py-5 border-b border-border-gold text-center flex flex-col md:flex-row justify-center gap-5 md:gap-16">
+    <button onclick="showBooking()" class="nav-btn px-8 py-3.5 text-lg font-medium text-text-dim hover:text-gold transition-colors relative after:absolute after:bottom-[-6px] after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-gold after:transition-all hover:after:w-3/5 data-[active=true]:text-gold data-[active=true]:after:w-3/5">
       Book Now
     </button>
-    <button onclick="showProducts()" class="nav-btn px-8 py-3 text-lg font-medium text-text-dim hover:text-gold transition-colors relative after:absolute after:bottom-[-6px] after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-gold after:transition-all hover:after:w-2/5">
+    <button onclick="showProducts()" class="nav-btn px-8 py-3.5 text-lg font-medium text-text-dim hover:text-gold transition-colors relative after:absolute after:bottom-[-6px] after:left-1/2 after:-translate-x-1/2 after:w-0 after:h-0.5 after:bg-gold after:transition-all hover:after:w-3/5">
       Shop
     </button>
   </nav>
 
   <!-- Toast Container -->
-  <div id="toast-container" class="fixed bottom-6 right-6 z-[10000] max-w-xs md:max-w-sm space-y-3"></div>
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[10000] max-w-xs md:max-w-sm space-y-3 pointer-events-none"></div>
 
   <!-- Mode Toggle -->
   <button onclick="toggleMode()" class="fixed bottom-8 right-20 md:right-8 z-50 w-14 h-14 rounded-full bg-gold/10 border border-gold text-gold flex items-center justify-center text-2xl shadow-gold hover:bg-gold hover:text-bg-dark hover:scale-110 transition-all">
@@ -176,19 +181,19 @@
     <span class="hidden dark:inline">☽</span>
   </button>
 
-  <!-- Auth Section -->
+  <!-- ─── AUTH ───────────────────────────────────────── -->
   <div id="authSection" class="container max-w-3xl mx-auto px-6 py-12">
-    <div id="signupCard" class="bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
+    <div id="signupCard" class="bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Create Your Account</h2>
       <input id="signupEmail" type="email" placeholder="Email address" class="w-full p-4 mb-5 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
       <input id="signupUsername" type="text" placeholder="Username" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Username">
       <button onclick="signup()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="signupBtn">
         Sign Up
       </button>
-      <p class="text-center mt-6 text-text-dim">Already a member? <a href="#" onclick="showLogin(); event.preventDefault();" class="text-gold hover:underline">Sign in</a></p>
+      <p class="text-center mt-6 text-text-dim">Already a member? <button onclick="showLogin()" class="text-gold hover:underline">Sign in</button></p>
     </div>
 
-    <div id="loginCard" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
+    <div id="loginCard" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Welcome Back</h2>
       <input id="loginEmail" type="email" placeholder="Email address" class="w-full p-4 mb-4 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" required aria-label="Email address">
 
@@ -202,51 +207,69 @@
       <button onclick="login()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="loginBtn">
         Sign In
       </button>
-      <p class="text-center mt-6 text-text-dim">New here? <a href="#" onclick="showSignup(); event.preventDefault();" class="text-gold hover:underline">Create account</a></p>
+      <p class="text-center mt-6 text-text-dim">New here? <button onclick="showSignup()" class="text-gold hover:underline">Create account</button></p>
     </div>
   </div>
 
-  <!-- Booking Section -->
+  <!-- ─── BOOKING ────────────────────────────────────── -->
   <div id="bookingSection" class="hidden container max-w-5xl mx-auto px-6 py-12">
-    <div id="step1" class="bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
+
+    <!-- Step 1: Services -->
+    <div id="step1" class="bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Select Services</h2>
       <input id="customerName" placeholder="Name for the booking (optional)" class="w-full p-4 mb-6 bg-[#1a1a1a] border border-border-gold rounded-lg text-text-light focus:border-gold-light focus:ring-2 focus:ring-gold/30 outline-none" aria-label="Name for the booking">
 
       <div id="services" class="space-y-5 mb-8"></div>
-      <div class="text-center text-2xl font-bold text-gold-light mb-6">
+
+      <div class="text-center text-2xl font-bold text-gold-light mb-8">
         Total: £<span id="total">0.00</span>
       </div>
-      <button onclick="goToCalendar()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all" id="continueToDateBtn">
+
+      <button onclick="goToCalendar()" class="w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50" id="continueToDateBtn" disabled>
         Continue to Date
       </button>
     </div>
 
-    <div id="step2" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
+    <!-- Step 2: Calendar -->
+    <div id="step2" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Choose Date</h2>
-      <div id="calendar" class="grid grid-cols-3 md:grid-cols-7 gap-4"></div>
-      <button onclick="goToTimes()" class="mt-8 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all" id="continueToTimeBtn">
+      <div class="grid grid-cols-7 gap-2 mb-4 text-center text-sm font-medium">
+        <div class="calendar-header">Mon</div>
+        <div class="calendar-header">Tue</div>
+        <div class="calendar-header">Wed</div>
+        <div class="calendar-header">Thu</div>
+        <div class="calendar-header">Fri</div>
+        <div class="calendar-header">Sat</div>
+        <div class="calendar-header">Sun</div>
+      </div>
+      <div id="calendar" class="grid grid-cols-7 gap-2 md:gap-4"></div>
+
+      <button onclick="goToTimes()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50" id="continueToTimeBtn" disabled>
         Continue to Time
       </button>
     </div>
 
-    <div id="step3" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold">
+    <!-- Step 3: Time Slots -->
+    <div id="step3" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold">
       <h2 class="text-4xl font-serif text-gold mb-8">Choose Time</h2>
-      <div id="times" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-      <button onclick="confirmBooking()" class="mt-8 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirmBookingBtn">
+      <div id="times" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+
+      <button onclick="confirmBooking()" class="mt-10 w-full py-4 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="confirmBookingBtn" disabled>
         Confirm Booking
       </button>
     </div>
 
-    <div id="step4" class="hidden bg-bg-card border border-border-gold rounded-2xl p-10 shadow-gold text-center">
+    <!-- Step 4: Confirmation -->
+    <div id="step4" class="hidden bg-bg-card border border-border-gold rounded-2xl p-8 md:p-10 shadow-gold text-center">
       <h2 class="text-4xl font-serif text-gold mb-6">Booking Confirmed</h2>
-      <p id="confirmationText" class="text-xl mb-8 leading-relaxed whitespace-pre-line"></p>
-      <button onclick="startNewBooking()" class="py-4 px-10 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all" id="bookAnotherBtn">
+      <p id="confirmationText" class="text-xl mb-10 leading-relaxed whitespace-pre-line"></p>
+      <button onclick="startNewBooking()" class="py-4 px-12 bg-transparent border-2 border-gold text-gold font-semibold rounded-lg hover:bg-gold hover:text-bg-dark hover:shadow-[0_0_28px_rgba(201,163,71,0.45)] transition-all">
         Book Another Appointment
       </button>
     </div>
   </div>
 
-  <!-- Products Section -->
+  <!-- ─── PRODUCTS (placeholder) ─────────────────────── -->
   <div id="productsSection" class="hidden container max-w-6xl mx-auto px-6 py-12">
     <h2 class="text-5xl font-serif text-gold text-center mb-12">Premium Products</h2>
     <div class="mt-20 py-24 text-center">
@@ -261,327 +284,305 @@
   </div>
 
   <script>
-    // ──────────────────────────────────────────────────────────────────────────────
-    // EARLY DEBUG + TOAST (runs first)
-    // ──────────────────────────────────────────────────────────────────────────────
-    console.log("=== FULL INDEX.HTML LOADED ===");
+    // ───────────────────────────────────────────────
+    // CONFIG
+    // ───────────────────────────────────────────────
+    const BACKEND = location.hostname === "localhost" || location.hostname === "127.0.0.1"
+      ? "http://localhost:3000"
+      : `${location.protocol}//${location.hostname}:3000`;
 
-    function showToast(message, type = 'info') {
-      console.log(`[TOAST] ${type}: ${message}`);
-      const container = document.getElementById('toast-container');
-      if (!container) return console.error("Toast container missing");
-      const toast = document.createElement('div');
-      toast.className = `p-5 rounded-xl shadow-2xl text-white font-medium ${
-        type === 'success' ? 'bg-green-700' : type === 'error' ? 'bg-red-700' : 'bg-blue-700'
-      }`;
-      toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 7000);
-    }
+    console.log("Backend:", BACKEND);
 
-    showToast("Full page loaded – calendar & bookings restored", 'success');
-
-    // ──────────────────────────────────────────────────────────────────────────────
-    // GLOBAL STATE
-    // ──────────────────────────────────────────────────────────────────────────────
+    // ───────────────────────────────────────────────
+    // STATE
+    // ───────────────────────────────────────────────
     let currentUser = null;
-    let currentStep = 1;
     let selectedServices = [];
     let total = 0;
     let selectedDate = "";
     let selectedTime = "";
+    let currentStep = 1;
 
-    const BACKEND = "http://192.168.0.8:3000";
+    const servicesData = [
+      { name: "Haircut",    price: 10    },
+      { name: "Skin Fade",  price: 11.99 },
+      { name: "Beard Trim", price: 6.99  },
+      { name: "Hair & Beard", price: 14.99 }
+    ];
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // AUTH FUNCTIONS
-    // ──────────────────────────────────────────────────────────────────────────────
-    function showSignup() {
-      try {
-        document.getElementById("signupCard").classList.remove("hidden");
-        document.getElementById("loginCard").classList.add("hidden");
-      } catch (e) {
-        showToast("Cannot show signup form", 'error');
-      }
+    const defaultTimes = [
+      "09:00", "10:00", "11:00", "12:00",
+      "13:00", "14:00", "15:00", "16:00"
+    ];
+
+    // ───────────────────────────────────────────────
+    // HELPERS
+    // ───────────────────────────────────────────────
+    function showToast(msg, type = "info") {
+      const c = document.getElementById("toast-container");
+      const d = document.createElement("div");
+      d.className = `p-4 rounded-lg text-white shadow-xl pointer-events-auto ${
+        type === "error" ? "bg-red-700" :
+        type === "success" ? "bg-green-700" :
+        "bg-blue-700/90"
+      }`;
+      d.textContent = msg;
+      c.appendChild(d);
+      setTimeout(() => d.remove(), 4800);
     }
 
-    function showLogin() {
-      try {
-        document.getElementById("signupCard").classList.add("hidden");
-        document.getElementById("loginCard").classList.remove("hidden");
-      } catch (e) {
-        showToast("Cannot show login form", 'error');
-      }
+    function toggleSection(showId, ...hideIds) {
+      hideIds.forEach(id => document.getElementById(id)?.classList.add("hidden"));
+      document.getElementById(showId)?.classList.remove("hidden");
     }
 
+    function updateContinueButtons() {
+      const hasServices = selectedServices.length > 0;
+      document.getElementById("continueToDateBtn").disabled = !hasServices;
+      document.getElementById("continueToTimeBtn").disabled = !selectedDate;
+      document.getElementById("confirmBookingBtn").disabled = !selectedTime;
+    }
+
+    // ───────────────────────────────────────────────
+    // AUTH
+    // ───────────────────────────────────────────────
     async function signup() {
-      console.log("signup() called");
-      const signupBtn = document.getElementById("signupBtn");
-      signupBtn.disabled = true;
-      showToast("Signing up...", 'info');
-
       try {
-        const email = document.getElementById("signupEmail")?.value?.trim() || "";
-        const username = document.getElementById("signupUsername")?.value?.trim() || "";
-
-        if (!email || !username) {
-          showToast("Please fill in email and username", 'error');
-          return;
-        }
-
-        if (!/\S+@\S+\.\S+/.test(email)) {
-          showToast("Invalid email format", 'error');
-          return;
-        }
+        const email = document.getElementById("signupEmail").value.trim();
+        const username = document.getElementById("signupUsername").value.trim();
+        if (!email || !username) return showToast("Please fill all fields", "error");
 
         const res = await fetch(`${BACKEND}/user/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, username })
         });
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: `Server error ${res.status}` }));
-          throw new Error(errorData.message || `Server error ${res.status}`);
-        }
-
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Signup failed");
+
         currentUser = data.user;
-        showToast("Account created successfully!", 'success');
-        document.getElementById("authSection").classList.add("hidden");
-        document.getElementById("bookingSection").classList.remove("hidden");
-      } catch (err) {
-        console.error("Signup error:", err);
-        showToast("Signup failed: " + err.message, 'error');
-      } finally {
-        signupBtn.disabled = false;
+        toggleSection("bookingSection", "authSection", "productsSection");
+        showToast("Account created!", "success");
+      } catch (e) {
+        showToast(e.message, "error");
       }
     }
 
     async function login() {
-      console.log("login() called");
-      const loginBtn = document.getElementById("loginBtn");
-      loginBtn.disabled = true;
-      showToast("Logging in...", 'info');
-
       try {
-        const email = document.getElementById("loginEmail")?.value?.trim() || "";
-        if (!email) return showToast("Email is required", 'error');
-
-        if (!/\S+@\S+\.\S+/.test(email)) {
-          showToast("Invalid email format", 'error');
-          return;
-        }
+        const email = document.getElementById("loginEmail").value.trim();
+        if (!email) return showToast("Enter email", "error");
 
         const res = await fetch(`${BACKEND}/user/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email })
         });
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: `Server error ${res.status}` }));
-          throw new Error(errorData.message || `Server error ${res.status}`);
-        }
-
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Login failed");
+
         currentUser = data.user;
-
-        if (document.getElementById("rememberMe").checked) {
-          localStorage.setItem('rememberedEmail', email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-
-        showToast("Logged in successfully!", 'success');
-        document.getElementById("authSection").classList.add("hidden");
-        document.getElementById("bookingSection").classList.remove("hidden");
-      } catch (err) {
-        console.error("Login error:", err);
-        showToast("Login failed: " + err.message, 'error');
-      } finally {
-        loginBtn.disabled = false;
+        toggleSection("bookingSection", "authSection", "productsSection");
+        showToast("Logged in!", "success");
+      } catch (e) {
+        showToast(e.message, "error");
       }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
+    // ───────────────────────────────────────────────
+    // UI NAVIGATION
+    // ───────────────────────────────────────────────
+    function showBooking() {
+      toggleSection("bookingSection", "productsSection", "authSection");
+      document.querySelectorAll('[onclick^="show"]').forEach(el => el.dataset.active = "false");
+      event.target.dataset.active = "true";
+    }
+
+    function showProducts() {
+      toggleSection("productsSection", "bookingSection", "authSection");
+      document.querySelectorAll('[onclick^="show"]').forEach(el => el.dataset.active = "false");
+      event.target.dataset.active = "true";
+    }
+
+    function showLogin() {
+      toggleSection("loginCard", "signupCard");
+    }
+
+    function showSignup() {
+      toggleSection("signupCard", "loginCard");
+    }
+
+    function goHome() {
+      toggleSection("authSection", "bookingSection", "productsSection");
+      document.getElementById("backBtn").classList.add("hidden");
+    }
+
+    function goBack() {
+      if (currentStep === 4) startNewBooking();
+      else if (currentStep === 3) goToCalendar();
+      else if (currentStep === 2) document.getElementById("step1").classList.remove("hidden"), document.getElementById("step2").classList.add("hidden");
+      currentStep--;
+      document.getElementById("backBtn").classList.toggle("hidden", currentStep <= 1);
+    }
+
+    function goToCalendar() {
+      toggleSection("step2", "step1", "step3", "step4");
+      currentStep = 2;
+      document.getElementById("backBtn").classList.remove("hidden");
+      generateCalendar();
+      updateContinueButtons();
+    }
+
+    function goToTimes() {
+      if (!selectedDate) return showToast("Please select a date", "error");
+      toggleSection("step3", "step1", "step2", "step4");
+      currentStep = 3;
+      loadTimes();
+      updateContinueButtons();
+    }
+
+    function startNewBooking() {
+      selectedServices = [];
+      total = 0;
+      selectedDate = "";
+      selectedTime = "";
+      currentStep = 1;
+      document.getElementById("total").textContent = "0.00";
+      document.getElementById("customerName").value = "";
+      document.getElementById("confirmationText").textContent = "";
+      toggleSection("step1", "step2", "step3", "step4", "authSection", "productsSection");
+      document.getElementById("backBtn").classList.add("hidden");
+      renderServices();
+      updateContinueButtons();
+    }
+
+    // ───────────────────────────────────────────────
     // SERVICES
-    // ──────────────────────────────────────────────────────────────────────────────
-    const servicesData = [
-      { name: "Haircut",      price: 10    },
-      { name: "Skin Fade",    price: 11.99 },
-      { name: "Beard Trim",   price: 6.99  },
-      { name: "Hair & Beard", price: 14.99 }
-    ];
-
+    // ───────────────────────────────────────────────
     function renderServices() {
-      try {
-        const container = document.getElementById("services");
-        if (!container) throw new Error("Services container missing");
-        container.innerHTML = "";
-        servicesData.forEach(svc => {
-          const div = document.createElement("div");
-          div.className = "flex justify-between items-center py-3 border-b border-border-gold last:border-b-0";
-          div.innerHTML = `
-            <span class="text-lg">${svc.name}</span>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer" data-name="${svc.name}" data-price="${svc.price}">
-              <div class="w-14 h-7 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:bg-gold peer-checked:after:translate-x-7 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all"></div>
-            </label>
-          `;
-          div.querySelector("input").onchange = e => {
-            const checked = e.target.checked;
-            const name = e.target.dataset.name;
-            const price = Number(e.target.dataset.price);
-            if (checked) {
-              if (!selectedServices.some(s => s.name === name)) {
-                selectedServices.push({ name, price });
-                total += price;
-              }
-            } else {
-              selectedServices = selectedServices.filter(s => s.name !== name);
-              total -= price;
-            }
-            document.getElementById("total").textContent = total.toFixed(2);
-          };
-          container.appendChild(div);
-        });
-      } catch (e) {
-        console.error("renderServices failed:", e);
-        showToast("Could not load services", 'error');
-      }
+      const c = document.getElementById("services");
+      c.innerHTML = "";
+      servicesData.forEach(s => {
+        const d = document.createElement("label");
+        d.className = "flex justify-between items-center border-b border-border-gold py-3.5 cursor-pointer hover:bg-[#1a1a1a]/40 transition";
+        d.innerHTML = `
+          <span class="text-lg">${s.name}</span>
+          <div class="flex items-center gap-3">
+            <span class="text-gold-light font-medium">£${s.price.toFixed(2)}</span>
+            <input type="checkbox" class="w-5 h-5 accent-gold">
+          </div>
+        `;
+        d.querySelector("input").onchange = e => {
+          if (e.target.checked) {
+            selectedServices.push(s);
+            total += s.price;
+          } else {
+            selectedServices = selectedServices.filter(x => x.name !== s.name);
+            total -= s.price;
+          }
+          document.getElementById("total").textContent = total.toFixed(2);
+          updateContinueButtons();
+        };
+        c.appendChild(d);
+      });
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // CALENDAR & TIME SLOTS
-    // ──────────────────────────────────────────────────────────────────────────────
-    const defaultTimes = ["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"];
-
+    // ───────────────────────────────────────────────
+    // CALENDAR
+    // ───────────────────────────────────────────────
     function generateCalendar() {
-      try {
-        const container = document.getElementById("calendar");
-        if (!container) throw new Error("Calendar container missing");
-        container.innerHTML = "";
-        const today = new Date();
-        today.setHours(0,0,0,0);
+      const c = document.getElementById("calendar");
+      c.innerHTML = "";
+      const today = new Date();
+      today.setHours(0,0,0,0);
 
-        for (let i = 0; i < 21; i++) {
-          const d = new Date();
-          d.setDate(today.getDate() + i);
-          const iso = d.toISOString().split("T")[0];
+      for (let i = 0; i < 28; i++) {   // ~4 weeks
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const iso = d.toISOString().split("T")[0];
+        const dayOfWeek = d.getDay();
 
-          const dayEl = document.createElement("div");
-          dayEl.className = "text-center p-4 rounded-xl border border-border-gold cursor-pointer transition-all hover:border-gold hover:bg-gold/10";
-          dayEl.innerHTML = `
-            <div class="text-sm text-text-dim">${d.toLocaleDateString('en-GB', { weekday: 'short' })}</div>
-            <div class="text-xl font-bold">${d.getDate()}</div>
-            <div class="text-xs text-text-dim">${d.toLocaleDateString('en-GB', { month: 'short' })}</div>
-          `;
+        const el = document.createElement("div");
+        el.className = `
+          p-3 md:p-4 text-center rounded-lg border border-border-gold cursor-pointer transition
+          hover:border-gold-light hover:bg-[#1a1a1a]/60
+          ${d < today ? 'past opacity-50 pointer-events-none' : ''}
+          ${dayOfWeek === 0 || dayOfWeek === 6 ? 'text-gold-light' : ''}
+          ${iso === selectedDate ? 'bg-gold/20 border-gold' : ''}
+        `;
+        el.innerHTML = `<div class="text-sm">${d.toLocaleDateString('en-GB',{day:'numeric'})}</div>
+                        <div class="text-xs opacity-70">${d.toLocaleDateString('en-GB',{weekday:'short'})}</div>`;
 
-          if (d < today) {
-            dayEl.classList.add("opacity-40", "cursor-not-allowed", "bg-[#1a1a1a]");
-            dayEl.setAttribute('aria-disabled', 'true');
-          } else {
-            dayEl.onclick = () => {
-              document.querySelectorAll("#calendar > div").forEach(el => el.classList.remove("bg-gold", "text-bg-dark"));
-              dayEl.classList.add("bg-gold", "text-bg-dark");
-              selectedDate = iso;
-              loadTimeSlots(iso);
-            };
-            dayEl.setAttribute('role', 'button');
-            dayEl.setAttribute('tabindex', '0');
-          }
-
-          container.appendChild(dayEl);
+        if (!(d < today)) {
+          el.onclick = () => {
+            selectedDate = iso;
+            generateCalendar(); // refresh highlight
+            updateContinueButtons();
+          };
         }
-      } catch (e) {
-        console.error("generateCalendar failed:", e);
-        showToast("Calendar could not load", 'error');
+
+        c.appendChild(el);
       }
     }
 
-    async function loadTimeSlots(date) {
-      try {
-        const container = document.getElementById("times");
-        if (!container) throw new Error("Times container missing");
-        container.innerHTML = "";
-        selectedTime = "";
+    // ───────────────────────────────────────────────
+    // TIME SLOTS
+    // ───────────────────────────────────────────────
+    async function loadTimes() {
+      const c = document.getElementById("times");
+      c.innerHTML = "";
+      selectedTime = "";
 
-        // Fetch booked times from backend (assuming endpoint exists)
-        let booked = [];
-        try {
-          const res = await fetch(`${BACKEND}/bookings?date=${date}`);
-          if (res.ok) {
-            const data = await res.json();
-            booked = data.bookedTimes || [];
-          }
-        } catch (err) {
-          console.warn("Failed to fetch booked times:", err);
+      let booked = [];
+      try {
+        const r = await fetch(`${BACKEND}/booked/${selectedDate}`);
+        if (r.ok) booked = await r.json();
+      } catch {}
+
+      const now = new Date();
+      const todayStr = now.toISOString().split("T")[0];
+
+      defaultTimes.forEach(t => {
+        const [hh, mm] = t.split(":").map(Number);
+        const slotDate = new Date(selectedDate);
+        slotDate.setHours(hh, mm, 0, 0);
+
+        const isPast = slotDate < now && selectedDate === todayStr;
+        const isBooked = booked.includes(t);
+
+        const d = document.createElement("div");
+        d.className = `
+          p-4 text-center rounded-lg border border-border-gold cursor-pointer transition
+          hover:border-gold-light hover:bg-[#1a1a1a]/60
+          ${isPast ? 'past-time' : ''}
+          ${isBooked ? 'booked' : ''}
+          ${t === selectedTime ? 'selected' : ''}
+        `;
+        d.textContent = t;
+
+        if (!isPast && !isBooked) {
+          d.onclick = () => {
+            selectedTime = t;
+            [...c.children].forEach(el => el.classList.remove("selected"));
+            d.classList.add("selected");
+            updateContinueButtons();
+          };
         }
 
-        const now = new Date();
-        const isToday = date === now.toISOString().split("T")[0];
-
-        defaultTimes.forEach(t => {
-          const el = document.createElement("div");
-          el.className = "text-center p-5 rounded-xl border border-border-gold cursor-pointer transition-all hover:border-gold hover:bg-gold/10";
-          el.textContent = t;
-          el.setAttribute('role', 'button');
-          el.setAttribute('tabindex', '0');
-
-          let isPast = false;
-          if (isToday) {
-            const [hour, minute] = t.split(":").map(Number);
-            const slotTime = new Date(now);
-            slotTime.setHours(hour, minute, 0, 0);
-            if (slotTime <= now) isPast = true;
-          }
-
-          if (booked.includes(t)) {
-            el.classList.add("booked");
-            el.title = "Already booked";
-            el.setAttribute('aria-disabled', 'true');
-          } else if (isPast) {
-            el.classList.add("past-time");
-            el.title = "Past time";
-            el.setAttribute('aria-disabled', 'true');
-          } else {
-            el.onclick = () => {
-              document.querySelectorAll("#times > div").forEach(e => e.classList.remove("bg-gold", "text-bg-dark"));
-              el.classList.add("bg-gold", "text-bg-dark");
-              selectedTime = t;
-              showToast(`Time selected: ${t}`, 'success');
-            };
-          }
-
-          container.appendChild(el);
-        });
-      } catch (e) {
-        console.error("loadTimeSlots failed:", e);
-        showToast("Could not load time slots", 'error');
-      }
+        c.appendChild(d);
+      });
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // BOOKING CONFIRMATION
-    // ──────────────────────────────────────────────────────────────────────────────
+    // ───────────────────────────────────────────────
+    // BOOKING CONFIRM
+    // ───────────────────────────────────────────────
     async function confirmBooking() {
-      console.log("confirmBooking called");
-      const confirmBtn = document.getElementById("confirmBookingBtn");
-      confirmBtn.disabled = true;
-      showToast("Confirming booking...", 'info');
-
       try {
-        if (!currentUser) {
-          showToast("Please sign in first", 'error');
-          return;
-        }
+        if (!currentUser) return showToast("Please sign in first", "error");
+        if (!selectedDate || !selectedTime) return showToast("Select date & time", "error");
+        if (!selectedServices.length) return showToast("Select at least one service", "error");
 
-        const name = document.getElementById("customerName")?.value?.trim() || currentUser.username || "Guest";
-
-        if (selectedServices.length === 0) return showToast("Select at least one service", 'error');
-        if (!selectedDate) return showToast("Select a date", 'error');
-        if (!selectedTime) return showToast("Select a time", 'error');
+        const name = document.getElementById("customerName").value.trim() || currentUser.username;
 
         const res = await fetch(`${BACKEND}/book`, {
           method: "POST",
@@ -591,137 +592,57 @@
             date: selectedDate,
             time: selectedTime,
             services: selectedServices,
-            total: total.toFixed(2),
-            email: currentUser.email || "guest@example.com"
+            total,
+            email: currentUser.email
           })
         });
 
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({ message: "Booking failed" }));
-          throw new Error(errorData.message || "Booking failed");
-        }
-
         const data = await res.json();
-        const servicesList = selectedServices.map(s => s.name).join(", ");
-        const msg = `Thank you, ${name}!\n\nAppointment booked for:\n${selectedDate} at ${selectedTime}\n\nServices: ${servicesList}\nTotal: £${total.toFixed(2)}`;
+        if (!res.ok) throw new Error(data.error || "Booking failed");
 
-        document.getElementById("confirmationText").textContent = msg;
-        showToast("Booking confirmed!", 'success');
+        document.getElementById("confirmationText").textContent =
+          `Thank you, ${name}!\n\n` +
+          `Your appointment is booked for:\n` +
+          `${new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} at ${selectedTime}\n\n` +
+          `Services:\n${selectedServices.map(s => `• ${s.name} — £${s.price.toFixed(2)}`).join("\n")}\n\n` +
+          `Total: £${total.toFixed(2)}`;
 
-        document.querySelectorAll('[id^="step"]').forEach(el => el.classList.add("hidden"));
-        document.getElementById("step4").classList.remove("hidden");
-        document.getElementById("backBtn").style.display = "block";
-
-        // Reset
-        selectedServices = [];
-        total = 0;
-        selectedDate = "";
-        selectedTime = "";
-        document.getElementById("total").textContent = "0.00";
-        document.querySelectorAll("#services input").forEach(cb => cb.checked = false);
-        generateCalendar();
-      } catch (err) {
-        console.error("Booking error:", err);
-        showToast("Booking failed: " + err.message, 'error');
-      } finally {
-        confirmBtn.disabled = false;
-      }
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────────
-    // STEP NAVIGATION
-    // ──────────────────────────────────────────────────────────────────────────────
-    function showStep(n) {
-      try {
-        document.querySelectorAll('[id^="step"]').forEach(el => el.classList.add("hidden"));
-        document.getElementById(`step${n}`).classList.remove("hidden");
-        currentStep = n;
-        document.getElementById("backBtn").style.display = n === 1 ? "none" : "block";
+        toggleSection("step4", "step1", "step2", "step3");
+        currentStep = 4;
+        showToast("Booking confirmed!", "success");
       } catch (e) {
-        showToast("Navigation error", 'error');
+        showToast(e.message, "error");
       }
     }
 
-    function goBack() {
-      if (currentStep > 1) showStep(currentStep - 1);
-    }
-
-    function goHome() {
-      showStep(1);
-    }
-
-    function goToCalendar() {
-      if (!currentUser) return showToast("Sign in first", 'error');
-      showStep(2);
-    }
-
-    function goToTimes() {
-      if (!selectedDate) return showToast("Select date first", 'error');
-      showStep(3);
-    }
-
-    function startNewBooking() {
-      showStep(1);
-      selectedServices = [];
-      total = 0;
-      selectedDate = "";
-      selectedTime = "";
-      document.getElementById("total").textContent = "0.00";
-      document.querySelectorAll("#services input").forEach(cb => cb.checked = false);
-      generateCalendar();
-    }
-
-    function showBooking() {
-      document.getElementById("productsSection").classList.add("hidden");
-      document.getElementById("bookingSection").classList.remove("hidden");
-      document.querySelectorAll(".nav-btn").forEach(b => b.dataset.active = "false");
-      document.querySelector(".nav-btn:first-child").dataset.active = "true";
-    }
-
-    function showProducts() {
-      document.getElementById("bookingSection").classList.add("hidden");
-      document.getElementById("productsSection").classList.remove("hidden");
-      document.querySelectorAll(".nav-btn").forEach(b => b.dataset.active = "false");
-      document.querySelector(".nav-btn:last-child").dataset.active = "true";
-    }
-
+    // ───────────────────────────────────────────────
+    // DARK / LIGHT MODE
+    // ───────────────────────────────────────────────
     function toggleMode() {
       document.documentElement.classList.toggle("light");
-      localStorage.setItem('theme', document.documentElement.classList.contains('light') ? 'light' : 'dark');
+      localStorage.setItem("theme", document.documentElement.classList.contains("light") ? "light" : "dark");
     }
 
-    // ──────────────────────────────────────────────────────────────────────────────
-    // SAFE INITIALIZATION
-    // ──────────────────────────────────────────────────────────────────────────────
-    function init() {
-      try {
-        renderServices();
-        generateCalendar();
-        showBooking();
-
-        // Load remembered email
-        const rememberedEmail = localStorage.getItem('rememberedEmail');
-        if (rememberedEmail) {
-          document.getElementById("loginEmail").value = rememberedEmail;
-          document.getElementById("rememberMe").checked = true;
-        }
-
-        // Load theme
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-          document.documentElement.classList.add('light');
-        }
-
-        console.log("App fully initialized");
-        showToast("Calendar & bookings loaded", 'success');
-      } catch (err) {
-        console.error("Init failed:", err);
-        showToast("Some features failed to load – please refresh the page", 'error');
+    function loadTheme() {
+      if (localStorage.getItem("theme") === "light" ||
+         (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: light)").matches)) {
+        document.documentElement.classList.add("light");
       }
     }
 
-    // Run init on DOMContentLoaded for better reliability
-    document.addEventListener('DOMContentLoaded', init);
+    // ───────────────────────────────────────────────
+    // INIT
+    // ───────────────────────────────────────────────
+    function init() {
+      loadTheme();
+      renderServices();
+      updateContinueButtons();
+
+      // Optional: show auth by default
+      toggleSection("authSection", "bookingSection", "productsSection");
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
